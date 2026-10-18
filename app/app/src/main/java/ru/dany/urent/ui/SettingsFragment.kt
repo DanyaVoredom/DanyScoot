@@ -1,4 +1,4 @@
-package com.dany.fusionbot.ui
+package ru.dany.urent.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -6,13 +6,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import com.dany.fusionbot.BuildConfig
-import com.dany.fusionbot.R
-import com.dany.fusionbot.ble.ScooterCodec
-import com.dany.fusionbot.core.LogBus
-import com.dany.fusionbot.core.Prefs
-import com.dany.fusionbot.core.ScooterClient
-import com.dany.fusionbot.databinding.FragmentSettingsBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import ru.dany.urent.AppTheme
+import ru.dany.urent.BuildConfig
+import ru.dany.urent.R
+import ru.dany.urent.ble.ScooterCodec
+import ru.dany.urent.core.LogBus
+import ru.dany.urent.core.Prefs
+import ru.dany.urent.core.ScooterClient
+import ru.dany.urent.databinding.FragmentSettingsBinding
 
 class SettingsFragment : Fragment() {
 
@@ -41,7 +43,32 @@ class SettingsFragment : Fragment() {
             LogBus.info("SETTINGS", "Ключ LostBot: ${ScooterCodec.KEY_PRESETS[1]}")
         }
         b.settingsSave.setOnClickListener { save() }
+        setupTheme()
         loadPrefs()
+    }
+
+    private fun setupTheme() {
+        val b = binding ?: return
+        b.themeButton.setOnClickListener { showThemeDialog() }
+    }
+
+    private fun showThemeDialog() {
+        val themes = AppTheme.entries
+        val labels = themes.map { getString(it.labelRes) }.toTypedArray()
+        val current = themes.indexOf(AppTheme.fromId(Prefs.get(requireContext()).theme)).coerceAtLeast(0)
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.settings_theme)
+            .setSingleChoiceItems(labels, current) { dialog, which ->
+                dialog.dismiss()
+                val theme = themes[which]
+                val prefs = Prefs.get(requireContext())
+                if (prefs.theme != theme.id) {
+                    prefs.theme = theme.id
+                    requireActivity().recreate()
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
@@ -52,6 +79,10 @@ class SettingsFragment : Fragment() {
     private fun loadPrefs() {
         val b = binding ?: return
         val prefs = Prefs.get(requireContext())
+        b.themeButton.text = getString(
+            R.string.settings_theme_value,
+            getString(AppTheme.fromId(prefs.theme).labelRes),
+        )
         b.settingsKey.setText(prefs.bleKey)
         b.settingsSpamInterval.setText(prefs.spamIntervalMs.toString())
         b.settingsAutoResumeSpam.isChecked = prefs.autoResumeSpam

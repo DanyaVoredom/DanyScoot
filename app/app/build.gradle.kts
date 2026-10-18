@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.dany.fusionbot"
+    namespace = "ru.dany.urent"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.dany.fusionbot"
+        applicationId = "ru.dany.urent"
         minSdk = 23
         targetSdk = 35
         versionCode = 1

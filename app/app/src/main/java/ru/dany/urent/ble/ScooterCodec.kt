@@ -1,4 +1,4 @@
-package com.dany.fusionbot.ble
+package ru.dany.urent.ble
 
 data class IotInfo(
     val value: Int,

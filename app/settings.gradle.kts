@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "FusionBot"
+rootProject.name = "DanyUrent"
 include(":app")

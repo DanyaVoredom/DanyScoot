@@ -1,4 +1,4 @@
-package com.dany.fusionbot
+package ru.dany.urent
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -16,15 +16,15 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.dany.fusionbot.core.ClientState
-import com.dany.fusionbot.core.LogBus
-import com.dany.fusionbot.core.Prefs
-import com.dany.fusionbot.core.ScooterClient
-import com.dany.fusionbot.databinding.ActivityMainBinding
-import com.dany.fusionbot.ui.ControlFragment
-import com.dany.fusionbot.ui.DevicesFragment
-import com.dany.fusionbot.ui.LogFragment
-import com.dany.fusionbot.ui.SettingsFragment
+import ru.dany.urent.core.ClientState
+import ru.dany.urent.core.LogBus
+import ru.dany.urent.core.Prefs
+import ru.dany.urent.core.ScooterClient
+import ru.dany.urent.databinding.ActivityMainBinding
+import ru.dany.urent.ui.ControlFragment
+import ru.dany.urent.ui.DevicesFragment
+import ru.dany.urent.ui.LogFragment
+import ru.dany.urent.ui.SettingsFragment
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -43,6 +43,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(AppTheme.current(this).styleRes)
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityMainBinding.inflate(layoutInflater)

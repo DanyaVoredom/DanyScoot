@@ -1,4 +1,4 @@
-package com.dany.fusionbot.ble
+package ru.dany.urent.ble
 
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals

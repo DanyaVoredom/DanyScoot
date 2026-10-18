@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="colorLogTx" format="color" />
+    <attr name="colorLogRx" format="color" />
+    <attr name="colorLogOk" format="color" />
+    <attr name="colorLogWarn" format="color" />
+    <attr name="colorLogErr" format="color" />
+    <attr name="colorLogInfo" format="color" />
+</resources>

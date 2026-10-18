@@ -1,28 +1,28 @@
-package com.dany.fusionbot.ui
+package ru.dany.urent.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.dany.fusionbot.R
-import com.dany.fusionbot.ble.OpcodeCatalog
-import com.dany.fusionbot.ble.OpcodeDirection
-import com.dany.fusionbot.ble.OpcodeInfo
-import com.dany.fusionbot.ble.ScooterCodec
-import com.dany.fusionbot.ble.hexByte
-import com.dany.fusionbot.ble.parseHex
-import com.dany.fusionbot.core.ClientState
-import com.dany.fusionbot.core.LogBus
-import com.dany.fusionbot.core.Prefs
-import com.dany.fusionbot.core.ScooterClient
-import com.dany.fusionbot.databinding.FragmentControlBinding
-import com.dany.fusionbot.spam.SpamService
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import ru.dany.urent.R
+import ru.dany.urent.ble.OpcodeCatalog
+import ru.dany.urent.ble.OpcodeDirection
+import ru.dany.urent.ble.OpcodeInfo
+import ru.dany.urent.ble.ScooterCodec
+import ru.dany.urent.ble.hexByte
+import ru.dany.urent.ble.parseHex
+import ru.dany.urent.core.ClientState
+import ru.dany.urent.core.LogBus
+import ru.dany.urent.core.Prefs
+import ru.dany.urent.core.ScooterClient
+import ru.dany.urent.databinding.FragmentControlBinding
+import ru.dany.urent.spam.SpamService
 import kotlinx.coroutines.launch
 
 class ControlFragment : Fragment() {
@@ -89,7 +89,7 @@ class ControlFragment : Fragment() {
         }
         b.telemetryRefresh.setOnClickListener { ScooterClient.requestTelemetry() }
 
-        setupOpcodeSpinner()
+        setupOpcodePicker()
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -102,20 +102,42 @@ class ControlFragment : Fragment() {
         }
     }
 
-    private fun setupOpcodeSpinner() {
+    private fun setupOpcodePicker() {
         val b = binding ?: return
         val all = Prefs.get(requireContext()).showAllOpcodes
         opcodesShownForAll = all
         val list = OpcodeCatalog.all
         opcodes = if (all) list else list.filter { it.direction != OpcodeDirection.SET_ONLY }
-        val labels = opcodes.map { "${hexByte(it.code)} ${it.name}" }
-        b.opcodeInput.setAdapter(ArrayAdapter(requireContext(), R.layout.item_dropdown, labels))
-        b.opcodeInput.setOnItemClickListener { _, _, position, _ ->
-            val info = opcodes.getOrNull(position) ?: return@setOnItemClickListener
-            binding?.consoleCmd?.setText(hexByte(info.code))
+        val currentCode = parseCode(b.consoleCmd.text?.toString().orEmpty())
+        val selected = opcodes.firstOrNull { it.code == currentCode } ?: opcodes.firstOrNull()
+        if (selected != null) {
+            updateOpcodeButton(selected)
+            if (b.consoleCmd.text.isNullOrEmpty()) b.consoleCmd.setText(hexByte(selected.code))
         }
-        b.opcodeInput.setText(labels.firstOrNull().orEmpty(), false)
-        opcodes.firstOrNull()?.let { b.consoleCmd.setText(hexByte(it.code)) }
+        b.opcodeButton.setOnClickListener { showOpcodeDialog() }
+    }
+
+    private fun updateOpcodeButton(info: OpcodeInfo) {
+        binding?.opcodeButton?.text = getString(
+            R.string.console_opcode_value,
+            "${hexByte(info.code)} ${info.name}",
+        )
+    }
+
+    private fun showOpcodeDialog() {
+        val labels = opcodes.map { "${hexByte(it.code)} ${it.name}" }.toTypedArray()
+        val currentCode = parseCode(binding?.consoleCmd?.text?.toString().orEmpty())
+        val current = opcodes.indexOfFirst { it.code == currentCode }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.console_opcode)
+            .setSingleChoiceItems(labels, current) { dialog, which ->
+                dialog.dismiss()
+                val info = opcodes.getOrNull(which) ?: return@setSingleChoiceItems
+                binding?.consoleCmd?.setText(hexByte(info.code))
+                updateOpcodeButton(info)
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private fun saveKey() {
@@ -295,7 +317,7 @@ class ControlFragment : Fragment() {
         val prefs = Prefs.get(requireContext())
         if (!b.keyInput.hasFocus()) b.keyInput.setText(prefs.bleKey)
         if (!b.spamInterval.hasFocus()) b.spamInterval.setText(prefs.spamIntervalMs.toString())
-        if (prefs.showAllOpcodes != opcodesShownForAll) setupOpcodeSpinner()
+        if (prefs.showAllOpcodes != opcodesShownForAll) setupOpcodePicker()
         updateStatus(ScooterClient.state.value)
     }
 

@@ -1,4 +1,4 @@
-package com.dany.fusionbot.core
+package ru.dany.urent.core
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

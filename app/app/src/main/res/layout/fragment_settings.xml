@@ -12,6 +12,22 @@
         android:paddingEnd="12dp"
         android:paddingBottom="16dp">
 
+        <TextView style="@style/SectionHeader" android:text="@string/settings_appearance" />
+
+        <com.google.android.material.card.MaterialCardView style="@style/CardBlock">
+
+            <LinearLayout style="@style/CardBody">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/themeButton"
+                    style="@style/ActionButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0"
+                    android:text="@string/settings_theme" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <TextView style="@style/SectionHeader" android:text="@string/settings_key" />
 
         <com.google.android.material.card.MaterialCardView style="@style/CardBlock">

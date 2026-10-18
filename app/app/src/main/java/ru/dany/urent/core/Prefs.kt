@@ -1,4 +1,4 @@
-package com.dany.fusionbot.core
+package ru.dany.urent.core
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -7,7 +7,7 @@ import androidx.core.content.edit
 class Prefs private constructor(context: Context) {
 
     private val sp: SharedPreferences =
-        context.applicationContext.getSharedPreferences("fusionbot_prefs", Context.MODE_PRIVATE)
+        context.applicationContext.getSharedPreferences("danyurent_prefs", Context.MODE_PRIVATE)
 
     var bleKey: String
         get() = sp.getString(KEY_BLE_KEY, DEFAULT_BLE_KEY)?.takeIf { it.isNotEmpty() } ?: DEFAULT_BLE_KEY
@@ -70,6 +70,12 @@ class Prefs private constructor(context: Context) {
             sp.edit { putBoolean(KEY_SHOW_ALL_OPCODES, value) }
         }
 
+    var theme: String
+        get() = sp.getString(KEY_THEME, DEFAULT_THEME) ?: DEFAULT_THEME
+        set(value) {
+            sp.edit { putString(KEY_THEME, value) }
+        }
+
     var lastDeviceAddress: String
         get() = sp.getString(KEY_LAST_ADDRESS, "").orEmpty()
         set(value) {
@@ -89,6 +95,7 @@ class Prefs private constructor(context: Context) {
         const val MAX_SPAM_INTERVAL = 10000
         const val DEFAULT_RECONNECT_ATTEMPTS = 3
         const val DEFAULT_RECONNECT_DELAY = 5000
+        const val DEFAULT_THEME = "dark"
 
         private const val KEY_BLE_KEY = "ble_key"
         private const val KEY_SPAM_INTERVAL = "unlock_spam_interval_ms"
@@ -100,6 +107,7 @@ class Prefs private constructor(context: Context) {
         private const val KEY_SHOW_SCAN_LOG = "show_scan_debug_log"
         private const val KEY_DEMO_MODE = "use_demo"
         private const val KEY_SHOW_ALL_OPCODES = "show_all_opcodes"
+        private const val KEY_THEME = "theme"
         private const val KEY_LAST_ADDRESS = "last_device_address"
         private const val KEY_LAST_NAME = "last_device_name"
 

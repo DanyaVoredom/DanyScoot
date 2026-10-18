@@ -193,7 +193,7 @@ controlActivity (controlActivity.smali, activity_control.xml):
 - bleSettingsActivity строит весь экран кодом без layout-ресурса и хранит строки в base64 (bleSettingsActivity.smali:54-172); activity_ble_settings.xml в дампе присутствует, но бинарный и не декодирован (не подтверждено дампом: его содержимое).
 - Подпись: v1-манифест 2305 строк, CERT.SF заявляет схемы 2 и 3 (CERT.SF:1-5); отдельный факт о фактической проверке схем на устройстве по дампу не проверяется.
 
-## 9. Сводка для переноса в FusionBot
+## 9. Сводка для переноса в DanyUrent
 
 Минимальный набор для полной совместимости с NineHack-совместимыми самокатами:
 1. Транспорт: сервис 6e400001-b5a3-f393-e0a9-e50e24dcca9e, прием (notify) 6e400003, передача (write) 6e400002, CCCD 00002902-0000-1000-8000-00805f9b34fb; connectGatt с TRANSPORT_LE; нотификации включать через setCharacteristicNotification плюс запись ENABLE_NOTIFICATION_VALUE в CCCD (в NineHack перед этим лишнее чтение дескриптора); write type WRITE_TYPE_DEFAULT.

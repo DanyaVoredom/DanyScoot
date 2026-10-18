@@ -1,7 +1,8 @@
-package com.dany.fusionbot.ui
+package ru.dany.urent.ui
 
 import android.graphics.Color
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,12 +13,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.dany.fusionbot.R
-import com.dany.fusionbot.core.LogBus
-import com.dany.fusionbot.core.LogLevel
-import com.dany.fusionbot.core.LogLine
-import com.dany.fusionbot.databinding.FragmentLogBinding
-import com.dany.fusionbot.databinding.ItemLogBinding
+import ru.dany.urent.R
+import ru.dany.urent.core.LogBus
+import ru.dany.urent.core.LogLevel
+import ru.dany.urent.core.LogLine
+import ru.dany.urent.databinding.FragmentLogBinding
+import ru.dany.urent.databinding.ItemLogBinding
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -104,14 +105,14 @@ class LogFragment : Fragment() {
 
         override fun onBindViewHolder(holder: Holder, position: Int) {
             val line = items[position]
-            val context = holder.binding.root.context
+            val root = holder.binding.root
             val color = when (line.level) {
-                LogLevel.TX -> ContextCompat.getColor(context, R.color.source_lostbot)
-                LogLevel.RX -> ContextCompat.getColor(context, R.color.source_ninehack)
-                LogLevel.OK -> ContextCompat.getColor(context, R.color.ok)
-                LogLevel.WARN -> ContextCompat.getColor(context, R.color.warn)
-                LogLevel.ERR -> ContextCompat.getColor(context, R.color.err)
-                LogLevel.INFO -> ContextCompat.getColor(context, R.color.text_primary)
+                LogLevel.TX -> themeColor(root, R.attr.colorLogTx)
+                LogLevel.RX -> themeColor(root, R.attr.colorLogRx)
+                LogLevel.OK -> themeColor(root, R.attr.colorLogOk)
+                LogLevel.WARN -> themeColor(root, R.attr.colorLogWarn)
+                LogLevel.ERR -> themeColor(root, R.attr.colorLogErr)
+                LogLevel.INFO -> themeColor(root, R.attr.colorLogInfo)
             }
             holder.binding.logLine.text = buildString {
                 append(timeFormat.format(Date(line.timeMs))).append(' ')
@@ -119,6 +120,18 @@ class LogFragment : Fragment() {
             }
             holder.binding.logLine.setTextColor(color)
             holder.binding.logLine.setBackgroundColor(Color.TRANSPARENT)
+        }
+
+        private fun themeColor(view: View, attr: Int): Int {
+            val value = TypedValue()
+            if (!view.context.theme.resolveAttribute(attr, value, true)) {
+                return ContextCompat.getColor(view.context, R.color.text_primary)
+            }
+            return if (value.resourceId != 0) {
+                ContextCompat.getColor(view.context, value.resourceId)
+            } else {
+                value.data
+            }
         }
     }
 }

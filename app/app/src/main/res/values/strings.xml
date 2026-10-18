@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">FusionBot</string>
+    <string name="app_name">DanyUrent</string>
 
     <string name="tab_devices">Устройства</string>
     <string name="tab_control">Управление</string>
@@ -94,6 +94,7 @@
 
     <string name="console_section">Консоль команд</string>
     <string name="console_opcode">Опкод</string>
+    <string name="console_opcode_value">Опкод: %1$s</string>
     <string name="console_command">Команда</string>
     <string name="console_payload_hex">Данные, hex</string>
     <string name="console_send">Отправить</string>
@@ -102,6 +103,15 @@
     <string name="log_section">Журнал</string>
     <string name="log_clear">Очистить</string>
     <string name="log_autoscroll">Автопрокрутка</string>
+
+    <string name="settings_appearance">Оформление</string>
+    <string name="settings_theme">Тема</string>
+    <string name="settings_theme_value">Тема: %1$s</string>
+    <string name="theme_black">Черная</string>
+    <string name="theme_white">Белая</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Темная</string>
+    <string name="theme_amoled">AMOLED</string>
 
     <string name="settings_connection">Подключение</string>
     <string name="settings_auto_reconnect">Автоподключение</string>
@@ -124,8 +134,8 @@
     <string name="settings_device_type">Тип передачи</string>
     <string name="settings_save">Сохранить</string>
     <string name="settings_saved">Сохранено</string>
-    <string name="settings_about">FusionBot объединяет протоколы LostBot и NineHack: кадры A3 A4, CRC-8/MAXIM, рукопожатие ключом, спам разблокировки, телеметрия, Nordic UART. Работает только с собственным самокатом.</string>
-    <string name="settings_about_version">%1$s\n\nFusionBot %2$s (%3$d)</string>
+    <string name="settings_about">DanyUrent объединяет протоколы LostBot и NineHack: кадры A3 A4, CRC-8/MAXIM, рукопожатие ключом, спам разблокировки, телеметрия, Nordic UART. Работает только с собственным самокатом.</string>
+    <string name="settings_about_version">%1$s\n\nDanyUrent %2$s (%3$d)</string>
 
     <string name="notification_channel_name">Спам разблокировки</string>
     <string name="notification_channel_desc">Уведомление о работе спама разблокировки</string>

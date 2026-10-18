@@ -1,4 +1,4 @@
-package com.dany.fusionbot.ui
+package ru.dany.urent.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,15 +11,15 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.dany.fusionbot.MainActivity
-import com.dany.fusionbot.R
-import com.dany.fusionbot.ble.ScannedDevice
-import com.dany.fusionbot.core.ClientState
-import com.dany.fusionbot.core.LogBus
-import com.dany.fusionbot.core.Prefs
-import com.dany.fusionbot.core.ScooterClient
-import com.dany.fusionbot.databinding.FragmentDevicesBinding
-import com.dany.fusionbot.databinding.ItemDeviceBinding
+import ru.dany.urent.MainActivity
+import ru.dany.urent.R
+import ru.dany.urent.ble.ScannedDevice
+import ru.dany.urent.core.ClientState
+import ru.dany.urent.core.LogBus
+import ru.dany.urent.core.Prefs
+import ru.dany.urent.core.ScooterClient
+import ru.dany.urent.databinding.FragmentDevicesBinding
+import ru.dany.urent.databinding.ItemDeviceBinding
 import kotlinx.coroutines.launch
 
 class DevicesFragment : Fragment() {

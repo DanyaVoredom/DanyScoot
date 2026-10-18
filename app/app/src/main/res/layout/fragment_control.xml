@@ -379,15 +379,15 @@
 
             <LinearLayout style="@style/CardBody">
 
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/InputField"
-                    android:hint="@string/console_opcode">
-
-                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                        android:id="@+id/opcodeInput"
-                        style="@style/InputText"
-                        android:inputType="none" />
-                </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/opcodeButton"
+                    style="@style/ActionButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="@string/console_opcode" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/InputField"

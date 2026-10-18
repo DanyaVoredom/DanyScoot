@@ -1,31 +1,186 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.FusionBot" parent="Theme.Material3.Dark.NoActionBar">
-        <item name="colorPrimary">@color/brand</item>
-        <item name="colorOnPrimary">@color/on_brand</item>
-        <item name="colorPrimaryContainer">@color/brand_container</item>
-        <item name="colorOnPrimaryContainer">@color/text_primary</item>
-        <item name="colorSecondary">@color/source_lostbot</item>
-        <item name="colorOnSecondary">@color/on_brand</item>
-        <item name="colorSecondaryContainer">@color/surface_high</item>
-        <item name="colorOnSecondaryContainer">@color/text_primary</item>
-        <item name="colorTertiary">@color/source_ninehack</item>
-        <item name="colorSurface">@color/surface_dark</item>
-        <item name="colorOnSurface">@color/text_primary</item>
-        <item name="colorSurfaceVariant">@color/surface_card</item>
-        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
-        <item name="colorSurfaceContainer">@color/surface_card</item>
-        <item name="colorSurfaceContainerHigh">@color/surface_high</item>
-        <item name="colorSurfaceContainerHighest">@color/surface_high</item>
-        <item name="colorOutline">@color/outline</item>
-        <item name="colorOutlineVariant">@color/outline</item>
-        <item name="colorError">@color/err</item>
-        <item name="android:colorBackground">@color/surface_dark</item>
-        <item name="android:windowBackground">@color/surface_dark</item>
-        <item name="android:textColorPrimary">@color/text_primary</item>
-        <item name="android:textColorSecondary">@color/text_secondary</item>
-        <item name="android:statusBarColor">@color/surface_dark</item>
-        <item name="android:navigationBarColor">@color/surface_dark</item>
+
+    <style name="Theme.DanyUrent.Dark" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">#FF3DDC84</item>
+        <item name="colorOnPrimary">#FF062B18</item>
+        <item name="colorPrimaryContainer">#FF1E4630</item>
+        <item name="colorOnPrimaryContainer">#FFE3F2E8</item>
+        <item name="colorSecondary">#FF4FA3FF</item>
+        <item name="colorOnSecondary">#FF06131F</item>
+        <item name="colorSecondaryContainer">#FF223026</item>
+        <item name="colorOnSecondaryContainer">#FFE3F2E8</item>
+        <item name="colorTertiary">#FFFFB74D</item>
+        <item name="colorSurface">#FF101511</item>
+        <item name="colorOnSurface">#FFE3F2E8</item>
+        <item name="colorSurfaceVariant">#FF1A231C</item>
+        <item name="colorOnSurfaceVariant">#FF9DB5A6</item>
+        <item name="colorSurfaceContainer">#FF1A231C</item>
+        <item name="colorSurfaceContainerHigh">#FF223026</item>
+        <item name="colorSurfaceContainerHighest">#FF223026</item>
+        <item name="colorOutline">#FF3A4A3F</item>
+        <item name="colorOutlineVariant">#FF3A4A3F</item>
+        <item name="colorError">#FFEF5350</item>
+        <item name="colorLogTx">#FF4FA3FF</item>
+        <item name="colorLogRx">#FFFFB74D</item>
+        <item name="colorLogOk">#FF66BB6A</item>
+        <item name="colorLogWarn">#FFFFA726</item>
+        <item name="colorLogErr">#FFEF5350</item>
+        <item name="colorLogInfo">#FFE3F2E8</item>
+        <item name="android:colorBackground">#FF101511</item>
+        <item name="android:windowBackground">#FF101511</item>
+        <item name="android:statusBarColor">#FF101511</item>
+        <item name="android:navigationBarColor">#FF101511</item>
+        <item name="android:windowLightStatusBar">false</item>
         <item name="elevationOverlayEnabled">false</item>
+        <item name="colorAccent">#FF3DDC84</item>
+        <item name="colorControlActivated">#FF3DDC84</item>
     </style>
+
+    <style name="Theme.DanyUrent.Black" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">#FF3DDC84</item>
+        <item name="colorOnPrimary">#FF00210F</item>
+        <item name="colorPrimaryContainer">#FF12351F</item>
+        <item name="colorOnPrimaryContainer">#FFD7F5E2</item>
+        <item name="colorSecondary">#FF66B2FF</item>
+        <item name="colorOnSecondary">#FF001B33</item>
+        <item name="colorSecondaryContainer">#FF0E2233</item>
+        <item name="colorOnSecondaryContainer">#FFD7F5E2</item>
+        <item name="colorTertiary">#FFFFC266</item>
+        <item name="colorSurface">#FF000000</item>
+        <item name="colorOnSurface">#FFF2F2F2</item>
+        <item name="colorSurfaceVariant">#FF0B0B0B</item>
+        <item name="colorOnSurfaceVariant">#FFA6A6A6</item>
+        <item name="colorSurfaceContainer">#FF0A0A0A</item>
+        <item name="colorSurfaceContainerHigh">#FF121212</item>
+        <item name="colorSurfaceContainerHighest">#FF1A1A1A</item>
+        <item name="colorOutline">#FF2A2A2A</item>
+        <item name="colorOutlineVariant">#FF2A2A2A</item>
+        <item name="colorError">#FFFF6B6B</item>
+        <item name="colorLogTx">#FF66B2FF</item>
+        <item name="colorLogRx">#FFFFC266</item>
+        <item name="colorLogOk">#FF7BE495</item>
+        <item name="colorLogWarn">#FFFFB74D</item>
+        <item name="colorLogErr">#FFFF6B6B</item>
+        <item name="colorLogInfo">#FFF2F2F2</item>
+        <item name="android:colorBackground">#FF000000</item>
+        <item name="android:windowBackground">#FF000000</item>
+        <item name="android:statusBarColor">#FF000000</item>
+        <item name="android:navigationBarColor">#FF000000</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="elevationOverlayEnabled">false</item>
+        <item name="colorAccent">#FF3DDC84</item>
+        <item name="colorControlActivated">#FF3DDC84</item>
+    </style>
+
+    <style name="Theme.DanyUrent.Amoled" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">#FF00E676</item>
+        <item name="colorOnPrimary">#FF001B0C</item>
+        <item name="colorPrimaryContainer">#FF002513</item>
+        <item name="colorOnPrimaryContainer">#FFB9FFD6</item>
+        <item name="colorSecondary">#FF4FC3F7</item>
+        <item name="colorOnSecondary">#FF001E2B</item>
+        <item name="colorSecondaryContainer">#FF001E2B</item>
+        <item name="colorOnSecondaryContainer">#FFB9FFD6</item>
+        <item name="colorTertiary">#FFFFCA28</item>
+        <item name="colorSurface">#FF000000</item>
+        <item name="colorOnSurface">#FFFFFFFF</item>
+        <item name="colorSurfaceVariant">#FF000000</item>
+        <item name="colorOnSurfaceVariant">#FFB3B3B3</item>
+        <item name="colorSurfaceContainer">#FF000000</item>
+        <item name="colorSurfaceContainerHigh">#FF0B0B0B</item>
+        <item name="colorSurfaceContainerHighest">#FF121212</item>
+        <item name="colorOutline">#FF1F1F1F</item>
+        <item name="colorOutlineVariant">#FF1F1F1F</item>
+        <item name="colorError">#FFFF5252</item>
+        <item name="colorLogTx">#FF40C4FF</item>
+        <item name="colorLogRx">#FFFFD54F</item>
+        <item name="colorLogOk">#FF00E676</item>
+        <item name="colorLogWarn">#FFFFAB00</item>
+        <item name="colorLogErr">#FFFF5252</item>
+        <item name="colorLogInfo">#FFFFFFFF</item>
+        <item name="android:colorBackground">#FF000000</item>
+        <item name="android:windowBackground">#FF000000</item>
+        <item name="android:statusBarColor">#FF000000</item>
+        <item name="android:navigationBarColor">#FF000000</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="elevationOverlayEnabled">false</item>
+        <item name="colorAccent">#FF00E676</item>
+        <item name="colorControlActivated">#FF00E676</item>
+    </style>
+
+    <style name="Theme.DanyUrent.Light" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">#FF1B6B3A</item>
+        <item name="colorOnPrimary">#FFFFFFFF</item>
+        <item name="colorPrimaryContainer">#FFC8E6C9</item>
+        <item name="colorOnPrimaryContainer">#FF06210F</item>
+        <item name="colorSecondary">#FF1565C0</item>
+        <item name="colorOnSecondary">#FFFFFFFF</item>
+        <item name="colorSecondaryContainer">#FFD6E4FF</item>
+        <item name="colorOnSecondaryContainer">#FF001B3D</item>
+        <item name="colorTertiary">#FFA05A00</item>
+        <item name="colorSurface">#FFFFFFFF</item>
+        <item name="colorOnSurface">#FF1A1C19</item>
+        <item name="colorSurfaceVariant">#FFEEF2EC</item>
+        <item name="colorOnSurfaceVariant">#FF4F5B52</item>
+        <item name="colorSurfaceContainer">#FFFFFFFF</item>
+        <item name="colorSurfaceContainerHigh">#FFF2F5F0</item>
+        <item name="colorSurfaceContainerHighest">#FFE8EDE6</item>
+        <item name="colorOutline">#FFB8C4BA</item>
+        <item name="colorOutlineVariant">#FFD5DDD5</item>
+        <item name="colorError">#FFB3261E</item>
+        <item name="colorLogTx">#FF1565C0</item>
+        <item name="colorLogRx">#FFA05A00</item>
+        <item name="colorLogOk">#FF1B6B3A</item>
+        <item name="colorLogWarn">#FFB26A00</item>
+        <item name="colorLogErr">#FFB3261E</item>
+        <item name="colorLogInfo">#FF1A1C19</item>
+        <item name="android:colorBackground">#FFF6F8F4</item>
+        <item name="android:windowBackground">#FFF6F8F4</item>
+        <item name="android:statusBarColor">#FFF6F8F4</item>
+        <item name="android:navigationBarColor">#FF1B1F1B</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="elevationOverlayEnabled">false</item>
+        <item name="colorAccent">#FF1B6B3A</item>
+        <item name="colorControlActivated">#FF1B6B3A</item>
+    </style>
+
+    <style name="Theme.DanyUrent.White" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">#FF006D2C</item>
+        <item name="colorOnPrimary">#FFFFFFFF</item>
+        <item name="colorPrimaryContainer">#FFD7F5E2</item>
+        <item name="colorOnPrimaryContainer">#FF00210F</item>
+        <item name="colorSecondary">#FF0D47A1</item>
+        <item name="colorOnSecondary">#FFFFFFFF</item>
+        <item name="colorSecondaryContainer">#FFE3F2FD</item>
+        <item name="colorOnSecondaryContainer">#FF001B3D</item>
+        <item name="colorTertiary">#FF8A4F00</item>
+        <item name="colorSurface">#FFFFFFFF</item>
+        <item name="colorOnSurface">#FF000000</item>
+        <item name="colorSurfaceVariant">#FFF7F7F7</item>
+        <item name="colorOnSurfaceVariant">#FF555555</item>
+        <item name="colorSurfaceContainer">#FFF7F7F7</item>
+        <item name="colorSurfaceContainerHigh">#FFF0F0F0</item>
+        <item name="colorSurfaceContainerHighest">#FFE8E8E8</item>
+        <item name="colorOutline">#FFD0D0D0</item>
+        <item name="colorOutlineVariant">#FFE0E0E0</item>
+        <item name="colorError">#FFB00020</item>
+        <item name="colorLogTx">#FF0D47A1</item>
+        <item name="colorLogRx">#FF8A4F00</item>
+        <item name="colorLogOk">#FF006D2C</item>
+        <item name="colorLogWarn">#FF9A5B00</item>
+        <item name="colorLogErr">#FFB00020</item>
+        <item name="colorLogInfo">#FF000000</item>
+        <item name="android:colorBackground">#FFFFFFFF</item>
+        <item name="android:windowBackground">#FFFFFFFF</item>
+        <item name="android:statusBarColor">#FFFFFFFF</item>
+        <item name="android:navigationBarColor">#FF000000</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="elevationOverlayEnabled">false</item>
+        <item name="colorAccent">#FF006D2C</item>
+        <item name="colorControlActivated">#FF006D2C</item>
+    </style>
+
+    <style name="Theme.DanyUrent" parent="Theme.DanyUrent.Dark" />
+
 </resources>
