@@ -60,7 +60,7 @@ class BleTransport(private val context: Context) {
         const val MAX_WRITE_QUEUE = 64
         private const val GATT_ERROR = 133
         private const val GATT_CLOSE_DELAY_MS = 150L
-        private const val DISCOVER_FALLBACK_MS = 1500L
+        private const val DISCOVER_FALLBACK_MS = 3000L
     }
 
     private val handler = Handler(Looper.getMainLooper())

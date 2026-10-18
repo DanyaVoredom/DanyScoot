@@ -82,6 +82,26 @@ class ScooterCodecTest {
     }
 
     @Test
+    fun timestampUnlockMatchesSpamBuilder() {
+        val timeMs = 1_700_000_000_000L
+        val direct = FrameCodec.parse(ScooterCodec.unlockCommandTimestamp(0x33, timeMs))
+        val spam = FrameCodec.parse(ScooterCodec.spamUnlockCommand(0x33, timeMs))
+        assertEquals(direct.cmd, spam.cmd)
+        assertEquals(direct.key, spam.key)
+        assertArrayEquals(direct.payload, spam.payload)
+    }
+
+    @Test
+    fun lockStatusAcceptsReferenceCodes() {
+        assertTrue(ScooterCodec.isLockStatusSuccess(ByteArray(0)))
+        assertTrue(ScooterCodec.isLockStatusSuccess(byteArrayOf(0x00)))
+        assertTrue(ScooterCodec.isLockStatusSuccess(byteArrayOf(0x01)))
+        assertTrue(ScooterCodec.isLockStatusSuccess(byteArrayOf(0x02)))
+        assertFalse(ScooterCodec.isLockStatusSuccess(byteArrayOf(0x03)))
+        assertFalse(ScooterCodec.isLockStatusSuccess(byteArrayOf(0xFF.toByte())))
+    }
+
+    @Test
     fun vehicleInfoDecodesFields() {
         val payload = byteArrayOf(
             87, 2,

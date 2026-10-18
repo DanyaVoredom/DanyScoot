@@ -9,7 +9,7 @@
 | NineHack | com.timeylies.ninehack.ru | 1.2 (1) | 11 497 879 | E21272AC4C1A74E1BFE5AF824EE2257BB15D0BB5A8C014F75014C6DE1931D497 |
 | Urent 1.90.2 base | ru.urentbike.app | 1.90.2 (1902) | 68 207 063 | B42D28566AD4BCC600BBD7CFDF2D5197B2B0DA24B1291D217E80AFC7C0CF6B68 |
 | Urent 2.7.0 base | ru.urentbike.app | 2.7.0 (2070) | 82 428 322 | 503007AC2D084F95100145BD9D77D69B991E337F2642FF362BBF7F4A5EB8B7C3 |
-| DanyScoot debug | ru.dany.scoot | 1.1.0 (2) | зависит от сборки | вычисляется после сборки |
+| DanyScoot debug | ru.dany.scoot | 1.1.1 (3) | зависит от сборки | вычисляется после сборки |
 
 ## 2. SDK и версии
 

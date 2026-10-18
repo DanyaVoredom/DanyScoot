@@ -31,8 +31,8 @@ object ScooterClient : BleTransport.Listener {
     private const val SPAM_TAG = "SPAM"
     private const val DEMO_TAG = "DEMO"
     private const val AUTH_TIMEOUT_MS = 3000L
+    private const val UNLOCK_TIMEOUT_MS = 3000L
     private const val DEMO_TICK_MS = 1500L
-    private val LOCK_SUCCESS_CODES = setOf(1, 2)
 
     private lateinit var prefs: Prefs
     @SuppressLint("StaticFieldLeak")
@@ -42,6 +42,9 @@ object ScooterClient : BleTransport.Listener {
     private var authPending = false
     private var authenticated = false
     private var authTimeout: Runnable? = null
+    private var unlockVariant = -1
+    private var unlockKey = 0
+    private var unlockTimeout: Runnable? = null
     private var spamRunning = false
     private var spamRunnable: Runnable? = null
     private var reconnectAttempts = 0
@@ -136,6 +139,7 @@ object ScooterClient : BleTransport.Listener {
         authenticated = false
         authTimeout?.let { handler.removeCallbacks(it) }
         authTimeout = null
+        cancelUnlock()
         sessionKey = 0
         _lastError.value = ""
         stopSpam()
@@ -181,6 +185,7 @@ object ScooterClient : BleTransport.Listener {
         authenticated = false
         authTimeout?.let { handler.removeCallbacks(it) }
         authTimeout = null
+        cancelUnlock()
         rxBuffer = ByteArray(0)
         _state.value = ClientState.IDLE
         LogBus.info(TAG, "Отключено")
@@ -222,6 +227,7 @@ object ScooterClient : BleTransport.Listener {
             return
         }
         val key = prefs.bleKey
+        cancelUnlock()
         LogBus.info(AUTH_TAG, "Отправка ключа: $key")
         authPending = true
         _state.value = ClientState.AUTHENTICATING
@@ -247,11 +253,15 @@ object ScooterClient : BleTransport.Listener {
 
     fun unlock() {
         val key = requireKey() ?: return
-        writeCommand(ScooterCodec.unlockCommand(key), "разблокировка")
+        cancelUnlock()
+        unlockKey = key
+        unlockVariant = 0
+        sendUnlockVariant()
     }
 
     fun lock() {
         val key = requireKey() ?: return
+        cancelUnlock()
         writeCommand(ScooterCodec.lockCommand(key), "блокировка")
     }
 
@@ -289,6 +299,7 @@ object ScooterClient : BleTransport.Listener {
             LogBus.warn(SPAM_TAG, "Сначала авторизуйтесь")
             return
         }
+        cancelUnlock()
         wantedSpam = true
         spamRunning = true
         _spamActive.value = true
@@ -345,13 +356,69 @@ object ScooterClient : BleTransport.Listener {
         transport != null && _state.value != ClientState.IDLE && _state.value != ClientState.CONNECTING &&
             _state.value != ClientState.SCANNING && _state.value != ClientState.ERROR
 
-    private fun writeCommand(frame: ByteArray, label: String) {
+    private fun writeCommand(frame: ByteArray, label: String): Boolean {
         if (isDemo) {
             LogBus.tx("TX", "${label}: ${hex(frame)}")
             demoReply(frame)
+            return true
+        }
+        return writeFrame(frame, label)
+    }
+
+    private fun sendUnlockVariant() {
+        if (!isDemo && !isReady) {
+            cancelUnlock()
             return
         }
-        writeFrame(frame, label)
+        val frame = when (unlockVariant) {
+            0 -> ScooterCodec.unlockCommand(unlockKey)
+            1 -> ScooterCodec.unlockCommandTimestamp(unlockKey, System.currentTimeMillis())
+            else -> return
+        }
+        val label = if (unlockVariant == 0) "разблокировка 10x01" else "разблокировка timestamp"
+        if (!writeCommand(frame, label)) {
+            cancelUnlock()
+            return
+        }
+        if (isDemo) return
+        scheduleUnlockTimeout()
+    }
+
+    private fun scheduleUnlockTimeout() {
+        unlockTimeout?.let { handler.removeCallbacks(it) }
+        val timeout = Runnable {
+            unlockTimeout = null
+            when (unlockVariant) {
+                0 -> {
+                    LogBus.warn("UNLOCK", "Нет ответа на 10x01, повтор с timestamp")
+                    unlockVariant = 1
+                    sendUnlockVariant()
+                }
+                1 -> {
+                    unlockVariant = -1
+                    unlockKey = 0
+                    LogBus.err("UNLOCK", "Нет ответа на оба варианта разблокировки")
+                }
+            }
+        }
+        unlockTimeout = timeout
+        handler.postDelayed(timeout, UNLOCK_TIMEOUT_MS)
+    }
+
+    private fun retryUnlock(reason: String) {
+        if (unlockVariant != 0 || spamRunning) return
+        unlockTimeout?.let { handler.removeCallbacks(it) }
+        unlockTimeout = null
+        LogBus.warn("UNLOCK", "$reason, повтор с timestamp")
+        unlockVariant = 1
+        sendUnlockVariant()
+    }
+
+    private fun cancelUnlock() {
+        unlockTimeout?.let { handler.removeCallbacks(it) }
+        unlockTimeout = null
+        unlockVariant = -1
+        unlockKey = 0
     }
 
     private fun writeFrame(frame: ByteArray, label: String?): Boolean {
@@ -447,6 +514,7 @@ object ScooterClient : BleTransport.Listener {
         authenticated = false
         authTimeout?.let { handler.removeCallbacks(it) }
         authTimeout = null
+        cancelUnlock()
         rxBuffer = ByteArray(0)
         _spamActive.value = false
         LogBus.warn(TAG, "Соединение потеряно ($reason)")
@@ -500,9 +568,10 @@ object ScooterClient : BleTransport.Listener {
                     else -> "Самокат отклонил команду 0x${hexByte(rejected)}, причина 0x${hexByte(reason)}"
                 }
                 LogBus.err("SCOOTER", message)
+                if (rejected == ScooterCodec.CMD_UNLOCK) retryUnlock("Команда 0x05 отклонена")
             }
-            ScooterCodec.CMD_UNLOCK -> report(frame, "Самокат разблокирован", "Ошибка разблокировки", LOCK_SUCCESS_CODES)
-            ScooterCodec.CMD_LOCK -> report(frame, "Самокат заблокирован", "Ошибка блокировки", LOCK_SUCCESS_CODES)
+            ScooterCodec.CMD_UNLOCK -> handleUnlockFrame(frame)
+            ScooterCodec.CMD_LOCK -> reportLock(frame, "Самокат заблокирован", "Ошибка блокировки")
             ScooterCodec.CMD_SCOOTER_SET -> {
                 val ok = frame.payload.isNotEmpty() && frame.payload[0].toInt() == 0
                 LogBus.log(
@@ -594,6 +663,30 @@ object ScooterClient : BleTransport.Listener {
         val code = frame.payload.firstOrNull()?.toInt()?.and(0xFF)
         val ok = code != null && code in successCodes
         LogBus.log(if (ok) LogLevel.OK else LogLevel.WARN, "SCOOTER", if (ok) okText else failText)
+    }
+
+    private fun reportLock(frame: ScooterFrame, okText: String, failText: String) {
+        val code = frame.payload.firstOrNull()?.toInt()?.and(0xFF)
+        val ok = ScooterCodec.isLockStatusSuccess(frame.payload)
+        val detail = if (code == null) "ACK" else "код 0x${hexByte(code)}"
+        LogBus.log(if (ok) LogLevel.OK else LogLevel.WARN, "SCOOTER", "${if (ok) okText else failText}, $detail")
+    }
+
+    private fun handleUnlockFrame(frame: ScooterFrame) {
+        val ok = ScooterCodec.isLockStatusSuccess(frame.payload)
+        reportLock(frame, "Самокат разблокирован", "Ошибка разблокировки")
+        if (unlockVariant < 0) return
+        unlockTimeout?.let { handler.removeCallbacks(it) }
+        unlockTimeout = null
+        if (ok) {
+            unlockVariant = -1
+            unlockKey = 0
+        } else if (unlockVariant == 0) {
+            retryUnlock("Первый вариант отклонен")
+        } else {
+            unlockVariant = -1
+            unlockKey = 0
+        }
     }
 
     private fun handleAuthFrame(frame: ScooterFrame) {

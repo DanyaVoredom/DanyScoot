@@ -53,11 +53,33 @@ object ScooterCodec {
 
     val KEY_PRESETS: List<String> = listOf("4BKNwi77", "w4S3Hqn5")
 
+    private val LOCK_SUCCESS_STATUSES = setOf(0, 1, 2)
+
     fun keyCommand(key: String): ByteArray =
         FrameCodec.build(CMD_KEY, 0, key.toByteArray(Charsets.UTF_8))
 
     fun unlockCommand(actualKey: Int): ByteArray =
         FrameCodec.build(CMD_UNLOCK, actualKey, ByteArray(10) { 0x01 })
+
+    fun unlockCommandTimestamp(actualKey: Int, timeMs: Long): ByteArray {
+        val seconds = timeMs / 1000L
+        val payload = byteArrayOf(
+            0x01,
+            0x31,
+            0x31,
+            0x32,
+            0x39,
+            ((seconds shr 24) and 0xFF).toByte(),
+            ((seconds shr 16) and 0xFF).toByte(),
+            ((seconds shr 8) and 0xFF).toByte(),
+            (seconds and 0xFF).toByte(),
+            0x00,
+        )
+        return FrameCodec.build(CMD_UNLOCK, actualKey, payload)
+    }
+
+    fun isLockStatusSuccess(payload: ByteArray): Boolean =
+        payload.isEmpty() || (payload[0].toInt() and 0xFF) in LOCK_SUCCESS_STATUSES
 
     fun lockCommand(actualKey: Int): ByteArray =
         FrameCodec.build(CMD_LOCK, actualKey, byteArrayOf(0x01))
@@ -75,22 +97,8 @@ object ScooterCodec {
     fun findCarCommand(actualKey: Int): ByteArray =
         FrameCodec.build(CMD_FIND_CAR, actualKey, byteArrayOf(0x01))
 
-    fun spamUnlockCommand(actualKey: Int, timeMs: Long): ByteArray {
-        val seconds = timeMs / 1000L
-        val payload = byteArrayOf(
-            0x01,
-            0x31,
-            0x31,
-            0x32,
-            0x39,
-            ((seconds shr 24) and 0xFF).toByte(),
-            ((seconds shr 16) and 0xFF).toByte(),
-            ((seconds shr 8) and 0xFF).toByte(),
-            (seconds and 0xFF).toByte(),
-            0x00,
-        )
-        return FrameCodec.build(CMD_UNLOCK, actualKey, payload)
-    }
+    fun spamUnlockCommand(actualKey: Int, timeMs: Long): ByteArray =
+        unlockCommandTimestamp(actualKey, timeMs)
 
     fun isAsciiDeviceInfo(payload: ByteArray): Boolean {
         var end = payload.size

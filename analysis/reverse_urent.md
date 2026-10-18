@@ -1,6 +1,6 @@
 # Реверс BLE-протокола Urent
 
-Независимая проверка протокола по LostBot, NineHack и FishBot, сверка с кодом DanyScoot. Метки: confirmed (подтверждено кодом референса), inferred (вывод без прямого подтверждения), missing (данных нет).
+Независимая проверка протокола по LostBot, NineHack и FishBot, сверка с кодом DanyScoot. Метки: confirmed (подтверждено кодом референса), inferred (вывод без прямого подтверждения), missing (данных нет). Номера строк в app/app могут сдвигаться после обновлений, привязка по именам функций.
 
 ## Артефакты
 
@@ -172,15 +172,15 @@ NineHack (analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator
 
 0x01 (analysis/java/fishbot/sources/A2/c.java:260-261): payload[0] не используется в декодере LostBot, но условие успеха в обработчике auth требует payload[0]==1 (analysis/java/fishbot/sources/C2/F.java:394).
 
-Сводка расхождений статусов для 0x05/0x15: LostBot 0/2/пусто, NineHack 1, DanyScoot 1/2 (app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt:35). Три несовместимые трактовки, истина прошивки не установлена (missing: нужен RX-лог успешного unlock).
+Сводка расхождений статусов для 0x05/0x15: LostBot 0/2/пусто, NineHack 1, DanyScoot 0/1/2/пусто после обновления (app/app/src/main/java/ru/dany/scoot/ble/ScooterCodec.kt:81). Истина прошивки не установлена (missing: нужен RX-лог успешного unlock).
 
 ## Таймауты
 
 | Параметр | LostBot | NineHack | DanyScoot |
 |---|---|---|---|
-| Ожидание ответа на команду | 3000 мс (analysis/java/fishbot/sources/cd/bn.java:117, analysis/java/fishbot/sources/C2/F.java:298) | нет (confirmed отсутствие) | нет отдельного ожидания, только auth 3000 (app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt:33) |
+| Ожидание ответа на команду | 3000 мс (analysis/java/fishbot/sources/cd/bn.java:117, analysis/java/fishbot/sources/C2/F.java:298) | нет (confirmed отсутствие) | 3000 мс для unlock, остальные без отдельного ожидания (app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt:34) |
 | Auth | 3000 мс (analysis/java/fishbot/sources/C2/F.java:379) | нет | 3000 мс (app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt:33, 245) |
-| MTU fallback | 3000 мс (analysis/LostBot/smali/D2/s.1.smali:182-184) | нет MTU | 1500 мс (app/app/src/main/java/ru/dany/scoot/ble/BleTransport.kt:63, 210) |
+| MTU fallback | 3000 мс (analysis/LostBot/smali/D2/s.1.smali:182-184) | нет MTU | 3000 мс (app/app/src/main/java/ru/dany/scoot/ble/BleTransport.kt:63, 210) |
 | Подключение | 20000 мс (analysis/LostBot/smali/z2/i.smali:943-945) | не найдено | 20000 мс (app/app/src/main/java/ru/dany/scoot/ble/BleTransport.kt:55) |
 | Запись | опрос очереди после onCharacteristicWrite (analysis/LostBot/smali/z2/g.smali:158) | нет | 2000 мс (app/app/src/main/java/ru/dany/scoot/ble/BleTransport.kt:58) |
 | Дескриптор | не найдено | нет | 3000 мс (app/app/src/main/java/ru/dany/scoot/ble/BleTransport.kt:59) |
@@ -193,19 +193,19 @@ NineHack (analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator
 
 1. Тип записи. DanyScoot выбирает NO_RESPONSE, только если бит PROPERTY_WRITE (0x08) снят (app/app/src/main/java/ru/dany/scoot/ble/BleTransport.kt:264, 510-514). LostBot выбирает NO_RESPONSE при установленном PROPERTY_WRITE_NO_RESPONSE (0x04) и DEFAULT иначе (analysis/LostBot/smali/z2/i.smali:1128-1145). При обеих установленных характеристиках приложения выберут разные типы: DanyScoot DEFAULT, LostBot NO_RESPONSE. Какие свойства реально отдаёт прошивка, неизвестно (missing: нужен GATT-дамп с реального скутера). NineHack всегда DEFAULT (analysis/NineHack/smali_classes3/com/timeylies/ninehack/controlActivity.smali:656-658).
 
-2. Коды успеха 0x05/0x15. DanyScoot: {1, 2} (app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt:35, 593-596). LostBot: {0, 2, пусто} (analysis/java/fishbot/sources/A2/c.java:427-443). NineHack: {1}. Если прошивка отвечает так, как ожидает LostBot, то payload 00 DanyScoot покажет как ошибку, а payload 01 LostBot покажет как FAIL. Это расхождение отображения результата, а не формата кадра (confirmed расхождение трактовок).
+2. Коды успеха 0x05/0x15. DanyScoot после обновления принимает {0, 1, 2, пусто} (app/app/src/main/java/ru/dany/scoot/ble/ScooterCodec.kt:81, app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt:669-690). Это объединяет трактовки LostBot {0, 2, пусто} (analysis/java/fishbot/sources/A2/c.java:427-443) и NineHack {1}. Истинный код прошивки не установлен (missing: нужен RX-лог успешного unlock).
 
 3. 0x10 ERROR. DanyScoot читает payload[0] как отклонённую команду и payload[1] как причину (app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt:494-503), совпадает с LostBot (analysis/java/fishbot/sources/A2/c.java:264-268). NineHack видит payload[0]==1 как ошибку CRC (analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:194-208). Совпадение с LostBot подтверждено, расхождение только с NineHack.
 
 4. Auth. Совпадает полностью: cmd 0x01, key 0, ASCII, успех payload[0]==1, session payload[1], таймаут 3000 (app/app/src/main/java/ru/dany/scoot/ble/ScooterCodec.kt:56-57, app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt:599-617, 245). Отличие: DanyScoot при ошибке auth оставляет state READY и пишет "неверный ключ" без повторов (app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt:611-616); LostBot при пустом ключе вообще не отправляет кадр (analysis/java/fishbot/sources/C2/F.java:365-370). В DanyScoot пустой ключ заменяется дефолтным при сохранении (app/app/src/main/java/ru/dany/scoot/core/Prefs.kt:36-41).
 
-5. Payload unlock. DanyScoot unlock шлёт 10 байт 01 (app/app/src/main/java/ru/dany/scoot/ble/ScooterCodec.kt:59-60), спам шлёт 1129 + время (app/app/src/main/java/ru/dany/scoot/ble/ScooterCodec.kt:78-93). LostBot unlock и спам шлют только вариант с временем (analysis/java/fishbot/sources/C2/o.java:52-54, analysis/java/fishbot/sources/C2/F.java:1306). Вариант 10x01 подтверждён только NineHack (analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:1337-1348). Совместимость 10x01 с прошивкой Urent не подтверждена (missing).
+5. Payload unlock. DanyScoot сначала шлёт 10 байт 01 (app/app/src/main/java/ru/dany/scoot/ble/ScooterCodec.kt:60), при таймауте 3000 мс или отказе 0x05 повторяет вариант 1129 + время (app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt:368-422, 675-690). Спам шлёт только вариант с временем (app/app/src/main/java/ru/dany/scoot/ble/ScooterCodec.kt:64-83, 100-101). LostBot unlock и спам шлют только вариант с временем (analysis/java/fishbot/sources/C2/o.java:52-54, analysis/java/fishbot/sources/C2/F.java:1306). Вариант 10x01 подтверждён только NineHack (analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:1337-1348). Совместимость 10x01 с прошивкой Urent не подтверждена (missing), поэтому оставлен автоматический переход на timestamp.
 
 6. Ключ по умолчанию. DanyScoot 4BKNwi77 (app/app/src/main/java/ru/dany/scoot/core/Prefs.kt:116), LostBot w4S3Hqn5 (analysis/java/fishbot/sources/D2/C0141b.java:81-85), NineHack 4BKNwi77 (analysis/NineHack/res/values/strings.xml:44). Пресеты DanyScoot содержат оба (app/app/src/main/java/ru/dany/scoot/ble/ScooterCodec.kt:54), выбор вручную.
 
 7. Диапазон rand. DanyScoot 1..254 (app/app/src/main/java/ru/dany/scoot/ble/Frame.kt:61-62), LostBot 0..254 (analysis/java/fishbot/sources/K1/a.java:10-11), NineHack 1..254 (analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:1155-1171). Совместимо, отличие только статистическое.
 
-8. Тайминги и переподключение: см. таблицу таймаутов. Практические отличия: fallback MTU 1500 против 3000, интервал спама 100 против 500, попытки 3/5000 против 20/250.
+8. Тайминги и переподключение: см. таблицу таймаутов. Fallback MTU после обновления 3000, как у LostBot. Остались отличия: интервал спама 100 против 500, попытки 3/5000 против 20/250.
 
 9. Отсутствующие команды. В DanyScoot нет построителей для 0x34, 0x35, 0x55, 0x62, 0x64, 0x72-0x79, 0x86, 0xA0, 0xA1, 0xC3, 0xC5, 0xC7, 0xDC, 0xDE и статусов 0xFB/0xFC кроме отображения; payload этих команд в референсах отсутствует (missing). Каталог DanyScoot содержит только имена (app/app/src/main/java/ru/dany/scoot/ble/OpcodeCatalog.kt:15-68), что совпадает с именами LostBot по кодам.
 
