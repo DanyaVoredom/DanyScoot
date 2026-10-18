@@ -1,6 +1,6 @@
 # Референсы DanyScoot: артефакты, протокол, ключи, официальное приложение Urent
 
-Сводный индекс. Детальный протокол: analysis/protocol_full.md. Официальное приложение: analysis/report_urent.md. Отчёты по отдельным APK: report_lostbot.md, report_ninehack.md, report_fishbot.md, report_whoosh.md, report_yandex_go.md. Независимые проверки: reverse_urent.md, reverse_yandex.md.
+Сводный индекс. Детальный протокол: analysis/protocol_full.md. Официальное приложение: analysis/report_urent.md. Отчёты по отдельным APK: report_lostbot.md, report_ninehack.md, report_fishbot.md, report_whoosh.md, report_yandex_go.md. Независимые проверки: reverse_urent.md, reverse_whoosh.md, reverse_yandex.md.
 
 ## 1. Артефакты
 
