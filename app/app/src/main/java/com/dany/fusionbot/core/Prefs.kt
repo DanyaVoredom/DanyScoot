@@ -2,6 +2,7 @@ package com.dany.fusionbot.core
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 
 class Prefs private constructor(context: Context) {
 
@@ -12,73 +13,73 @@ class Prefs private constructor(context: Context) {
         get() = sp.getString(KEY_BLE_KEY, DEFAULT_BLE_KEY)?.takeIf { it.isNotEmpty() } ?: DEFAULT_BLE_KEY
         set(value) {
             val v = value.trim().ifEmpty { DEFAULT_BLE_KEY }
-            sp.edit().putString(KEY_BLE_KEY, v).apply()
+            sp.edit { putString(KEY_BLE_KEY, v) }
         }
 
     var spamIntervalMs: Int
         get() = sp.getInt(KEY_SPAM_INTERVAL, DEFAULT_SPAM_INTERVAL)
         set(value) {
-            sp.edit().putInt(KEY_SPAM_INTERVAL, value.coerceIn(MIN_SPAM_INTERVAL, MAX_SPAM_INTERVAL)).apply()
+            sp.edit { putInt(KEY_SPAM_INTERVAL, value.coerceIn(MIN_SPAM_INTERVAL, MAX_SPAM_INTERVAL)) }
         }
 
     var autoReconnect: Boolean
         get() = sp.getBoolean(KEY_AUTO_RECONNECT, true)
         set(value) {
-            sp.edit().putBoolean(KEY_AUTO_RECONNECT, value).apply()
+            sp.edit { putBoolean(KEY_AUTO_RECONNECT, value) }
         }
 
     var autoReconnectAttempts: Int
         get() = sp.getInt(KEY_AUTO_RECONNECT_ATTEMPTS, DEFAULT_RECONNECT_ATTEMPTS)
         set(value) {
-            sp.edit().putInt(KEY_AUTO_RECONNECT_ATTEMPTS, value.coerceIn(0, 20)).apply()
+            sp.edit { putInt(KEY_AUTO_RECONNECT_ATTEMPTS, value.coerceIn(0, 20)) }
         }
 
     var autoReconnectDelayMs: Int
         get() = sp.getInt(KEY_AUTO_RECONNECT_DELAY, DEFAULT_RECONNECT_DELAY)
         set(value) {
-            sp.edit().putInt(KEY_AUTO_RECONNECT_DELAY, value.coerceIn(500, 60000)).apply()
+            sp.edit { putInt(KEY_AUTO_RECONNECT_DELAY, value.coerceIn(500, 60000)) }
         }
 
     var autoResumeSpam: Boolean
         get() = sp.getBoolean(KEY_AUTO_RESUME_SPAM, false)
         set(value) {
-            sp.edit().putBoolean(KEY_AUTO_RESUME_SPAM, value).apply()
+            sp.edit { putBoolean(KEY_AUTO_RESUME_SPAM, value) }
         }
 
     var showAllDevices: Boolean
         get() = sp.getBoolean(KEY_SHOW_ALL_DEVICES, true)
         set(value) {
-            sp.edit().putBoolean(KEY_SHOW_ALL_DEVICES, value).apply()
+            sp.edit { putBoolean(KEY_SHOW_ALL_DEVICES, value) }
         }
 
     var showScanLog: Boolean
         get() = sp.getBoolean(KEY_SHOW_SCAN_LOG, false)
         set(value) {
-            sp.edit().putBoolean(KEY_SHOW_SCAN_LOG, value).apply()
+            sp.edit { putBoolean(KEY_SHOW_SCAN_LOG, value) }
         }
 
     var demoMode: Boolean
         get() = sp.getBoolean(KEY_DEMO_MODE, false)
         set(value) {
-            sp.edit().putBoolean(KEY_DEMO_MODE, value).apply()
+            sp.edit { putBoolean(KEY_DEMO_MODE, value) }
         }
 
     var showAllOpcodes: Boolean
         get() = sp.getBoolean(KEY_SHOW_ALL_OPCODES, true)
         set(value) {
-            sp.edit().putBoolean(KEY_SHOW_ALL_OPCODES, value).apply()
+            sp.edit { putBoolean(KEY_SHOW_ALL_OPCODES, value) }
         }
 
     var lastDeviceAddress: String
         get() = sp.getString(KEY_LAST_ADDRESS, "").orEmpty()
         set(value) {
-            sp.edit().putString(KEY_LAST_ADDRESS, value).apply()
+            sp.edit { putString(KEY_LAST_ADDRESS, value) }
         }
 
     var lastDeviceName: String
         get() = sp.getString(KEY_LAST_NAME, "").orEmpty()
         set(value) {
-            sp.edit().putString(KEY_LAST_NAME, value).apply()
+            sp.edit { putString(KEY_LAST_NAME, value) }
         }
 
     companion object {

@@ -66,13 +66,30 @@ class LogFragment : Fragment() {
 
         fun submit(list: List<LogLine>) {
             val old = items.size
-            val grew = list.size > old && (old == 0 || list.subList(0, old) == items)
-            items.clear()
-            items.addAll(list)
+            val samePrefix = old > 0 && list.size >= old && list.subList(0, old) == items
+            val slide = old > 1 && list.size == old && list.subList(1, old) == items.subList(1, old)
             when {
-                grew -> notifyItemRangeInserted(old, items.size - old)
-                items.isEmpty() -> notifyDataSetChanged()
-                else -> notifyDataSetChanged()
+                list.isEmpty() -> {
+                    items.clear()
+                    notifyDataSetChanged()
+                }
+                samePrefix && list.size > old -> {
+                    items.clear()
+                    items.addAll(list)
+                    notifyItemRangeInserted(old, list.size - old)
+                }
+                slide -> {
+                    items.removeAt(0)
+                    items.add(list.last())
+                    notifyItemRemoved(0)
+                    notifyItemInserted(items.size - 1)
+                }
+                list == items -> Unit
+                else -> {
+                    items.clear()
+                    items.addAll(list)
+                    notifyDataSetChanged()
+                }
             }
         }
 

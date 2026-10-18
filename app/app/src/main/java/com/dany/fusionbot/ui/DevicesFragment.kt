@@ -46,9 +46,11 @@ class DevicesFragment : Fragment() {
                 launch {
                     ScooterClient.devices.collect { list ->
                         adapter.submit(list)
-                        binding?.scanStatus?.text = when {
-                            scanning -> getString(R.string.scan_searching) + " " + list.size
-                            else -> getString(R.string.scan_hint)
+                        val scanningNow = ScooterClient.state.value == ClientState.SCANNING
+                        binding?.scanStatus?.text = if (scanningNow) {
+                            "${getString(R.string.scan_searching)} ${list.size}"
+                        } else {
+                            getString(R.string.scan_hint)
                         }
                     }
                 }
@@ -56,6 +58,12 @@ class DevicesFragment : Fragment() {
                     ScooterClient.state.collect { state ->
                         scanning = state == ClientState.SCANNING
                         binding?.scanButton?.text = if (scanning) getString(R.string.scan_stop) else getString(R.string.scan_start)
+                        binding?.scanStatus?.text = if (scanning) {
+                            "${getString(R.string.scan_searching)} ${adapter.itemCount}"
+                        } else {
+                            getString(R.string.scan_hint)
+                        }
+                        refreshDemoButton()
                     }
                 }
             }
@@ -90,7 +98,7 @@ class DevicesFragment : Fragment() {
 
     private fun startDemo() {
         val prefs = Prefs.get(requireContext())
-        if (prefs.demoMode) {
+        if (ScooterClient.isDemo) {
             ScooterClient.disconnect()
             prefs.demoMode = false
             refreshDemoButton()
@@ -114,7 +122,7 @@ class DevicesFragment : Fragment() {
 
     private fun refreshDemoButton() {
         val b = binding ?: return
-        val demo = Prefs.get(requireContext()).demoMode
+        val demo = ScooterClient.isDemo
         b.demoButton.text = if (demo) getString(R.string.device_disconnect) else getString(R.string.settings_demo_mode)
     }
 
@@ -148,7 +156,10 @@ class DevicesFragment : Fragment() {
             val device = items[position]
             holder.binding.deviceName.text = device.name
             holder.binding.deviceAddress.text = device.address
-            holder.binding.deviceRssi.text = "RSSI ${device.rssi} дБм" + if (device.hasUart) "  UART" else ""
+            holder.binding.deviceRssi.text = holder.binding.root.context.getString(
+                if (device.hasUart) R.string.device_rssi_uart else R.string.device_rssi,
+                device.rssi,
+            )
             holder.binding.root.setOnClickListener { onClick(device) }
         }
     }

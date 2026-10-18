@@ -15,14 +15,21 @@
     <string name="device_connect">Подключить</string>
     <string name="device_disconnect">Отключить</string>
     <string name="device_forget">Забыть</string>
+    <string name="device_rssi">RSSI %1$d дБм</string>
+    <string name="device_rssi_uart">RSSI %1$d дБм · UART</string>
     <string name="status_disconnected">Не подключено</string>
     <string name="status_connecting">Подключение…</string>
     <string name="status_connected">Подключено</string>
     <string name="status_authenticating">Авторизация…</string>
     <string name="status_ready">Готово</string>
     <string name="status_error">Ошибка</string>
+    <string name="status_scanning">Сканирование</string>
+    <string name="status_discovering">Поиск сервисов</string>
+    <string name="status_demo">Демо-режим</string>
+    <string name="spam_badge">Спам: %1$d</string>
 
     <string name="control_auth_section">Авторизация</string>
+    <string name="control_select_scooter">Сначала выберите самокат</string>
     <string name="control_key_hint">Ключ устройства</string>
     <string name="control_default_ble_key">4BKNwi77</string>
     <string name="control_auth">Отправить ключ</string>
@@ -44,6 +51,7 @@
     <string name="control_spam_interval">Интервал, мс</string>
     <string name="control_spam_sent">Отправлено</string>
     <string name="control_spam_active">Спам разблокировки активен</string>
+    <string name="control_spam_counter">%1$s: %2$d</string>
 
     <string name="control_scooter_section">Самокат</string>
     <string name="control_headlight">Фара</string>
@@ -78,6 +86,10 @@
     <string name="live_locked_yes">Закрыт</string>
     <string name="live_locked_no">Открыт</string>
     <string name="live_unknown">-</string>
+    <string name="live_battery_value">%1$d%%</string>
+    <string name="live_speed_value">%1$.1f км/ч</string>
+    <string name="live_distance_value">%1$.2f км</string>
+    <string name="live_voltage_value">%1$.2f В</string>
     <string name="live_refresh">Обновить</string>
 
     <string name="console_section">Консоль команд</string>
@@ -111,11 +123,15 @@
     <string name="settings_key_lostbot">Ключ LostBot</string>
     <string name="settings_device_type">Тип передачи</string>
     <string name="settings_save">Сохранить</string>
+    <string name="settings_saved">Сохранено</string>
     <string name="settings_about">FusionBot объединяет протоколы LostBot и NineHack: кадры A3 A4, CRC-8/MAXIM, рукопожатие ключом, спам разблокировки, телеметрия, Nordic UART. Работает только с собственным самокатом.</string>
+    <string name="settings_about_version">%1$s\n\nFusionBot %2$s (%3$d)</string>
 
     <string name="notification_channel_name">Спам разблокировки</string>
     <string name="notification_channel_desc">Уведомление о работе спама разблокировки</string>
     <string name="notification_title">Спам разблокировки</string>
+    <string name="notification_text">Отправлено %1$d, интервал %2$d мс</string>
+    <string name="notification_waiting">Ожидание переподключения</string>
     <string name="notification_action_stop">Стоп</string>
 
     <string name="perm_needed">Требуются разрешения: Bluetooth</string>

@@ -57,6 +57,14 @@ class ScooterCodecTest {
     }
 
     @Test
+    fun setScooterClampsModeToProtocolRange() {
+        val high = FrameCodec.parse(ScooterCodec.setScooterFromUi(0x42, true, 99, true))
+        assertEquals(0x03, high.payload[1].toInt())
+        val low = FrameCodec.parse(ScooterCodec.setScooterFromUi(0x42, true, -5, true))
+        assertEquals(0x01, low.payload[1].toInt())
+    }
+
+    @Test
     fun spamUnlockCarriesTimestampBigEndian() {
         val timeMs = 1_700_000_000_000L
         val seconds = timeMs / 1000L
@@ -116,6 +124,20 @@ class ScooterCodecTest {
     }
 
     @Test
+    fun asciiDeviceInfoRequiresPrintablePayload() {
+        assertFalse(ScooterCodec.isAsciiDeviceInfo(byteArrayOf(0x3A, 0xFF.toByte())))
+        assertFalse(ScooterCodec.isAsciiDeviceInfo(byteArrayOf(0x41, 0x42)))
+        assertTrue(ScooterCodec.isAsciiDeviceInfo("IMEI:1\u0000".toByteArray(Charsets.UTF_8)))
+        assertEquals("IMEI:1", ScooterCodec.parseIotText("IMEI:1\u0000\u0000".toByteArray(Charsets.UTF_8)).text)
+    }
+
+    @Test
+    fun iotInfoRejectsShortPayload() {
+        assertEquals(null, ScooterCodec.parseIotInfo(byteArrayOf(1, 2, 3)))
+        assertEquals(null, ScooterCodec.parseIotInfo(ByteArray(0)))
+    }
+
+    @Test
     fun realtimeDecodesCurrent() {
         val info = ScooterCodec.parseRealtime(byteArrayOf(88, 0x00, 0xF5.toByte(), 0x01, 0x2C, 0x03))
         assertNotNull(info)
@@ -133,5 +155,12 @@ class ScooterCodecTest {
         assertNotNull(pair)
         assertEquals(0x12345678L, pair!!.first)
         assertEquals(0x0A0B0C0DL, pair.second)
+    }
+
+    @Test
+    fun rfidRejectsShortPayloads() {
+        assertEquals(null, ScooterCodec.parseRfid(byteArrayOf(1, 2, 3)))
+        assertEquals(null, ScooterCodec.parseRfidPair(ByteArray(7)))
+        assertEquals(0x00000001L, ScooterCodec.parseRfid(byteArrayOf(0, 0, 0, 1)))
     }
 }

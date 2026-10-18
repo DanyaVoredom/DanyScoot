@@ -26,8 +26,12 @@ class SettingsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val b = binding ?: return
-        b.settingsAbout.text = getString(R.string.settings_about) + "\n\nFusionBot " +
-            BuildConfig.VERSION_NAME + " (" + BuildConfig.VERSION_CODE + ")"
+        b.settingsAbout.text = getString(
+            R.string.settings_about_version,
+            getString(R.string.settings_about),
+            BuildConfig.VERSION_NAME,
+            BuildConfig.VERSION_CODE,
+        )
         b.settingsKeyNineHack.setOnClickListener {
             b.settingsKey.setText(ScooterCodec.KEY_PRESETS[0])
             LogBus.info("SETTINGS", "Ключ NineHack: ${ScooterCodec.KEY_PRESETS[0]}")
@@ -84,7 +88,7 @@ class SettingsFragment : Fragment() {
             ScooterClient.disconnect()
         }
         LogBus.ok("SETTINGS", "Настройки сохранены")
-        Toast.makeText(requireContext(), "Сохранено", Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), R.string.settings_saved, Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroyView() {

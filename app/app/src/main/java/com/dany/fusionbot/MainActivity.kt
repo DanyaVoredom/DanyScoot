@@ -9,6 +9,9 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -41,8 +44,17 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
+            val bars = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime(),
+            )
+            val cutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
+            view.setPadding(cutout.left, bars.top, cutout.right, bars.bottom)
+            insets
+        }
         requestPermissionsIfNeeded()
         setupFragments(savedInstanceState)
         binding.bottomNav.setOnItemSelectedListener { item ->
@@ -68,9 +80,7 @@ class MainActivity : AppCompatActivity() {
             wanted.add(Manifest.permission.BLUETOOTH_CONNECT)
         } else {
             wanted.add(Manifest.permission.ACCESS_FINE_LOCATION)
-            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
-                wanted.add(Manifest.permission.ACCESS_COARSE_LOCATION)
-            }
+            wanted.add(Manifest.permission.ACCESS_COARSE_LOCATION)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             wanted.add(Manifest.permission.POST_NOTIFICATIONS)
@@ -125,7 +135,7 @@ class MainActivity : AppCompatActivity() {
     private fun updateSpamBadge(sent: Int, active: Boolean) {
         val badge = binding.spamBadge
         if (active) {
-            badge.text = "Спам: $sent"
+            badge.text = getString(R.string.spam_badge, sent)
             badge.visibility = View.VISIBLE
         } else {
             badge.text = ""
@@ -152,12 +162,12 @@ class MainActivity : AppCompatActivity() {
         val name = ScooterClient.deviceName
         val stateText = when (state) {
             ClientState.IDLE -> getString(R.string.status_disconnected)
-            ClientState.SCANNING -> "Сканирование"
+            ClientState.SCANNING -> getString(R.string.status_scanning)
             ClientState.CONNECTING -> getString(R.string.status_connecting)
-            ClientState.DISCOVERING -> "Поиск сервисов"
+            ClientState.DISCOVERING -> getString(R.string.status_discovering)
             ClientState.AUTHENTICATING -> getString(R.string.status_authenticating)
             ClientState.READY -> getString(R.string.status_ready)
-            ClientState.DEMO -> "Демо-режим"
+            ClientState.DEMO -> getString(R.string.status_demo)
             ClientState.ERROR -> getString(R.string.status_error)
         }
         binding.statusText.text = if (name.isEmpty()) stateText else "$name: $stateText"

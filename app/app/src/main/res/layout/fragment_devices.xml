@@ -30,6 +30,7 @@
         style="@style/RowLabel"
         android:paddingTop="8dp"
         android:paddingStart="4dp"
+        android:paddingEnd="4dp"
         android:paddingBottom="4dp"
         android:text="@string/scan_hint" />
 

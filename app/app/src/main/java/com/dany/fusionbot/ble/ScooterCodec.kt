@@ -41,6 +41,15 @@ object ScooterCodec {
     const val CMD_RFID = 0x85
     const val CMD_RFID_DELETE = 0x86
     const val CMD_EJECT_BATTERY = 0x81
+    const val CMD_FIND_CAR = 0xA2
+    const val CMD_BATTERY_COVER = 0xC0
+    const val CMD_IOT_RESTART = 0x92
+    const val CMD_CLEAR_BT = 0x54
+    const val CMD_COLOR_LIGHT = 0x82
+    const val CMD_POWER_CONTROL = 0x91
+    const val CMD_FW_INFO = 0xFA
+    const val CMD_FW_STATUS = 0xFB
+    const val CMD_FW_PACK = 0xFC
 
     val KEY_PRESETS: List<String> = listOf("4BKNwi77", "w4S3Hqn5")
 
@@ -64,7 +73,7 @@ object ScooterCodec {
         FrameCodec.build(CMD_EJECT_BATTERY, actualKey, byteArrayOf(0x05))
 
     fun findCarCommand(actualKey: Int): ByteArray =
-        FrameCodec.build(0xA2, actualKey, byteArrayOf(0x01))
+        FrameCodec.build(CMD_FIND_CAR, actualKey, byteArrayOf(0x01))
 
     fun spamUnlockCommand(actualKey: Int, timeMs: Long): ByteArray {
         val seconds = timeMs / 1000L
@@ -83,8 +92,16 @@ object ScooterCodec {
         return FrameCodec.build(CMD_UNLOCK, actualKey, payload)
     }
 
-    fun isAsciiDeviceInfo(payload: ByteArray): Boolean =
-        payload.any { (it.toInt() and 0xFF) == 0x3A }
+    fun isAsciiDeviceInfo(payload: ByteArray): Boolean {
+        var end = payload.size
+        while (end > 0 && payload[end - 1].toInt() == 0) end--
+        if (end == 0 || payload.none { (it.toInt() and 0xFF) == 0x3A }) return false
+        for (i in 0 until end) {
+            val value = payload[i].toInt() and 0xFF
+            if (value !in 0x20..0x7E && value != 0x09 && value != 0x0A && value != 0x0D) return false
+        }
+        return true
+    }
 
     fun parseIotInfo(payload: ByteArray): IotInfo? {
         if (payload.size < 7) return null
@@ -102,7 +119,9 @@ object ScooterCodec {
     }
 
     fun parseIotText(payload: ByteArray): IotInfo {
-        val text = String(payload, Charsets.UTF_8)
+        var end = payload.size
+        while (end > 0 && payload[end - 1].toInt() == 0) end--
+        val text = String(payload, 0, end, Charsets.UTF_8).trim()
         return IotInfo(value = 0, flags = 0, locked = false, version = "", text = text)
     }
 

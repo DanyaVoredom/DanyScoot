@@ -14,6 +14,8 @@ import com.dany.fusionbot.R
 import com.dany.fusionbot.ble.OpcodeCatalog
 import com.dany.fusionbot.ble.OpcodeDirection
 import com.dany.fusionbot.ble.OpcodeInfo
+import com.dany.fusionbot.ble.ScooterCodec
+import com.dany.fusionbot.ble.hexByte
 import com.dany.fusionbot.ble.parseHex
 import com.dany.fusionbot.core.ClientState
 import com.dany.fusionbot.core.LogBus
@@ -27,7 +29,6 @@ class ControlFragment : Fragment() {
 
     private var binding: FragmentControlBinding? = null
     private var opcodes: List<OpcodeInfo> = emptyList()
-    private var selectingOpcode = false
     private var opcodesShownForAll = true
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -65,14 +66,27 @@ class ControlFragment : Fragment() {
             ScooterClient.findCar()
         }
         b.consoleSend.setOnClickListener { sendConsole() }
-        b.svcBatteryCover.setOnClickListener { ScooterClient.sendService(0xC0, byteArrayOf(0x01)) }
-        b.svcIotRestart.setOnClickListener { ScooterClient.sendService(0x92, byteArrayOf(0x01)) }
-        b.svcClearBt.setOnClickListener { ScooterClient.sendService(0x54, byteArrayOf(0x01)) }
-        b.svcColorLight.setOnClickListener {
-            ScooterClient.sendService(0x82, byteArrayOf(0x01, 0x00, 0x7C, 0x6A, 0xE8.toByte(), 0x00, 0x00, 0x00))
+        b.svcBatteryCover.setOnClickListener {
+            ScooterClient.sendService(ScooterCodec.CMD_BATTERY_COVER, byteArrayOf(0x01))
         }
-        b.svcPowerOff.setOnClickListener { ScooterClient.sendService(0x91, byteArrayOf(0x01)) }
-        b.svcReadConfig.setOnClickListener { ScooterClient.sendService(0xFA, ByteArray(0)) }
+        b.svcIotRestart.setOnClickListener {
+            ScooterClient.sendService(ScooterCodec.CMD_IOT_RESTART, byteArrayOf(0x01))
+        }
+        b.svcClearBt.setOnClickListener {
+            ScooterClient.sendService(ScooterCodec.CMD_CLEAR_BT, byteArrayOf(0x01))
+        }
+        b.svcColorLight.setOnClickListener {
+            ScooterClient.sendService(
+                ScooterCodec.CMD_COLOR_LIGHT,
+                byteArrayOf(0x01, 0x00, 0x7C, 0x6A, 0xE8.toByte(), 0x00, 0x00, 0x00),
+            )
+        }
+        b.svcPowerOff.setOnClickListener {
+            ScooterClient.sendService(ScooterCodec.CMD_POWER_CONTROL, byteArrayOf(0x01))
+        }
+        b.svcReadConfig.setOnClickListener {
+            ScooterClient.sendService(ScooterCodec.CMD_FW_INFO, ByteArray(0))
+        }
         b.telemetryRefresh.setOnClickListener { ScooterClient.requestTelemetry() }
 
         setupOpcodeSpinner()
@@ -94,14 +108,14 @@ class ControlFragment : Fragment() {
         opcodesShownForAll = all
         val list = OpcodeCatalog.all
         opcodes = if (all) list else list.filter { it.direction != OpcodeDirection.SET_ONLY }
-        val labels = opcodes.map { "%02X %s".format(it.code, it.name) }
+        val labels = opcodes.map { "${hexByte(it.code)} ${it.name}" }
         b.opcodeInput.setAdapter(ArrayAdapter(requireContext(), R.layout.item_dropdown, labels))
         b.opcodeInput.setOnItemClickListener { _, _, position, _ ->
             val info = opcodes.getOrNull(position) ?: return@setOnItemClickListener
-            binding?.consoleCmd?.setText("%02X".format(info.code))
+            binding?.consoleCmd?.setText(hexByte(info.code))
         }
         b.opcodeInput.setText(labels.firstOrNull().orEmpty(), false)
-        opcodes.firstOrNull()?.let { b.consoleCmd.setText("%02X".format(it.code)) }
+        opcodes.firstOrNull()?.let { b.consoleCmd.setText(hexByte(it.code)) }
     }
 
     private fun saveKey() {
@@ -120,8 +134,12 @@ class ControlFragment : Fragment() {
             return
         }
         saveKey()
+        if (!Prefs.get(requireContext()).demoMode && !ScooterClient.bluetoothEnabled()) {
+            Toast.makeText(requireContext(), R.string.bt_disabled, Toast.LENGTH_SHORT).show()
+            return
+        }
         if (!ScooterClient.hasLastDevice()) {
-            Toast.makeText(requireContext(), "Сначала выберите самокат", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), R.string.control_select_scooter, Toast.LENGTH_SHORT).show()
             return
         }
         ScooterClient.reconnectLast()
@@ -141,6 +159,7 @@ class ControlFragment : Fragment() {
     }
 
     private fun stopSpam() {
+        ScooterClient.stopSpam()
         SpamService.stop(requireContext())
     }
 
@@ -196,12 +215,12 @@ class ControlFragment : Fragment() {
         val name = ScooterClient.deviceName
         val text = when (state) {
             ClientState.IDLE -> getString(R.string.status_disconnected)
-            ClientState.SCANNING -> "Сканирование"
+            ClientState.SCANNING -> getString(R.string.status_scanning)
             ClientState.CONNECTING -> getString(R.string.status_connecting)
-            ClientState.DISCOVERING -> "Поиск сервисов"
+            ClientState.DISCOVERING -> getString(R.string.status_discovering)
             ClientState.AUTHENTICATING -> getString(R.string.status_authenticating)
             ClientState.READY -> getString(R.string.status_ready)
-            ClientState.DEMO -> "Демо-режим"
+            ClientState.DEMO -> getString(R.string.status_demo)
             ClientState.ERROR -> getString(R.string.status_error)
         }
         b.authStatus.text = if (name.isEmpty()) text else "$name: $text"
@@ -223,11 +242,8 @@ class ControlFragment : Fragment() {
 
     private fun updateSpamState(active: Boolean) {
         val b = binding ?: return
-        b.spamStatus.text = if (active) {
-            "${getString(R.string.control_spam_active)}: ${ScooterClient.spamSent.value}"
-        } else {
-            "${getString(R.string.control_spam_sent)}: ${ScooterClient.spamSent.value}"
-        }
+        val label = getString(if (active) R.string.control_spam_active else R.string.control_spam_sent)
+        b.spamStatus.text = getString(R.string.control_spam_counter, label, ScooterClient.spamSent.value)
     }
 
     private fun updateVehicle() {
@@ -240,10 +256,10 @@ class ControlFragment : Fragment() {
             b.liveRange.text = getString(R.string.live_unknown)
             return
         }
-        b.liveBattery.text = "${v.batteryPercent}%"
-        b.liveSpeed.text = "%.1f км/ч".format(v.speed)
-        b.liveMileage.text = "%.2f км".format(v.singleMileage / 1000.0)
-        b.liveRange.text = "%.2f км".format(v.remainingRange / 1000.0)
+        b.liveBattery.text = getString(R.string.live_battery_value, v.batteryPercent)
+        b.liveSpeed.text = getString(R.string.live_speed_value, v.speed)
+        b.liveMileage.text = getString(R.string.live_distance_value, v.singleMileage / 1000.0)
+        b.liveRange.text = getString(R.string.live_distance_value, v.remainingRange / 1000.0)
     }
 
     private fun updateIot() {
@@ -259,10 +275,14 @@ class ControlFragment : Fragment() {
             val volts = info.value / 100.0
             if (volts in 1.0..100.0) {
                 if (isNotEmpty()) append(" / ")
-                append("%.2f В".format(volts))
+                append(getString(R.string.live_voltage_value, volts))
             }
         }.ifEmpty { getString(R.string.live_unknown) }
-        b.liveLocked.text = if (info.locked) getString(R.string.live_locked_yes) else getString(R.string.live_locked_no)
+        b.liveLocked.text = when {
+            info.text != null -> getString(R.string.live_unknown)
+            info.locked -> getString(R.string.live_locked_yes)
+            else -> getString(R.string.live_locked_no)
+        }
     }
 
     override fun onHiddenChanged(hidden: Boolean) {

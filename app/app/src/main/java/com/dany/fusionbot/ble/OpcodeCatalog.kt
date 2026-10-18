@@ -72,5 +72,5 @@ object OpcodeCatalog {
 
     fun byCode(code: Int): OpcodeInfo? = byCode[code]
 
-    fun nameOf(code: Int): String = byCode[code]?.name ?: "UNKNOWN(0x%02X)".format(code)
+    fun nameOf(code: Int): String = byCode[code]?.name ?: "UNKNOWN(0x${hexByte(code)})"
 }

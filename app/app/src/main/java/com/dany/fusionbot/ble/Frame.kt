@@ -104,12 +104,11 @@ object FrameCodec {
     fun findFrames(buffer: ByteArray): Pair<List<ScooterFrame>, ByteArray> {
         val frames = ArrayList<ScooterFrame>()
         var offset = 0
-        while (offset + 6 < buffer.size) {
+        while (offset < buffer.size) {
             var start = -1
-            for (i in offset until buffer.size - 1) {
-                if ((buffer[i].toInt() and 0xFF) == FRAME_HEADER_1 &&
-                    (buffer[i + 1].toInt() and 0xFF) == FRAME_HEADER_2
-                ) {
+            for (i in offset until buffer.size) {
+                if ((buffer[i].toInt() and 0xFF) != FRAME_HEADER_1) continue
+                if (i + 1 >= buffer.size || (buffer[i + 1].toInt() and 0xFF) == FRAME_HEADER_2) {
                     start = i
                     break
                 }
@@ -127,13 +126,27 @@ object FrameCodec {
                 offset = start + 1
             }
         }
-        val rest = if (offset < buffer.size) buffer.copyOfRange(offset, buffer.size) else ByteArray(0)
-        return frames to rest
+        return frames to ByteArray(0)
     }
 }
 
-fun hex(data: ByteArray, separator: String = " "): String =
-    data.joinToString(separator) { "%02X".format(it.toInt() and 0xFF) }
+private const val HEX_DIGITS = "0123456789ABCDEF"
+
+fun hex(data: ByteArray, separator: String = " "): String {
+    if (data.isEmpty()) return ""
+    val sb = StringBuilder(data.size * 3)
+    for (i in data.indices) {
+        if (i > 0) sb.append(separator)
+        val value = data[i].toInt() and 0xFF
+        sb.append(HEX_DIGITS[value ushr 4]).append(HEX_DIGITS[value and 0x0F])
+    }
+    return sb.toString()
+}
+
+fun hexByte(value: Int): String {
+    val v = value and 0xFF
+    return String(charArrayOf(HEX_DIGITS[v ushr 4], HEX_DIGITS[v and 0x0F]))
+}
 
 fun parseHex(text: String): ByteArray? {
     var clean = text.trim()

@@ -20,6 +20,12 @@ class FrameCodecTest {
     }
 
     @Test
+    fun crc16MatchesModbusCheckValue() {
+        val data = "123456789".toByteArray(Charsets.US_ASCII)
+        assertEquals(0x4B37, Crc16.compute(data))
+    }
+
+    @Test
     fun frameRoundTripKeepsFields() {
         val payload = byteArrayOf(0x01, 0x31, 0x31, 0x32, 0x39, 0x00)
         val frame = FrameCodec.build(0x05, 0x42, payload)
@@ -87,6 +93,56 @@ class FrameCodecTest {
         val (frames, rest) = FrameCodec.findFrames(partial)
         assertEquals(0, frames.size)
         assertArrayEquals(partial, rest)
+    }
+
+    @Test
+    fun findFramesKeepsTrailingHeaderByte() {
+        val tail = byteArrayOf(0x11, 0x22, FRAME_HEADER_1.toByte())
+        val (frames, rest) = FrameCodec.findFrames(tail)
+        assertEquals(0, frames.size)
+        assertArrayEquals(byteArrayOf(FRAME_HEADER_1.toByte()), rest)
+    }
+
+    @Test
+    fun findFramesResynchronizesAfterCorruptFrame() {
+        val valid = FrameCodec.build(0x60, 0x42, byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8))
+        val corrupt = byteArrayOf(FRAME_HEADER_1.toByte(), FRAME_HEADER_2.toByte(), 1, 0, 0, 0, 0, 0)
+        val (frames, rest) = FrameCodec.findFrames(corrupt + valid)
+        assertEquals(1, frames.size)
+        assertEquals(0x60, frames[0].cmd)
+        assertEquals(0, rest.size)
+    }
+
+    @Test
+    fun parseRejectsBadHeader() {
+        val frame = FrameCodec.build(0x15, 0x42, byteArrayOf(0x01))
+        frame[0] = 0x00
+        try {
+            FrameCodec.parse(frame)
+            throw AssertionError("expected FrameException")
+        } catch (e: FrameCodec.FrameException) {
+            assertTrue(e.message.orEmpty().startsWith("Invalid frame header"))
+        }
+    }
+
+    @Test
+    fun parseRejectsTruncatedFrame() {
+        val frame = FrameCodec.build(0x15, 0x42, byteArrayOf(0x01))
+        try {
+            FrameCodec.parse(frame.copyOfRange(0, frame.size - 1))
+            throw AssertionError("expected FrameException")
+        } catch (e: FrameCodec.FrameException) {
+            assertTrue(e.message.orEmpty().startsWith("Invalid frame length"))
+        }
+    }
+
+    @Test
+    fun hexFormattingUsesUpperCaseAndSeparator() {
+        assertEquals("", hex(ByteArray(0)))
+        assertEquals("0A FF", hex(byteArrayOf(0x0A, 0xFF.toByte())))
+        assertEquals("0A-FF", hex(byteArrayOf(0x0A, 0xFF.toByte()), "-"))
+        assertEquals("00", hexByte(0))
+        assertEquals("A5", hexByte(0x1A5))
     }
 
     @Test

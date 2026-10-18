@@ -21,11 +21,14 @@ class SpamService : Service() {
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
     private val refresh = object : Runnable {
         override fun run() {
-            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            if (ScooterClient.spamActive.value) {
-                manager.notify(NOTIFICATION_ID, buildNotification())
-                handler.postDelayed(this, REFRESH_MS)
+            if (!ScooterClient.spamActive.value && !ScooterClient.spamWanted) {
+                stopForegroundCompat()
+                stopSelf()
+                return
             }
+            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.notify(NOTIFICATION_ID, buildNotification())
+            handler.postDelayed(this, REFRESH_MS)
         }
     }
 
@@ -68,7 +71,7 @@ class SpamService : Service() {
                 if (!ScooterClient.spamActive.value) {
                     ScooterClient.startSpam()
                 }
-                if (!ScooterClient.spamActive.value) {
+                if (!ScooterClient.spamActive.value && !ScooterClient.spamWanted) {
                     LogBus.warn("SPAM", "Спам не запущен: нет авторизации")
                     stopForegroundCompat()
                     stopSelf()
@@ -115,13 +118,23 @@ class SpamService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val interval = Prefs.get(this).spamIntervalMs
+        val text = if (ScooterClient.spamActive.value) {
+            getString(R.string.notification_text, ScooterClient.spamSent.value, interval)
+        } else {
+            getString(R.string.notification_waiting)
+        }
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_sync)
             .setContentTitle(getString(R.string.notification_title))
-            .setContentText("Отправлено ${ScooterClient.spamSent.value}, интервал $interval мс")
+            .setContentText(text)
             .setOngoing(true)
+            .setOnlyAlertOnce(true)
             .setContentIntent(openIntent)
-            .addAction(0, getString(R.string.notification_action_stop), stopIntent)
+            .addAction(
+                android.R.drawable.ic_menu_close_clear_cancel,
+                getString(R.string.notification_action_stop),
+                stopIntent,
+            )
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
     }
