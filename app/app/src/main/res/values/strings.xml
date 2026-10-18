@@ -61,6 +61,11 @@
     <string name="control_key_hint">Ключ устройства</string>
     <string name="control_default_ble_key">4BKNwi77</string>
     <string name="control_auth">Отправить ключ</string>
+    <string name="control_bypass_section">Экспериментально</string>
+    <string name="control_bypass_hint">Проверка без авторизации. Только для своего самоката.</string>
+    <string name="control_bypass_unlock">Unlock key 0</string>
+    <string name="control_brute_start">Перебор 0..255</string>
+    <string name="control_brute_stop">Стоп перебор</string>
     <string name="control_key_ok">Ключ верный</string>
     <string name="control_key_bad">Неверный ключ</string>
     <string name="control_authenticate_first">Сначала авторизуйтесь</string>

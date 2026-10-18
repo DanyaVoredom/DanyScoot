@@ -66,6 +66,9 @@ class ControlFragment : Fragment() {
             ScooterClient.findCar()
         }
         b.consoleSend.setOnClickListener { sendConsole() }
+        b.bypassButton.setOnClickListener { ScooterClient.bypassUnlock() }
+        b.bruteButton.setOnClickListener { ScooterClient.startKeyBrute() }
+        b.bruteStopButton.setOnClickListener { ScooterClient.stopKeyBrute() }
         b.svcBatteryCover.setOnClickListener {
             ScooterClient.sendService(ScooterCodec.CMD_BATTERY_COVER, byteArrayOf(0x01))
         }
@@ -260,6 +263,10 @@ class ControlFragment : Fragment() {
         b.svcReadConfig.isEnabled = ready
         b.telemetryRefresh.isEnabled = ready
         b.consoleSend.isEnabled = ready
+        val linked = ScooterClient.hasLink
+        b.bypassButton.isEnabled = linked
+        b.bruteButton.isEnabled = linked
+        b.bruteStopButton.isEnabled = linked
     }
 
     private fun updateSpamState(active: Boolean) {

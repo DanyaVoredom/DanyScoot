@@ -59,6 +59,44 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <TextView style="@style/SectionHeader" android:text="@string/control_bypass_section" />
+
+        <com.google.android.material.card.MaterialCardView style="@style/CardBlock">
+
+            <LinearLayout style="@style/CardBody">
+
+                <TextView
+                    style="@style/RowLabel"
+                    android:text="@string/control_bypass_hint" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingTop="8dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/bypassButton"
+                        style="@style/ActionButton"
+                        android:text="@string/control_bypass_unlock" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/bruteButton"
+                        style="@style/ActionButton"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/control_brute_start" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/bruteStopButton"
+                    style="@style/ActionButton"
+                    android:layout_width="match_parent"
+                    android:layout_weight="0"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/control_brute_stop" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <TextView style="@style/SectionHeader" android:text="@string/control_lock_section" />
 
         <com.google.android.material.card.MaterialCardView style="@style/CardBlock">
