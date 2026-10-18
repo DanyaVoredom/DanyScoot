@@ -65,6 +65,8 @@ object ScooterClient : BleTransport.Listener {
     private var authPending = false
     private var authenticated = false
     private var authTimeout: Runnable? = null
+    private var authKey = ""
+    private val authTried = mutableSetOf<String>()
     private var unlockVariant = -1
     private var unlockKey = 0
     private var unlockTimeout: Runnable? = null
@@ -243,6 +245,8 @@ object ScooterClient : BleTransport.Listener {
         rxBuffer = ByteArray(0)
         authPending = false
         authenticated = false
+        authKey = ""
+        authTried.clear()
         authTimeout?.let { handler.removeCallbacks(it) }
         authTimeout = null
         cancelUnlock()
@@ -296,6 +300,8 @@ object ScooterClient : BleTransport.Listener {
         whooshKey = ""
         authPending = false
         authenticated = false
+        authKey = ""
+        authTried.clear()
         authTimeout?.let { handler.removeCallbacks(it) }
         authTimeout = null
         cancelUnlock()
@@ -351,7 +357,17 @@ object ScooterClient : BleTransport.Listener {
             LogBus.warn(AUTH_TAG, "Нет подключения")
             return
         }
-        val key = prefs.bleKey
+        authTried.clear()
+        sendAuthKey(prefs.bleKey)
+    }
+
+    private fun sendAuthKey(key: String) {
+        if (!isConnected()) {
+            LogBus.warn(AUTH_TAG, "Нет подключения")
+            return
+        }
+        authKey = key
+        authTried.add(key)
         cancelUnlock()
         LogBus.info(AUTH_TAG, "Отправка ключа: $key")
         authPending = true
@@ -359,7 +375,7 @@ object ScooterClient : BleTransport.Listener {
         if (!writeFrame(ScooterCodec.keyCommand(key), "ключ")) {
             authPending = false
             authenticated = false
-            _state.value = ClientState.READY
+            tryNextAuthKey("Не удалось отправить кадр ключа")
             return
         }
         authTimeout?.let { handler.removeCallbacks(it) }
@@ -369,11 +385,31 @@ object ScooterClient : BleTransport.Listener {
                 authenticated = false
                 sessionKey = 0
                 LogBus.err(AUTH_TAG, "Таймаут авторизации")
-                _state.value = ClientState.READY
+                tryNextAuthKey("Таймаут авторизации")
             }
         }
         authTimeout = timeout
         handler.postDelayed(timeout, AUTH_TIMEOUT_MS)
+    }
+
+    private fun tryNextAuthKey(reason: String) {
+        sessionKey = 0
+        authenticated = false
+        authTimeout?.let { handler.removeCallbacks(it) }
+        authTimeout = null
+        if (authKey !in ScooterCodec.KEY_PRESETS) {
+            LogBus.err(AUTH_TAG, "$reason, ключ не подошел")
+            _state.value = ClientState.READY
+            return
+        }
+        val next = ScooterCodec.KEY_PRESETS.firstOrNull { it !in authTried }
+        if (next == null) {
+            LogBus.err(AUTH_TAG, "$reason, известные ключи не подошли")
+            _state.value = ClientState.READY
+            return
+        }
+        LogBus.warn(AUTH_TAG, "$reason, пробую ключ $next")
+        sendAuthKey(next)
     }
 
     fun unlock() {
@@ -729,6 +765,8 @@ object ScooterClient : BleTransport.Listener {
         sessionKey = 0
         authPending = false
         authenticated = false
+        authKey = ""
+        authTried.clear()
         authTimeout?.let { handler.removeCallbacks(it) }
         authTimeout = null
         cancelUnlock()
@@ -1363,14 +1401,12 @@ object ScooterClient : BleTransport.Listener {
             sessionKey = frame.payload[1].toInt() and 0xFF
             authenticated = true
             reconnectAttempts = 0
+            if (prefs.bleKey != authKey) prefs.bleKey = authKey
             LogBus.ok(AUTH_TAG, "Ключ верный, сессионный ключ 0x${hexByte(sessionKey)}")
             _state.value = ClientState.READY
             onAuthenticated()
         } else {
-            sessionKey = 0
-            authenticated = false
-            LogBus.err(AUTH_TAG, "Неверный ключ: попробуйте другой ключ в настройках")
-            _state.value = ClientState.READY
+            tryNextAuthKey("Ключ отклонен")
         }
     }
 
