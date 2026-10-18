@@ -1,8 +1,11 @@
-# FishBot (ru.lostbotapp/LostBot): BLE-протокол, спам разблокировки, прошивка, лицензирование, UI
+# LostBot/FishBot (ru.lostbotapp): BLE-протокол, спам разблокировки, прошивка, лицензирование, UI
+
+Сводный индекс: analysis/references.md. Полный протокол: analysis/protocol_full.md.
 
 ## 0. Артефакты и источники
 
 - APK: FishBot.apk (apktool 3.0.3), пакет FishBot.en.Milky, versionCode 1, versionName 1.0.0, minSdk 17, targetSdk 28, compileSdk 35 (analysis/FishBot/apktool.yml:1-11, AndroidManifest.xml:2).
+- Второй артефакт: LostBot.apk (ru.lostbotapp.Free 1.2.1, 2 536 378 байт, SHA-256 D1D8713820F3EBC480236E113020C0C547B94453D416EDE894D27A4205245882). Классы A2/c, A2/f, z2/i, D2/b идентичны FishBot; C2/F отличается логированием и полями, протокол тот же.
 - Java-декомпиляция jadx 1.5.6: analysis/java/fishbot/sources (ниже пути без префикса).
 - smali: analysis/FishBot/smali, smali_classes2 (используется там, где jadx не декомпилировал класс или коллизия регистра).
 - Манифест: activity ru.lostbotapp.MainActivity (exported, singleTop), service ru.lostbotapp.service.SpamService (exported=false, foregroundServiceType=connectedDevice), разрешения BLE/INTERNET/POST_NOTIFICATIONS + добавленный патчем набор (BIND_VPN_SERVICE, MANAGE_EXTERNAL_STORAGE, QUERY_ALL_PACKAGES, REQUEST_INSTALL_PACKAGES и др., AndroidManifest.xml:3-28).

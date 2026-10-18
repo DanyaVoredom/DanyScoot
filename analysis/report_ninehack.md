@@ -1,5 +1,7 @@
 # NineHack (com.timeylies.ninehack.ru): состав APK, BLE-транспорт, кадр, рукопожатие, команды, ответы, UI, аномалии
 
+Сводный индекс: analysis/references.md. Полный протокол: analysis/protocol_full.md.
+
 ## 0. Артефакты и источники
 
 - APK: references\NineHack.apk, 11 497 879 байт. Дамп apktool 3.0.3: analysis\NineHack (apktool.yml:1-2, apkFileName NineHack.apk).

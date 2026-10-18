@@ -1,5 +1,7 @@
 # FishBot.apk: анализ
 
+Сводный индекс: analysis/references.md. Полный протокол: analysis/protocol_full.md.
+
 Разбор: analysis/FishBot (apktool, пакет FishBot.en.Milky), база сравнения: analysis/LostBot (ru.lostbotapp.Free). Ассет плагина: analysis/payload.
 
 ## 1. Состав
