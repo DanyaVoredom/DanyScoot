@@ -46,6 +46,7 @@ object ScooterClient : BleTransport.Listener {
     private const val BYPASS_TAG = "BYPASS"
     private const val YANDEX_TIMEOUT_MS = 5000L
     private const val WHOOSH_KEY_TIMEOUT_MS = 3000L
+    private const val BRUTE_INTERVAL_MS = 30L
 
     private enum class YandexPending {
         AUTH,
@@ -569,7 +570,7 @@ object ScooterClient : BleTransport.Listener {
                 if (key % 16 == 0) {
                     LogBus.info(BYPASS_TAG, "Перебор: 0x${hexByte(key)}")
                 }
-                handler.postDelayed(this, 60)
+                handler.postDelayed(this, BRUTE_INTERVAL_MS)
             }
         }
         bruteRunnable = runnable
