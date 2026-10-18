@@ -1,0 +1,10 @@
+analysis/*
+!analysis/*.md
+app/.gradle/
+app/build/
+app/app/build/
+app/local.properties
+app/.kotlin/
+*.log
+.idea/
+.DS_Store

@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="16dp">
+
+        <TextView style="@style/SectionHeader" android:text="@string/control_auth_section" />
+
+        <com.google.android.material.card.MaterialCardView style="@style/CardBlock">
+
+            <LinearLayout style="@style/CardBody">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/InputField"
+                    android:hint="@string/control_key_hint">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/keyInput"
+                        style="@style/InputText" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingTop="8dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/authButton"
+                        style="@style/ActionButton"
+                        android:text="@string/control_auth" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/connectButton"
+                        style="@style/ActionButton"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/device_connect" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/disconnectButton"
+                        style="@style/ActionButton"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/device_disconnect" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/authStatus"
+                    style="@style/RowLabel"
+                    android:paddingTop="8dp"
+                    android:text="@string/status_disconnected" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView style="@style/SectionHeader" android:text="@string/control_lock_section" />
+
+        <com.google.android.material.card.MaterialCardView style="@style/CardBlock">
+
+            <LinearLayout style="@style/CardBody">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/unlockButton"
+                        style="@style/ActionButton"
+                        android:text="@string/control_unlock" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/lockButton"
+                        style="@style/ActionButton"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/control_lock" />
+                </LinearLayout>
+
+                <TextView style="@style/SectionHeader" android:text="@string/control_spam_section" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/spamStartButton"
+                        style="@style/ActionButton"
+                        android:text="@string/control_spam_start" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/spamStopButton"
+                        style="@style/ActionButton"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/control_spam_stop" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingTop="8dp">
+
+                    <TextView
+                        style="@style/RowLabel"
+                        android:text="@string/control_spam_interval" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/InputField"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/spamInterval"
+                            style="@style/InputText"
+                            android:inputType="number" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/spamStatus"
+                    style="@style/RowLabel"
+                    android:paddingTop="4dp"
+                    android:text="" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView style="@style/SectionHeader" android:text="@string/control_scooter_section" />
+
+        <com.google.android.material.card.MaterialCardView style="@style/CardBlock">
+
+            <LinearLayout style="@style/CardBody">
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/headlightSwitch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="@string/control_headlight"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <RadioGroup
+                    android:id="@+id/modeGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.radiobutton.MaterialRadioButton
+                        android:id="@+id/mode1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/control_mode_1"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <com.google.android.material.radiobutton.MaterialRadioButton
+                        android:id="@+id/mode2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/control_mode_2"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <com.google.android.material.radiobutton.MaterialRadioButton
+                        android:id="@+id/mode3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="@string/control_mode_3"
+                        android:textColor="?attr/colorOnSurface" />
+                </RadioGroup>
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/throttleSwitch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="@string/control_throttle_switch"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/applyScooterButton"
+                    style="@style/ActionButton"
+                    android:layout_width="match_parent"
+                    android:layout_weight="0"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/control_apply" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingTop="8dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/ejectButton"
+                        style="@style/ActionButton"
+                        android:text="@string/control_eject_battery" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/findButton"
+                        style="@style/ActionButton"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/control_find_car" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView style="@style/SectionHeader" android:text="@string/control_service_section" />
+
+        <com.google.android.material.card.MaterialCardView style="@style/CardBlock">
+
+            <LinearLayout style="@style/CardBody">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/svcBatteryCover"
+                        style="@style/ActionButton"
+                        android:text="@string/control_svc_battery_cover" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/svcIotRestart"
+                        style="@style/ActionButton"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/control_svc_iot_restart" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingTop="8dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/svcClearBt"
+                        style="@style/ActionButton"
+                        android:text="@string/control_svc_clear_bt" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/svcColorLight"
+                        style="@style/ActionButton"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/control_svc_color" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingTop="8dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/svcPowerOff"
+                        style="@style/ActionButton"
+                        android:text="@string/control_svc_power_off" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/svcReadConfig"
+                        style="@style/ActionButton"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/control_svc_read_config" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView style="@style/SectionHeader" android:text="@string/live_section" />
+
+        <com.google.android.material.card.MaterialCardView style="@style/CardBlock">
+
+            <LinearLayout style="@style/CardBody">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView style="@style/RowLabel" android:text="@string/live_battery" />
+
+                    <TextView
+                        android:id="@+id/liveBattery"
+                        style="@style/ValueText"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/live_unknown" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView style="@style/RowLabel" android:text="@string/live_speed" />
+
+                    <TextView
+                        android:id="@+id/liveSpeed"
+                        style="@style/ValueText"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/live_unknown" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView style="@style/RowLabel" android:text="@string/live_mileage" />
+
+                    <TextView
+                        android:id="@+id/liveMileage"
+                        style="@style/ValueText"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/live_unknown" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView style="@style/RowLabel" android:text="@string/live_range" />
+
+                    <TextView
+                        android:id="@+id/liveRange"
+                        style="@style/ValueText"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/live_unknown" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView style="@style/RowLabel" android:text="@string/live_version" />
+
+                    <TextView
+                        android:id="@+id/liveVersion"
+                        style="@style/ValueText"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/live_unknown" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView style="@style/RowLabel" android:text="@string/live_locked" />
+
+                    <TextView
+                        android:id="@+id/liveLocked"
+                        style="@style/ValueText"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/live_unknown" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/telemetryRefresh"
+                    style="@style/ActionButton"
+                    android:layout_width="match_parent"
+                    android:layout_weight="0"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/live_refresh" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView style="@style/SectionHeader" android:text="@string/console_section" />
+
+        <com.google.android.material.card.MaterialCardView style="@style/CardBlock">
+
+            <LinearLayout style="@style/CardBody">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/InputField"
+                    android:hint="@string/console_opcode">
+
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                        android:id="@+id/opcodeInput"
+                        style="@style/InputText"
+                        android:inputType="none" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/InputField"
+                    android:layout_marginTop="8dp"
+                    android:hint="@string/console_command">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/consoleCmd"
+                        style="@style/InputText" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/InputField"
+                    android:layout_marginTop="8dp"
+                    android:hint="@string/console_payload_hex">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/consolePayload"
+                        style="@style/InputText" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/consoleSend"
+                    style="@style/ActionButton"
+                    android:layout_width="match_parent"
+                    android:layout_weight="0"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/console_send" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+</ScrollView>

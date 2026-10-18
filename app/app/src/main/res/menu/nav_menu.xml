@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/tabDevices"
+        android:icon="@drawable/ic_devices"
+        android:title="@string/tab_devices" />
+    <item
+        android:id="@+id/tabControl"
+        android:icon="@drawable/ic_control"
+        android:title="@string/tab_control" />
+    <item
+        android:id="@+id/tabLog"
+        android:icon="@drawable/ic_log"
+        android:title="@string/tab_log" />
+    <item
+        android:id="@+id/tabSettings"
+        android:icon="@drawable/ic_settings"
+        android:title="@string/tab_settings" />
+</menu>
