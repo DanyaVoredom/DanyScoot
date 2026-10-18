@@ -290,23 +290,23 @@ Session key может быть 0. Ответ 01 00 означает стату�
 | 0x60 | 01 | Запрос телеметрии | LostBot |
 | 0x61 | light, mode, throttle, 00 | Настройки: light 1 off, 2 on, 0 keep; mode 0 keep, 1 low, 2 med, 3 high | LostBot, NineHack |
 | 0x63 | 01 | Запрос realtime | LostBot |
-| 0x64 | hi, lo | Диаметр колеса, 100..400 мм | LostBot |
+| 0x64 | hi, lo | Диаметр колеса, 100..400 мм | Декодер A2/c.java:304, сборщик не найден |
 | 0x73 | 01 01 | Сброс счетчика | LostBot service |
-| 0x78 | 01 или 06 | Найти самокат | LostBot |
+| 0x78 | | Найти самокат, сборщик не найден; в LostBot используется 0xA2 | Каталог |
 | 0x81 | 05 | Извлечь батарею | LostBot, NineHack |
 | 0x82 | mode, 00, R, G, B, 00, 00, 00 | Цветной свет | LostBot |
 | 0x85 | 01 | Прочитать RFID | LostBot |
 | 0x86 | id1 u32 BE + id2 u32 BE | Удалить два RFID | LostBot |
 | 0x91 | 01 | Выключение питания | LostBot service |
 | 0x92 | 01 | Перезапуск IoT | LostBot |
-| 0xA1 | tag + ASCII | QR read/write | LostBot decoder |
-| 0xA2 | 01 или 06 | Найти самокат звуком | LostBot |
+| 0xA1 | tag + ASCII | QR read/write | Декодер A2/c.java:366, сборщик не найден |
+| 0xA2 | 01, 02, 03 или 06 | Найти самокат звуком | LostBot |
 | 0xC0 | 01 | Открыть крышку батареи | LostBot |
-| 0xC3 | type, action | type 1 saddle, 3 tail-box, 8 helmet; action 1 open, 2 close | LostBot |
+| 0xC3 | type, action | type 1 saddle, 3 tail-box, 8 helmet; action 1 open, 2 close | Декодер A2/c.java:369-371, сборщик не найден |
 | 0xC4 | 01 | Обновить сертификат | LostBot |
 | 0xC5 | slot | Переключить SIM | LostBot service |
 | 0xC6 | 01 | Следующая SIM | LostBot |
-| 0xDC | ASCII *HBCS,NB,IMEI,V2,1,,,,,# или 2 + 00 | AVAS | LostBot I1/a.java |
+| 0xDC | ASCII *HBCS,NB,IMEI,V2,1,,,,,# + 00, где 1 или 2 | AVAS | LostBot I1/a.java:737-745 |
 | 0xDE | | AVAS2, билдер в дампе не найден | Каталог |
 | 0xFA | пусто | Запрос firmware info / IoT read | LostBot |
 | 0xFB | kind, total hi, total lo, crc hi, crc lo, devType, key | START прошивки | LostBot |
@@ -316,8 +316,8 @@ Session key может быть 0. Ответ 01 00 означает стату�
 
 - 0x31 и 0x60/0x63/0x85 требуют key = sessionKey, иначе самокат отвергнет команду.
 - 0x61 в LostBot отправляется как [2,0,0,0] или [1,0,0,0], то есть меняет только свет, режим keep. NineHack отправляет все три поля.
-- 0x78 и 0xA2 оба используются для поиска; в каталоге 0x78 называется XM_FIND_CAR, 0xA2 FIND_CAR (sound).
-- 0xDC payload заканчивается решеткой, не нулем.
+- 0x78 в каталоге называется XM_FIND_CAR, но сборщика нет; LostBot ищет самокат через 0xA2 FIND_CAR (sound).
+- 0xDC payload заканчивается решеткой и нулем.
 
 ## 6. Ответы и телеметрия
 

@@ -1,0 +1,719 @@
+{
+  "crc8": {
+    "poly_reflected": "8C",
+    "init": "00",
+    "check": "A1",
+    "empty": "00"
+  },
+  "crc16": {
+    "poly_reflected": "A001",
+    "init": "FFFF",
+    "check": "4B37"
+  },
+  "tx": [
+    {
+      "id": "handshake_ninehack",
+      "cmd": "01",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "34424B4E77693737",
+      "frame": "A3A40833010035434A4F76683636E7",
+      "note": "ключ NineHack, key=0"
+    },
+    {
+      "id": "handshake_lostbot",
+      "cmd": "01",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "7734533348716E35",
+      "frame": "A3A4083301007635523249706F3489",
+      "note": "ключ LostBot, key=0"
+    },
+    {
+      "id": "unlock_ninehack",
+      "cmd": "05",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "01010101010101010101",
+      "frame": "A3A40A3301040000000000000000000031",
+      "note": "NineHack unlock"
+    },
+    {
+      "id": "unlock_lostbot",
+      "cmd": "05",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01010101010101010101",
+      "frame": "A3A40A425215111111111111111111110B",
+      "note": "LostBot unlock, sessionKey 0x42"
+    },
+    {
+      "id": "lock",
+      "cmd": "15",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01",
+      "frame": "A3A401425205119D",
+      "note": "lock"
+    },
+    {
+      "id": "spam",
+      "cmd": "05",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01313132396553F10000",
+      "frame": "A3A40A42521511212122297543E11010F9",
+      "note": "t=1700000000"
+    },
+    {
+      "id": "device_info",
+      "cmd": "31",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01",
+      "frame": "A3A4014252211167",
+      "note": "запрос device info"
+    },
+    {
+      "id": "scooter_info",
+      "cmd": "60",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01",
+      "frame": "A3A40142527011D4",
+      "note": "запрос телеметрии"
+    },
+    {
+      "id": "realtime",
+      "cmd": "63",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01",
+      "frame": "A3A4014252731181",
+      "note": "запрос realtime"
+    },
+    {
+      "id": "set_on",
+      "cmd": "61",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "02020200",
+      "frame": "A3A4044252711212121071",
+      "note": "свет on, режим med, газ on"
+    },
+    {
+      "id": "set_off",
+      "cmd": "61",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01010100",
+      "frame": "A3A4044252711111111048",
+      "note": "свет off, режим low, газ off"
+    },
+    {
+      "id": "find1",
+      "cmd": "A2",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01",
+      "frame": "A3A4014252B211F1",
+      "note": "find car"
+    },
+    {
+      "id": "find2",
+      "cmd": "A2",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "02",
+      "frame": "A3A4014252B21213",
+      "note": "find car"
+    },
+    {
+      "id": "find3",
+      "cmd": "A2",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "03",
+      "frame": "A3A4014252B2134D",
+      "note": "find car"
+    },
+    {
+      "id": "find6",
+      "cmd": "A2",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "06",
+      "frame": "A3A4014252B21672",
+      "note": "find car"
+    },
+    {
+      "id": "eject",
+      "cmd": "81",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "05",
+      "frame": "A3A4014252911504",
+      "note": "eject battery"
+    },
+    {
+      "id": "battery_cover",
+      "cmd": "C0",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01",
+      "frame": "A3A4014252D0113A",
+      "note": "battery cover"
+    },
+    {
+      "id": "iot_restart",
+      "cmd": "92",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01",
+      "frame": "A3A40142528211DC",
+      "note": "IoT restart"
+    },
+    {
+      "id": "clear_bt",
+      "cmd": "54",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01",
+      "frame": "A3A40142524411C2",
+      "note": "clear paired users"
+    },
+    {
+      "id": "power_off",
+      "cmd": "91",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01",
+      "frame": "A3A4014252811189",
+      "note": "power off"
+    },
+    {
+      "id": "rfid_read",
+      "cmd": "85",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01",
+      "frame": "A3A401425295115E",
+      "note": "read RFID"
+    },
+    {
+      "id": "rfid_delete",
+      "cmd": "86",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "123456789ABCDEF0",
+      "frame": "A3A408425296022446688AACCEE0D9",
+      "note": "delete two RFID"
+    },
+    {
+      "id": "color",
+      "cmd": "82",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01007C6AE8000000",
+      "frame": "A3A40842529211106C7AF8101010D4",
+      "note": "mode 1, RGB 7C6AE8"
+    },
+    {
+      "id": "wheel",
+      "cmd": "64",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "00FA",
+      "frame": "A3A40242527410EAA2",
+      "note": "wheel 250 мм"
+    },
+    {
+      "id": "calibrate",
+      "cmd": "72",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "6553F10003",
+      "frame": "A3A4054252627543E1101301",
+      "note": "epoch 1700000000, tz +3"
+    },
+    {
+      "id": "meter_reset",
+      "cmd": "73",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "0101",
+      "frame": "A3A402425263111102",
+      "note": "meter reset"
+    },
+    {
+      "id": "accessory_saddle",
+      "cmd": "C3",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "0101",
+      "frame": "A3A4024252D31111BE",
+      "note": "saddle open"
+    },
+    {
+      "id": "accessory_tail",
+      "cmd": "C3",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "0302",
+      "frame": "A3A4024252D31312CD",
+      "note": "tail-box close"
+    },
+    {
+      "id": "accessory_helmet",
+      "cmd": "C3",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "0801",
+      "frame": "A3A4024252D318110C",
+      "note": "helmet open"
+    },
+    {
+      "id": "switch_sim1",
+      "cmd": "C5",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01",
+      "frame": "A3A4014252D511C5",
+      "note": "SIM slot 1"
+    },
+    {
+      "id": "switch_sim2",
+      "cmd": "C5",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "02",
+      "frame": "A3A4014252D51227",
+      "note": "SIM slot 2"
+    },
+    {
+      "id": "next_sim",
+      "cmd": "C6",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01",
+      "frame": "A3A4014252D61190",
+      "note": "next SIM"
+    },
+    {
+      "id": "cert",
+      "cmd": "C4",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01",
+      "frame": "A3A4014252D41101",
+      "note": "update certificate"
+    },
+    {
+      "id": "gsm_off",
+      "cmd": "50",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "00",
+      "frame": "A3A40142524010A7",
+      "note": "GSM disable"
+    },
+    {
+      "id": "gsm_on",
+      "cmd": "50",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01",
+      "frame": "A3A40142524011F9",
+      "note": "GSM enable"
+    },
+    {
+      "id": "gsm_detect",
+      "cmd": "83",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01",
+      "frame": "A3A40142529311F4",
+      "note": "GSM auto-detect"
+    },
+    {
+      "id": "audio_on",
+      "cmd": "75",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01",
+      "frame": "A3A40142526511C7",
+      "note": "audio on"
+    },
+    {
+      "id": "audio_off",
+      "cmd": "75",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "FF01",
+      "frame": "A3A402425265EF1196",
+      "note": "audio off"
+    },
+    {
+      "id": "start_test",
+      "cmd": "76",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01",
+      "frame": "A3A4014252661192",
+      "note": "enter test mode"
+    },
+    {
+      "id": "clear_mileage",
+      "cmd": "77",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01",
+      "frame": "A3A4014252671156",
+      "note": "clear mileage"
+    },
+    {
+      "id": "screen_off",
+      "cmd": "79",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "01",
+      "frame": "A3A401425269118A",
+      "note": "auto screen off"
+    },
+    {
+      "id": "qr_tag0",
+      "cmd": "A1",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "00414243",
+      "frame": "A3A4044252B110515253BE",
+      "note": "QR tag 0 + ABC"
+    },
+    {
+      "id": "vehicle_raw",
+      "cmd": "A0",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "48454C4C4F",
+      "frame": "A3A4054252B058555C5C5F11",
+      "note": "vehicle raw command"
+    },
+    {
+      "id": "avas_on",
+      "cmd": "DC",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "2A484243532C4E422C3132333435363738393031323334352C56322C312C2C2C2C2C2300",
+      "frame": "A3A4244252CC3A585253433C5E523C2122232425262728292021222324253C46223C213C3C3C3C3C3310AF",
+      "note": "AVAS on"
+    },
+    {
+      "id": "avas_off",
+      "cmd": "DC",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "2A484243532C4E422C3132333435363738393031323334352C56322C322C2C2C2C2C2300",
+      "frame": "A3A4244252CC3A585253433C5E523C2122232425262728292021222324253C46223C223C3C3C3C3C33106A",
+      "note": "AVAS off"
+    },
+    {
+      "id": "fw_info",
+      "cmd": "FA",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "",
+      "frame": "A3A4004252EA26",
+      "note": "firmware info"
+    },
+    {
+      "id": "fw_start",
+      "cmd": "FB",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "0000014B37077734533348716E35",
+      "frame": "A3A40E4252EB1010115B27176724432358617E25DE",
+      "note": "START OTA, 1 pack, CRC 4B37"
+    },
+    {
+      "id": "fw_read",
+      "cmd": "FC",
+      "key": 66,
+      "rand": 16,
+      "wire_rand": 66,
+      "payload": "000507",
+      "frame": "A3A4034252EC1015174C",
+      "note": "read config pack 5, devType 7"
+    }
+  ],
+  "rx": [
+    {
+      "id": "handshake_ack_0",
+      "cmd": "01",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "0100",
+      "frame": "A3A402330100000106",
+      "note": "sessionKey 0"
+    },
+    {
+      "id": "handshake_ack_42",
+      "cmd": "01",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "0142",
+      "frame": "A3A4023301000043FC",
+      "note": "sessionKey 0x42"
+    },
+    {
+      "id": "error_lock",
+      "cmd": "10",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "1502",
+      "frame": "A3A40233011114038C",
+      "note": "lock rejected, reason 2"
+    },
+    {
+      "id": "unlock_ok_1",
+      "cmd": "05",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "01",
+      "frame": "A3A4013301040022",
+      "note": "unlock status 1"
+    },
+    {
+      "id": "unlock_ok_2",
+      "cmd": "05",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "02",
+      "frame": "A3A40133010403C0",
+      "note": "unlock status 2"
+    },
+    {
+      "id": "lock_ok_0",
+      "cmd": "15",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "00",
+      "frame": "A3A4013301140190",
+      "note": "lock status 0"
+    },
+    {
+      "id": "device_info_bin",
+      "cmd": "31",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "10680100010402",
+      "frame": "A3A40733013011690001000503FC",
+      "note": "4200, flags 01, fw 1.4.2"
+    },
+    {
+      "id": "device_info_text",
+      "cmd": "31",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "494D45493A383630313233343536373839303132",
+      "frame": "A3A414330130484C44483B39373130333235343736393831303352",
+      "note": "IoT network string"
+    },
+    {
+      "id": "scooter_info",
+      "cmd": "60",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "450200BB007C05FA",
+      "frame": "A3A408330161440301BA017D04FBE6",
+      "note": "69%, mode 2, 18.7 km/h, trip 1.24 km, range 15.30 km"
+    },
+    {
+      "id": "realtime",
+      "cmd": "63",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "4500BB007B03",
+      "frame": "A3A4063301624401BA017A022D",
+      "note": "69%, 18.7 km/h, 1.23 A, flags 3"
+    },
+    {
+      "id": "rfid",
+      "cmd": "85",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "12345678",
+      "frame": "A3A4043301841335577960",
+      "note": "RFID 12345678"
+    },
+    {
+      "id": "rfid_pair",
+      "cmd": "86",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "123456789ABCDEF0",
+      "frame": "A3A408330187133557799BBDDFF104",
+      "note": "two RFID"
+    },
+    {
+      "id": "color",
+      "cmd": "82",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "01007C6AE8",
+      "frame": "A3A40533018300017D6BE9C6",
+      "note": "mode 1, RGB 7C6AE8"
+    },
+    {
+      "id": "accessory",
+      "cmd": "C3",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "0101",
+      "frame": "A3A4023301C2000044",
+      "note": "saddle open"
+    },
+    {
+      "id": "fw_ready",
+      "cmd": "FB",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "01",
+      "frame": "A3A4013301FA0067",
+      "note": "READY"
+    },
+    {
+      "id": "fw_complete",
+      "cmd": "FB",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "02",
+      "frame": "A3A4013301FA0385",
+      "note": "COMPLETE"
+    },
+    {
+      "id": "fw_timeout",
+      "cmd": "FB",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "03",
+      "frame": "A3A4013301FA02DB",
+      "note": "timeout"
+    },
+    {
+      "id": "fw_crc_error",
+      "cmd": "FB",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "04",
+      "frame": "A3A4013301FA0558",
+      "note": "total CRC error"
+    },
+    {
+      "id": "fw_pack_request",
+      "cmd": "FC",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "0005",
+      "frame": "A3A4023301FD010460",
+      "note": "request pack 5"
+    },
+    {
+      "id": "fw_pack_data",
+      "cmd": "FC",
+      "key": 0,
+      "rand": 1,
+      "wire_rand": 51,
+      "payload": "0005000102030405060708090A0B0C0D0E0FA268",
+      "frame": "A3A4143301FD0104010003020504070609080B0A0D0C0F0EA3695D",
+      "note": "pack 5 + CRC16"
+    }
+  ],
+  "malformed": [
+    {
+      "id": "bad_crc",
+      "frame": "A3A40133011400CF",
+      "note": "CRC mismatch: expected CE"
+    },
+    {
+      "id": "bad_len",
+      "frame": "A3A40233011400CE",
+      "note": "length mismatch: expected 9 got 8"
+    },
+    {
+      "id": "bad_header",
+      "frame": "A2A40133011400CE",
+      "note": "invalid header"
+    },
+    {
+      "id": "too_short",
+      "frame": "A3A4013301",
+      "note": "shorter than 7"
+    }
+  ]
+}

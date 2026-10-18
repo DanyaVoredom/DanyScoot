@@ -61,7 +61,28 @@
 | Телеметрия | A2/c.java | нет |
 | Сохраненные ключи | C2/C0121b.java, SavedBleKey | ninehack_settings |
 
-## 6. Ограничения
+## 6. Машиночитаемые данные
+
+| Файл | Содержимое |
+| --- | --- |
+| opcodes.csv | 54 опкода: код, имя, направление, payload, сборщик, декодер, поддержка DanyUrent, уверенность |
+| frames.json | 48 TX, 20 RX, 4 битых кадра, CRC-константы |
+| generate_frames.py | Генератор frames.json без внешних зависимостей |
+| verify_frames.py | Независимый разбор всех кадров и проверка CRC |
+| xddbot.md | Публичный XDDbot, совпадения и расхождения с APK |
+
+Поле danyurent: yes означает отдельную кнопку или метод, decoder означает только разбор ответа, manual означает отправку через общий диалог опкодов. Поле confidence: confirmed означает сборщик или декодер в APK, inferred означает payload из декодера, catalog означает только имя из каталога.
+
+Проверка:
+
+    python references/generate_frames.py
+    python references/verify_frames.py
+    python -c "import csv; r=list(csv.DictReader(open('references/opcodes.csv',encoding='utf-8'))); print(len(r))"
+    python -c "import json; d=json.load(open('references/frames.json',encoding='utf-8')); print(len(d['tx']),len(d['rx']),len(d['malformed']))"
+
+Ожидаемый вывод: ok 72, затем 54 и 48 20 4.
+
+## 7. Ограничения
 
 - APK не содержат прошивку самоката. Все выводы о прошивке сделаны по клиентскому коду и тест-векторам.
 - Известные ключи 4BKNwi77 и w4S3Hqn5 могут не подойти к конкретному самокату. Это проверяется только на hardware.

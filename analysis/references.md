@@ -112,8 +112,18 @@ rand у LostBot 0..254, у NineHack 1..254. CRC-8/MAXIM: poly 0x31 отраже�
 | Файл | Содержимое |
 | --- | --- |
 | analysis/protocol_full.md | Полный протокол, 54 опкода, TX/RX, телеметрия, прошивка, тест-векторы |
+| analysis/opcode_builders.md | Подтвержденные сборщики, каталог, декодеры, расхождения |
+| analysis/rx_samples.md | Байтовые примеры ответов, телеметрия, чанкинг, битые кадры |
+| analysis/hardware_test.md | Проверка на самокате, HCI snoop, nRF Connect, UART, дамп |
+| analysis/source_map.md | Карта файлов и строк для каждого утверждения |
+| analysis/README.md | Индекс всех документов |
 | analysis/report_lostbot.md | LostBot/FishBot: транспорт, auth, спам, прошивка, лицензии, UI |
 | analysis/report_ninehack.md | NineHack: минимальный клиент, кадр, команды, ошибки |
 | analysis/report_fishbot.md | Инжектор FishBot, payload, отличия от LostBot |
 | analysis/report_urent.md | Официальное Urent 1.90.2 и 2.7.0: манифест, API, отсутствие BLE |
 | references/README.md | Хэши, подписи, ссылки на скачивание |
+| references/opcodes.csv | 54 опкода в машиночитаемом виде |
+| references/frames.json | 48 TX, 20 RX и 4 битых кадра |
+| references/generate_frames.py | Генератор frames.json |
+| references/verify_frames.py | Независимая проверка кадров и CRC |
+| references/xddbot.md | Публичный XDDbot и расхождения с APK |

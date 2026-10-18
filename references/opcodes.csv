@@ -1,0 +1,55 @@
+code_hex,code_dec,name,direction,tx_payload,tx_source,rx_decode,rx_source,danyurent,confidence
+01,1,COMMUNICATION_KEY,BIDIR,ASCII key,LostBot C2/F.java:376; NineHack controlActivity.smali:736,status and sessionKey payload[0..1],A2/c.java:262,yes,confirmed
+05,5,UNLOCK,BIDIR,01 x10 or 01 31 31 32 39 t4 00,NineHack CommandCreator.smali:1147-1349; LostBot C2/F.java:1306,status 0/1/2,A2/c.java:266,yes,confirmed
+10,16,ERROR,NOTIF,unknown,unknown,rejected cmd and reason payload[0..1],A2/c.java:258,decoder,confirmed
+15,21,LOCK,BIDIR,01,LostBot D2/C0141b.java:29; NineHack CommandCreator.smali,status 0/1/2,A2/c.java:266,yes,confirmed
+31,49,DEVICE_INFO,BIDIR,01,LostBot D2/C0141b.java:31; D2/R0.java:51,voltage flags lock fw or IoT ASCII,A2/c.java:270,yes,confirmed
+34,52,HELMET_UNLOCK / MQTT_ACCOUNT,SET,ASCII account,LostBot D2/C0148e0.java:55,empty ACK,A2/c.java:283,manual,confirmed
+35,53,MQTT_PASSWORD,SET,ASCII password,LostBot D2/C0148e0.java:62,empty ACK,A2/c.java:285,manual,confirmed
+37,55,INSTALLATION_MODE,SET,unknown,unknown,catalog only,,manual,catalog
+3D,61,AUTO_LOCK_MODE,SET,unknown,unknown,catalog only,,manual,catalog
+40,64,STEERING_MODE,SET,unknown,unknown,catalog only,,manual,catalog
+50,80,DISABLE_GSM_COMMUNICATION,SET,00 or 01,LostBot C2/o.java:125 and 128,gsm state payload[0],A2/c.java:288,manual,confirmed
+51,81,SCOOTER_OLD_DATA,BIDIR,unknown,unknown,catalog only,,manual,catalog
+52,82,CLEAR_DATA,SET,unknown,unknown,catalog only,,manual,catalog
+53,83,GSM_AUTO_DETECT,SET,01,LostBot C2/o.java:131,detect result payload[0],A2/c.java:290,manual,confirmed
+54,84,CLEAR_BT_PAIRED_USERS,SET,01,LostBot D2/C0148e0.java:38,status payload[0],A2/c.java:292,yes,confirmed
+55,85,GPS_TRACKING_SETTINGS,SET,unknown,unknown,flag and two u16 LE,A2/c.java:294,manual,catalog
+56,86,METER_CONFIG,SET,unknown,unknown,catalog only,,manual,catalog
+60,96,SCOOTER_INFO,BIDIR,01,LostBot D2/C0141b.java:33; D2/R0.java:48,battery mode speed trip range,A2/c.java:296,yes,confirmed
+61,97,SCOOTER_SET,SET,light mode throttle 00,LostBot D2/C0141b.java:39 and 41; C2/o.java:79 and 82,status payload[0],A2/c.java:298,yes,confirmed
+62,98,SCOOTER_CONFIG,SET,unknown,unknown,config dump,A2/c.java:300,manual,catalog
+63,99,VEHICLE_REALTIME_INFO,BIDIR,01,LostBot D2/C0141b.java:35,battery speed current flags,A2/c.java:302,yes,confirmed
+64,100,SET_WHEEL_DIAMETER,SET,hi lo,no builder found,set wheel diameter u16 BE,A2/c.java:304,manual,inferred
+72,114,CALIBRATE_INSTRUMENT_TIME,SET,epoch4 tz,LostBot C2/o.java:105,epoch and timezone,A2/c.java:306,manual,confirmed
+73,115,METER_RESET,SET,01 01,LostBot D2/C0148e0.java:34,meter reset fields,A2/c.java:308,manual,confirmed
+74,116,NAVIGATION,SET,unknown,unknown,catalog only,,manual,catalog
+75,117,AUDIO_TOGGLE,SET,unknown,unknown,audio state,A2/c.java:310,manual,catalog
+76,118,START_TESTING,SET,01,LostBot C2/o.java:111,test mode state,A2/c.java:312,manual,confirmed
+77,119,CLEAR_MILEAGE,SET,01,LostBot C2/o.java:108,clear mileage result,A2/c.java:314,manual,confirmed
+78,120,XM_FIND_CAR,SET,unknown,no builder found,xm find result,A2/c.java:316,manual,catalog
+79,121,AUTOMATIC_SCREEN_OFF,SET,unknown,unknown,screen off result,A2/c.java:318,manual,catalog
+81,129,SCOOTER_BATTERY / OUT_LOCK,BIDIR,05 for eject,LostBot C2/o.java:62; D2/C0141b.java:37,tag and status,A2/c.java:355,yes,confirmed
+82,130,SCOOTER_COLOR_LIGHT,SET,mode 00 R G B 00 00 00,LostBot D2/C0141b.java:58; D2/C0166n0.java:274,mode and RGB,A2/c.java:357,yes,confirmed
+85,133,READ_RFID_CARD,BIDIR,01,LostBot C2/o.java:101; D2/C0141b.java:56,RFID u32 BE,A2/c.java:359,yes,confirmed
+86,134,DELETE_RFID,SET,id1 u32 BE id2 u32 BE,LostBot D2/C0175s0.java:36,delete result,A2/c.java:361,decoder,confirmed
+90,144,XM_POWER_CONTROL,SET,unknown,unknown,xm power state,A2/c.java:362,manual,catalog
+91,145,POWER_CONTROL,SET,01,LostBot D2/C0148e0.java:30; C2/o.java:47,power state,A2/c.java:363,yes,confirmed
+92,146,IOT_RESTART,SET,01,LostBot D2/C0148e0.java:48; D2/C0141b.java:52,restart ACK,A2/c.java:364,yes,confirmed
+95,149,CHAIN_LOCK_PASSWORD_ENTRY,SET,unknown,unknown,catalog only,,manual,catalog
+96,150,CHAIN_LOCK_PASSWORD_DELETE,SET,unknown,unknown,catalog only,,manual,catalog
+97,151,CHAIN_LOCK_GET_USER_PASSWORD,BIDIR,unknown,unknown,catalog only,,manual,catalog
+A0,160,VEHICLE_COMMANDS,BIDIR,raw bytes,no builder found,raw reply,A2/c.java:365,manual,inferred
+A1,161,QR_CODE_READ_WRITE,BIDIR,tag ASCII,no builder found,tag and ASCII,A2/c.java:366,manual,inferred
+A2,162,FIND_CAR (sound),SET,01 or 02 or 03 or 06,LostBot D2/C0141b.java:43 and 45; C2/o.java:41 44 50,find ACK,A2/c.java:367,yes,confirmed
+C0,192,BATTERY_UNLOCK,SET,01,LostBot D2/C0141b.java:37; C2/o.java:62,battery cover status,A2/c.java:368,yes,confirmed
+C3,195,ACCESSORY_CONTROL,SET,type action,no builder found,accessory state,A2/c.java:369,manual,inferred
+C4,196,UPDATE_CERTIFICATE,SET,01,LostBot C2/o.java:141; D2/C0141b.java:62,certificate ACK,A2/c.java:371,manual,confirmed
+C5,197,SWITCH_SIM,SET,slot,LostBot D2/C0148e0.java:66,slot state,A2/c.java:372,manual,confirmed
+C6,198,SWITCH_NEXT_SIM,SET,01,LostBot C2/o.java:138; D2/C0141b.java:60,ACK,A2/c.java:374,manual,confirmed
+C7,199,BATTERY/LIGHT or LOG_DATA,BIDIR,unknown,unknown,catalog only,,manual,catalog
+DC,220,AVAS_SWITCH,SET,ASCII HBCS + 00,LostBot I1/a.java:737-745,AVAS state,A2/c.java:375,manual,confirmed
+DE,222,AVAS_SWITCH_2,SET,unknown,unknown,AVAS2 state,A2/c.java:376,manual,catalog
+FA,250,FW_DEVICE_INFO,BIDIR,empty,LostBot D2/C0141b.java:50; C2/F.java:456,ASCII firmware info,A2/c.java:377,yes,confirmed
+FB,251,FW_DEVICE_DATA,BIDIR,kind total2 crc2 type key,LostBot C2/F.java:825 and 829,status 0..4,A2/c.java:378,yes,confirmed
+FC,252,FW_GET_FIRMWARE_DATA,BIDIR,idx2 type or idx2 data16 crc2,LostBot C2/F.java:1325,pack request or data,A2/c.java:384,yes,confirmed

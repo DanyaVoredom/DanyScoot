@@ -6,5 +6,7 @@ app/app/build/
 app/local.properties
 app/.kotlin/
 *.log
+__pycache__/
+*.pyc
 .idea/
 .DS_Store
