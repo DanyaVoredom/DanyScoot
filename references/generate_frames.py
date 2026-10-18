@@ -86,7 +86,7 @@ tx = [
     vector("cert", 0xC4, bytes([1]), 0x42, 0x10, "update certificate"),
     vector("gsm_off", 0x50, bytes([0]), 0x42, 0x10, "GSM disable"),
     vector("gsm_on", 0x50, bytes([1]), 0x42, 0x10, "GSM enable"),
-    vector("gsm_detect", 0x83, bytes([1]), 0x42, 0x10, "GSM auto-detect"),
+    vector("gsm_detect", 0x53, bytes([1]), 0x42, 0x10, "GSM auto-detect"),
     vector("audio_on", 0x75, bytes([1]), 0x42, 0x10, "audio on"),
     vector("audio_off", 0x75, bytes([0xFF, 1]), 0x42, 0x10, "audio off"),
     vector("start_test", 0x76, bytes([1]), 0x42, 0x10, "enter test mode"),

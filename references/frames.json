@@ -363,12 +363,12 @@
     },
     {
       "id": "gsm_detect",
-      "cmd": "83",
+      "cmd": "53",
       "key": 66,
       "rand": 16,
       "wire_rand": 66,
       "payload": "01",
-      "frame": "A3A40142529311F4",
+      "frame": "A3A40142524311AC",
       "note": "GSM auto-detect"
     },
     {
