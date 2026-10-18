@@ -1,0 +1,583 @@
+{
+  "schema": "danyurent.manifests/v1",
+  "apps": [
+    {
+      "id": "LostBot",
+      "package": "ru.lostbotapp.Free",
+      "version_name": "1.2.1",
+      "version_code": 4,
+      "min_sdk": 4,
+      "target_sdk": 42,
+      "compile_sdk": 35,
+      "manifest_compile_sdk": "35",
+      "application": {
+        "allowBackup": "false",
+        "appComponentFactory": "androidx.core.app.CoreComponentFactory",
+        "dataExtractionRules": "@xml/data_extraction_rules",
+        "extractNativeLibs": "true",
+        "fullBackupContent": "false",
+        "icon": "@mipmap/ic_launcher",
+        "label": "@string/app_name",
+        "name": "ru.lostbotapp.LostBotApplication",
+        "networkSecurityConfig": "@xml/network_security_config",
+        "roundIcon": "@mipmap/ic_launcher_round",
+        "supportsRtl": "true",
+        "theme": "@style/Theme.LostBot"
+      },
+      "component_counts": {
+        "activity": 1,
+        "activity_alias": 0,
+        "service": 1,
+        "receiver": 1,
+        "provider": 1,
+        "total": 4
+      },
+      "uses_features": [
+        {
+          "name": "android.hardware.bluetooth_le",
+          "required": "true"
+        }
+      ],
+      "query_packages": [],
+      "query_actions": [],
+      "permission_count": 12,
+      "source": "analysis/LostBot/AndroidManifest.xml"
+    },
+    {
+      "id": "FishBot",
+      "package": "FishBot.en.Milky",
+      "version_name": "1.0.0",
+      "version_code": 1,
+      "min_sdk": 17,
+      "target_sdk": 28,
+      "compile_sdk": 35,
+      "manifest_compile_sdk": "35",
+      "application": {
+        "allowBackup": "false",
+        "appComponentFactory": "androidx.core.app.CoreComponentFactory",
+        "dataExtractionRules": "@xml/APKTOOL_RENAMED_0x7f0c0000",
+        "extractNativeLibs": "true",
+        "fullBackupContent": "false",
+        "icon": "@mipmap/APKTOOL_RENAMED_0x7f080000",
+        "label": "@string/APKTOOL_RENAMED_0x7f090001",
+        "name": "ru.lostbotapp.LostBotApplication",
+        "networkSecurityConfig": "@xml/APKTOOL_RENAMED_0x7f0c0001",
+        "roundIcon": "@mipmap/APKTOOL_RENAMED_0x7f080001",
+        "supportsRtl": "true",
+        "theme": "@style/APKTOOL_RENAMED_0x7f0a000a",
+        "usesCleartextTraffic": "true"
+      },
+      "component_counts": {
+        "activity": 1,
+        "activity_alias": 0,
+        "service": 1,
+        "receiver": 1,
+        "provider": 1,
+        "total": 4
+      },
+      "uses_features": [
+        {
+          "name": "android.hardware.bluetooth_le",
+          "required": "true"
+        }
+      ],
+      "query_packages": [],
+      "query_actions": [],
+      "permission_count": 21,
+      "source": "analysis/FishBot/AndroidManifest.xml"
+    },
+    {
+      "id": "NineHack",
+      "package": "com.timeylies.ninehack.ru",
+      "version_name": "1.2",
+      "version_code": 1,
+      "min_sdk": 3,
+      "target_sdk": 49,
+      "compile_sdk": 34,
+      "manifest_compile_sdk": "34",
+      "application": {
+        "allowBackup": "true",
+        "appComponentFactory": "androidx.core.app.CoreComponentFactory",
+        "dataExtractionRules": "@xml/data_extraction_rules",
+        "debuggable": "true",
+        "extractNativeLibs": "true",
+        "fullBackupContent": "@xml/backup_rules",
+        "icon": "@mipmap/ic_launcher",
+        "label": "@string/app_name",
+        "roundIcon": "@mipmap/ic_launcher_round",
+        "supportsRtl": "true",
+        "theme": "@style/Theme.NineHack"
+      },
+      "component_counts": {
+        "activity": 5,
+        "activity_alias": 0,
+        "service": 0,
+        "receiver": 1,
+        "provider": 1,
+        "total": 7
+      },
+      "uses_features": [
+        {
+          "name": "android.hardware.bluetooth",
+          "required": "true"
+        },
+        {
+          "name": "android.hardware.bluetooth_le",
+          "required": "true"
+        }
+      ],
+      "query_packages": [],
+      "query_actions": [],
+      "permission_count": 8,
+      "source": "analysis/NineHack/AndroidManifest.xml"
+    },
+    {
+      "id": "Urent1902",
+      "package": "ru.urentbike.app",
+      "version_name": "1.90.2",
+      "version_code": 1902,
+      "min_sdk": 24,
+      "target_sdk": 36,
+      "compile_sdk": 36,
+      "manifest_compile_sdk": "36",
+      "application": {
+        "allowBackup": "false",
+        "appComponentFactory": "androidx.core.app.CoreComponentFactory",
+        "dataExtractionRules": "@xml/appsflyer_data_extraction_rules",
+        "extractNativeLibs": "true",
+        "fullBackupContent": "false",
+        "hardwareAccelerated": "true",
+        "icon": "@mipmap/ic_app_launcher",
+        "label": "@string/app_name",
+        "largeHeap": "true",
+        "name": "ru.urentbike.app.App",
+        "networkSecurityConfig": "@xml/network_security_config",
+        "requestLegacyExternalStorage": "true",
+        "roundIcon": "@mipmap/ic_app_launcher_round",
+        "supportsRtl": "true",
+        "theme": "@style/AppMainTheme",
+        "usesCleartextTraffic": "false"
+      },
+      "component_counts": {
+        "activity": 21,
+        "activity_alias": 0,
+        "service": 24,
+        "receiver": 19,
+        "provider": 14,
+        "total": 78
+      },
+      "uses_features": [
+        {
+          "name": "android.hardware.camera"
+        },
+        {
+          "name": "android.hardware.nfc",
+          "required": "false"
+        },
+        {
+          "name": "android.hardware.bluetooth_le",
+          "required": "true"
+        },
+        {
+          "glEsVersion": "0x30001",
+          "required": "true"
+        }
+      ],
+      "query_packages": [
+        "kz.kaspi.mobile",
+        "ru.nspk.mirpay",
+        "ru.sberbankmobile",
+        "com.idamob.tinkoff.android",
+        "com.google.android.apps.maps",
+        "com.facebook.katana",
+        "com.instagram.android",
+        "com.facebook.lite",
+        "com.samsung.android.mapsagent",
+        "androidx.test.orchestrator",
+        "androidx.test.services",
+        "com.google.android.apps.common.testing.services",
+        "com.huawei.android.pushagent",
+        "com.huawei.hff",
+        "com.huawei.hms",
+        "com.huawei.hwid",
+        "com.huawei.hwid.tv",
+        "com.huawei.works"
+      ],
+      "query_actions": [
+        "android.intent.action.SENDTO",
+        "android.intent.action.VIEW",
+        "android.intent.action.VIEW",
+        "ru.mts.analytics.sdk2.tracker.service.ITrackerService",
+        "com.appsflyer.referrer.INSTALL_PROVIDER",
+        "android.intent.action.VIEW",
+        "com.huawei.hms.core.aidlservice",
+        "com.huawei.hms.core"
+      ],
+      "permission_count": 34,
+      "source": "C:/Users/Dmode/AppData/Local/Temp/opencode/urent1902_dec/AndroidManifest.xml"
+    },
+    {
+      "id": "Urent270",
+      "package": "ru.urentbike.app",
+      "version_name": "2.7.0",
+      "version_code": 2070,
+      "min_sdk": 24,
+      "target_sdk": 36,
+      "compile_sdk": 36,
+      "manifest_compile_sdk": "36",
+      "application": {
+        "allowBackup": "false",
+        "appComponentFactory": "androidx.core.app.CoreComponentFactory",
+        "dataExtractionRules": "@xml/appsflyer_data_extraction_rules",
+        "extractNativeLibs": "true",
+        "fullBackupContent": "false",
+        "hardwareAccelerated": "true",
+        "icon": "@mipmap/ic_app_launcher",
+        "label": "@string/app_name",
+        "largeHeap": "true",
+        "name": "ru.urentbike.app.App",
+        "networkSecurityConfig": "@xml/network_security_config",
+        "requestLegacyExternalStorage": "true",
+        "roundIcon": "@mipmap/ic_app_launcher_round",
+        "supportsRtl": "true",
+        "theme": "@style/AppSplashTheme",
+        "usesCleartextTraffic": "false"
+      },
+      "component_counts": {
+        "activity": 20,
+        "activity_alias": 12,
+        "service": 24,
+        "receiver": 19,
+        "provider": 15,
+        "total": 90
+      },
+      "uses_features": [
+        {
+          "name": "android.hardware.camera"
+        },
+        {
+          "name": "android.hardware.nfc",
+          "required": "false"
+        },
+        {
+          "name": "android.hardware.bluetooth_le",
+          "required": "true"
+        },
+        {
+          "glEsVersion": "0x30001",
+          "required": "true"
+        }
+      ],
+      "query_packages": [
+        "kz.kaspi.mobile",
+        "ru.nspk.mirpay",
+        "ru.sberbankmobile",
+        "com.idamob.tinkoff.android",
+        "com.google.android.apps.maps",
+        "com.facebook.katana",
+        "com.instagram.android",
+        "com.facebook.lite",
+        "com.samsung.android.mapsagent",
+        "androidx.test.orchestrator",
+        "androidx.test.services",
+        "com.google.android.apps.common.testing.services",
+        "com.huawei.android.pushagent",
+        "com.huawei.hff",
+        "com.huawei.hms",
+        "com.huawei.hwid",
+        "com.huawei.hwid.tv",
+        "com.huawei.works"
+      ],
+      "query_actions": [
+        "org.chromium.intent.action.PAY",
+        "org.chromium.intent.action.IS_READY_TO_PAY",
+        "org.chromium.intent.action.UPDATE_PAYMENT_DETAILS",
+        "android.intent.action.SENDTO",
+        "android.intent.action.VIEW",
+        "android.intent.action.VIEW",
+        "ru.mts.analytics.sdk2.tracker.service.ITrackerService",
+        "com.appsflyer.referrer.INSTALL_PROVIDER",
+        "android.intent.action.VIEW",
+        "com.huawei.hms.core.aidlservice",
+        "com.huawei.hms.core"
+      ],
+      "permission_count": 34,
+      "source": "C:/Users/Dmode/AppData/Local/Temp/opencode/urent_dec/AndroidManifest.xml"
+    },
+    {
+      "id": "DanyUrent",
+      "package": "ru.dany.urent",
+      "version_name": "1.0.0",
+      "version_code": 1,
+      "min_sdk": 23,
+      "target_sdk": 35,
+      "compile_sdk": 36,
+      "manifest_compile_sdk": "",
+      "application": {
+        "name": ".App",
+        "allowBackup": "false",
+        "icon": "@mipmap/ic_launcher",
+        "label": "@string/app_name",
+        "supportsRtl": "true",
+        "theme": "@style/Theme.DanyUrent"
+      },
+      "component_counts": {
+        "activity": 1,
+        "activity_alias": 0,
+        "service": 1,
+        "receiver": 0,
+        "provider": 0,
+        "total": 2
+      },
+      "uses_features": [
+        {
+          "name": "android.hardware.bluetooth_le",
+          "required": "true"
+        }
+      ],
+      "query_packages": [],
+      "query_actions": [],
+      "permission_count": 9,
+      "source": "app/app/src/main/AndroidManifest.xml"
+    },
+    {
+      "id": "Whoosh400",
+      "package": "com.punicapp.whoosh",
+      "version_name": "4.0.0",
+      "version_code": 418060,
+      "min_sdk": 32,
+      "target_sdk": 36,
+      "compile_sdk": 36,
+      "manifest_compile_sdk": "36",
+      "application": {
+        "allowBackup": "false",
+        "appComponentFactory": "androidx.core.app.CoreComponentFactory",
+        "enableOnBackInvokedCallback": "false",
+        "extractNativeLibs": "false",
+        "forceDarkAllowed": "true",
+        "hardwareAccelerated": "true",
+        "icon": "@mipmap/ic_launcher_summer_game",
+        "label": "@string/app_name",
+        "largeHeap": "true",
+        "name": "com.punicapp.whoosh.WhooshApp",
+        "networkSecurityConfig": "@xml/network_security_config",
+        "requestLegacyExternalStorage": "true",
+        "supportsRtl": "true",
+        "usesCleartextTraffic": "true"
+      },
+      "component_counts": {
+        "activity": 24,
+        "activity_alias": 0,
+        "service": 29,
+        "receiver": 25,
+        "provider": 8,
+        "total": 86
+      },
+      "uses_features": [
+        {
+          "name": "android.hardware.camera",
+          "required": "true"
+        },
+        {
+          "name": "android.hardware.camera.flash",
+          "required": "false"
+        },
+        {
+          "name": "android.hardware.bluetooth_le",
+          "required": "true"
+        },
+        {
+          "glEsVersion": "0x20000",
+          "required": "true"
+        },
+        {
+          "name": "android.hardware.wifi",
+          "required": "false"
+        },
+        {
+          "name": "android.hardware.location",
+          "required": "false"
+        },
+        {
+          "name": "android.hardware.telephony",
+          "required": "false"
+        },
+        {
+          "name": "android.hardware.telephony.radio.access",
+          "required": "false"
+        }
+      ],
+      "query_packages": [
+        "ru.sberbankmobile",
+        "com.google.android.apps.maps",
+        "com.facebook.katana",
+        "com.instagram.android",
+        "com.facebook.lite",
+        "com.samsung.android.mapsagent",
+        "com.huawei.android.pushagent",
+        "com.xiaomi.mipicks",
+        "com.huawei.hwid",
+        "com.huawei.works"
+      ],
+      "query_actions": [
+        "android.support.customtabs.action.CustomTabsService",
+        "android.intent.action.VIEW",
+        "android.intent.action.VIEW",
+        "android.intent.action.VIEW",
+        "android.intent.action.VIEW",
+        "android.intent.action.VIEW",
+        "com.appsflyer.referrer.INSTALL_PROVIDER",
+        "com.huawei.hms.core.aidlservice",
+        "com.huawei.hms.core",
+        "android.intent.action.MAIN",
+        "android.net.VpnService"
+      ],
+      "permission_count": 37,
+      "source": "C:/Users/Dmode/AppData/Local/Temp/opencode/whoosh_dec/AndroidManifest.xml"
+    },
+    {
+      "id": "YandexGo5982",
+      "package": "ru.yandex.taxi",
+      "version_name": "5.98.2",
+      "version_code": 50128633,
+      "min_sdk": 32,
+      "target_sdk": 36,
+      "compile_sdk": 37,
+      "manifest_compile_sdk": "37",
+      "application": {
+        "allowBackup": "false",
+        "allowTaskReparenting": "true",
+        "appComponentFactory": "androidx.core.app.CoreComponentFactory",
+        "dataExtractionRules": "@xml/data_extraction_rules",
+        "extractNativeLibs": "false",
+        "icon": "@mipmap/icon",
+        "label": "@string/app_name",
+        "largeHeap": "true",
+        "localeConfig": "@xml/app_locale_config",
+        "name": "ru.yandex.taxi.YandexTaxiApplication",
+        "networkSecurityConfig": "@xml/network_security_config",
+        "resizeableActivity": "false",
+        "roundIcon": "@mipmap/round_icon",
+        "supportsRtl": "true",
+        "theme": "@style/Go.Light"
+      },
+      "component_counts": {
+        "activity": 98,
+        "activity_alias": 10,
+        "service": 56,
+        "receiver": 40,
+        "provider": 22,
+        "total": 226
+      },
+      "uses_features": [
+        {
+          "name": "android.hardware.camera",
+          "required": "false"
+        },
+        {
+          "name": "android.hardware.camera.autofocus",
+          "required": "false"
+        },
+        {
+          "name": "android.hardware.camera.flash",
+          "required": "false"
+        },
+        {
+          "name": "android.hardware.telephony",
+          "required": "false"
+        },
+        {
+          "name": "android.hardware.camera.any"
+        },
+        {
+          "name": "android.hardware.bluetooth_le",
+          "required": "false"
+        },
+        {
+          "name": "android.hardware.sensor.light",
+          "required": "false"
+        },
+        {
+          "name": "android.hardware.sensor.proximity",
+          "required": "false"
+        },
+        {
+          "name": "android.hardware.sensor.accelerometer",
+          "required": "false"
+        },
+        {
+          "name": "android.hardware.nfc",
+          "required": "false"
+        },
+        {
+          "name": "android.hardware.camera.ar",
+          "required": "false"
+        },
+        {
+          "glEsVersion": "0x30000",
+          "required": "true"
+        },
+        {
+          "name": "android.hardware.camera.front",
+          "required": "false"
+        },
+        {
+          "name": "android.hardware.screen.landscape",
+          "required": "false"
+        },
+        {
+          "name": "android.hardware.wifi",
+          "required": "false"
+        },
+        {
+          "name": "android.hardware.npu",
+          "required": "false"
+        }
+      ],
+      "query_packages": [
+        "ru.yandex.taxi",
+        "com.google.android.gms",
+        "com.huawei.hwid",
+        "ru.rostel",
+        "com.whatsapp",
+        "com.whatsapp.w4b",
+        "ru.nspk.mirpay",
+        "com.samsung.android.spay",
+        "com.yandex.bank.dev",
+        "com.yandex.bank",
+        "com.huawei.appmarket",
+        "com.google.android.apps.maps",
+        "com.google.ar.core",
+        "com.android.vending"
+      ],
+      "query_actions": [
+        "android.intent.action.ACTION_VIEW",
+        "android.support.customtabs.action.CustomTabsService",
+        "android.intent.action.SEND",
+        "android.intent.action.DIAL",
+        "com.yandex.intent.ADD_ACCOUNT",
+        "com.yandex.passport.ACTION_SSO_ANNOUNCEMENT",
+        "com.vkontakte.android.action.SDK_AUTH",
+        "android.intent.action.SENDTO",
+        "android.intent.action.VIEW",
+        "android.intent.action.DIAL",
+        "android.settings.APPLICATION_DETAILS_SETTINGS",
+        "android.intent.action.VIEW",
+        "ru.vk.store.sdk.install.referrer.InstallReferrerProvider",
+        "com.yandex.android.advid.IDENTIFIER_SERVICE",
+        "com.uodis.opendevice.OPENIDS_SERVICE",
+        "androidx.camera.extensions.action.VENDOR_ACTION",
+        "com.android.vending.billing.InAppBillingService.BIND",
+        "com.google.android.apps.play.billingtestcompanion.BillingOverrideService.BIND",
+        "android.intent.action.VIEW",
+        "android.intent.action.SENDTO",
+        "android.intent.action.SEND",
+        "android.intent.action.MEDIA_SCANNER_SCAN_FILE",
+        "com.google.android.play.core.install.BIND_INSTALL_SERVICE",
+        "android.intent.action.MAIN"
+      ],
+      "permission_count": 71,
+      "source": "C:/Users/Dmode/AppData/Local/Temp/opencode/yandex_dec/AndroidManifest.xml"
+    }
+  ]
+}

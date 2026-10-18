@@ -17,6 +17,11 @@
 - Документация docs, analysis и references.
 - Машиночитаемые opcodes.csv и frames.json.
 - Проверка кадров verify_frames.py.
+- Официальные base APK Urent 2.7.0, Whoosh 4.0.0 и Yandex Go 5.98.2 в references/apks через Git LFS.
+- Манифесты, разрешения и компоненты восьми приложений в manifests.json, permissions.csv и components.csv.
+- Карты UUID и BLE-команд в uuids.csv, ble_map.csv и ble_commands.csv.
+- Проверка references/validate_all.py.
+- Отчёты report_whoosh.md и report_yandex_go.md.
 
 ### Исправлено
 
@@ -24,6 +29,7 @@
 - 0x10 разбирается как отклонённая команда и причина, а не как CRC.
 - Очередь записи проверяет все чанки нового кадра и не переполняется.
 - parseHex отклоняет не-ASCII цифры.
+- Кадр GSM_AUTO_DETECT использует 0x53 вместо 0x83.
 
 ### Ограничения
 

@@ -1,0 +1,73 @@
+cmd,condition,offset,size,encoding,formula,field,values,source,confidence
+01,len >= 2,0,1,u8,,status,1 = accepted,A2/c.java:262,confirmed
+01,len >= 2,1,1,u8,,sessionKey,"0..255, 0 valid",A2/c.java:262,confirmed
+01,len < 2,,,,,invalid auth reply,,A2/c.java:262,inferred
+05,payload non-empty,0,1,u8,,status,LostBot 0 ok 1 fail 2 ack; DanyUrent 1 or 2 ok,A2/c.java:266,confirmed
+05,payload empty,,,,,ack without status,,A2/c.java:266,inferred
+10,payload empty,,,,,error without details,,A2/c.java:258,confirmed
+10,len >= 1,0,1,u8,,rejected_cmd,opcode,A2/c.java:258,confirmed
+10,len >= 2,1,1,u8,,reason,vendor specific,A2/c.java:258,confirmed
+15,payload non-empty,0,1,u8,,status,same conflict as 0x05,A2/c.java:266,confirmed
+31,text frame,0,len,ascii,,iot_network,"printable text, zero bytes removed",A2/c.java:270,confirmed
+31,len >= 7,0,2,u16 BE,/100,voltage_v,,A2/c.java:270,confirmed
+31,len >= 7,2,1,u8,,flags,bit 0 lock flag,A2/c.java:270,confirmed
+31,len >= 7,2,1,bit0,(flags & 1) == 0,locked,true when bit 0 is clear,A2/c.java:270,confirmed
+31,len >= 7,4,3,bytes,,firmware,major.minor.patch,A2/c.java:270,confirmed
+34,payload empty,,,,,mqtt_account_ack,,A2/c.java:283,confirmed
+35,payload empty,,,,,mqtt_password_ack,,A2/c.java:285,confirmed
+50,payload non-empty,0,1,u8,"0 = off, 1 = on",gsm_state,,A2/c.java:288,confirmed
+53,payload non-empty,0,1,u8,,gsm_detect_result,,A2/c.java:290,confirmed
+54,payload non-empty,0,1,u8,,clear_paired_result,"0 ok, 1 fail on LostBot",A2/c.java:292,confirmed
+55,len >= 5,0,1,u8,,gps_tracking_flag,,A2/c.java:294,confirmed
+55,len >= 5,1,2,u16 LE,,gps_interval_1,,A2/c.java:294,confirmed
+55,len >= 5,3,2,u16 LE,,gps_interval_2,,A2/c.java:294,confirmed
+60,len >= 8,0,1,u8,,battery_percent,,A2/c.java:296,confirmed
+60,len >= 8,1,1,u8,,mode,,A2/c.java:296,confirmed
+60,len >= 8,2,2,u16 BE,/10,speed_kmh,,A2/c.java:296,confirmed
+60,len >= 8,4,2,u16 BE,x10/1000,trip_km,,A2/c.java:296,confirmed
+60,len >= 8,6,2,u16 BE,x10/1000,range_km,,A2/c.java:296,confirmed
+60,len < 8,,,,,short telemetry,,A2/c.java:296,inferred
+61,payload non-empty,0,1,u8,0 = ok,set_status,,A2/c.java:298,confirmed
+63,len >= 6,0,1,u8,,battery_percent,,A2/c.java:302,confirmed
+63,len >= 6,1,2,u16 BE,/10,speed_kmh,,A2/c.java:302,confirmed
+63,len >= 6,3,2,u16 BE,/100,current_a,,A2/c.java:302,confirmed
+63,len >= 6,5,1,u8,,flags,,A2/c.java:302,confirmed
+64,len >= 2,0,2,u16 BE,,wheel_diameter_mm,100..400,A2/c.java:304,inferred
+72,len >= 5,0,4,u32 BE,,epoch_seconds,,A2/c.java:306,confirmed
+72,len >= 5,4,1,i8,,timezone_hours,signed,A2/c.java:306,confirmed
+73,len >= 2,0,2,bytes,"b2=b0, b3=b1",meter_reset_counters,,A2/c.java:308,confirmed
+75,payload non-empty,0,1,u8,255 = off,audio_state,b1 is level when off,A2/c.java:310,confirmed
+75,payload non-empty,1,1,u8,,audio_level,used when b0 = 255,A2/c.java:310,confirmed
+76,payload non-empty,0,1,u8,0 = exit,test_mode,non-zero enter,A2/c.java:312,confirmed
+77,payload non-empty,0,1,u8,,clear_mileage_result,,A2/c.java:314,confirmed
+78,payload non-empty,0,1,u8,,xm_find_result,,A2/c.java:316,catalog
+79,payload non-empty,0,1,u8,,screen_off_result,,A2/c.java:318,catalog
+81,len >= 2,0,1,u8,,tag,,A2/c.java:355,confirmed
+81,len >= 2,1,1,u8,,status,LostBot g() treats 0 as success; DanyUrent expects 1,A2/c.java:355,confirmed
+82,len >= 5,0,1,u8,,mode,,A2/c.java:357,confirmed
+82,len >= 5,2,3,bytes,,rgb,#RRGGBB at b2..b4,A2/c.java:357,confirmed
+85,len >= 4,0,4,u32 BE,,rfid_id,hex,A2/c.java:359,confirmed
+86,payload non-empty,0,1,u8,,delete_result,,A2/c.java:361,confirmed
+90,payload non-empty,0,1,u8,,xm_power_state,,A2/c.java:362,catalog
+91,payload non-empty,0,1,u8,1 = off,power_state,,A2/c.java:363,confirmed
+92,payload non-empty,,,,,iot_restart_ack,,A2/c.java:364,confirmed
+A0,payload non-empty,0,len,bytes,,raw_reply,hex dump,A2/c.java:365,inferred
+A1,len >= 1,0,1,u8,,qr_tag,,A2/c.java:366,inferred
+A1,len >= 1,1,len-1,ascii,,qr_text,,A2/c.java:366,inferred
+A2,payload non-empty,0,1,u8,,find_ack,,A2/c.java:367,confirmed
+C0,payload non-empty,0,1,u8,,battery_cover_state,,A2/c.java:368,confirmed
+C3,len >= 2,0,1,u8,,accessory_type,"1 saddle, 3 tail-box, 8 helmet",A2/c.java:369-371,inferred
+C3,len >= 2,1,1,u8,,accessory_action,"1 open, 2 close",A2/c.java:369-371,inferred
+C4,payload non-empty,0,1,u8,,certificate_ack,,A2/c.java:371,confirmed
+C5,payload empty,,,,,switch_sim_ack,,A2/c.java:372,confirmed
+C5,payload non-empty,0,1,u8,,sim_slot,,A2/c.java:372,confirmed
+C6,payload non-empty,0,1,u8,,next_sim_ack,,A2/c.java:374,confirmed
+DC,payload non-empty,0,1,u8,,avas_state,,A2/c.java:375,confirmed
+FA,payload non-empty,0,len,ascii,,firmware_info,,A2/c.java:377,confirmed
+FB,payload non-empty,0,1,u8,,transmission_status,"0 password, 1 ready, 2 complete, 3 timeout, 4 crc",A2/c.java:378,confirmed
+FB,len >= 3,1,2,u16 BE,,total_pack,config read reply,analysis/firmware.md,confirmed
+FB,len >= 6,5,1,u8,,device_type,config read reply,analysis/firmware.md,confirmed
+FC,len >= 2,0,2,u16 BE,,pack_index,pack request,A2/c.java:384,confirmed
+FC,len >= 20,2,16,bytes,,pack_data,,analysis/firmware.md,confirmed
+FC,len >= 20,18,2,u16 BE,,pack_crc16,,analysis/firmware.md,confirmed
+FC,len < 2,,,,,firmware_data_short,,A2/c.java:384,inferred

@@ -1,6 +1,6 @@
 # Индекс анализа
 
-Все документы собраны по references/FishBot.apk, references/LostBot.apk, references/NineHack.apk и официальным ru.urentbike.app 1.90.2 и 2.7.0. Факты без ссылки на источник являются вычисленными тест-векторами.
+Все документы собраны по references/FishBot.apk, references/LostBot.apk, references/NineHack.apk, официальным ru.urentbike.app 1.90.2 и 2.7.0, com.punicapp.whoosh 4.0.0 и ru.yandex.taxi 5.98.2. Факты без ссылки на источник являются вычисленными тест-векторами.
 
 ## 1. Основные документы
 
@@ -30,6 +30,8 @@
 | report_ninehack.md | NineHack: минимальный клиент, ключи, команды, ошибки, UI |
 | report_fishbot.md | FishBot: инжектор, payload, отличия от LostBot |
 | report_urent.md | официальный Urent 1.90.2 и 2.7.0: манифест, API, отсутствие BLE |
+| report_whoosh.md | Whoosh 4.0.0: BLE-стек, UUID, команды, шифрование |
+| report_yandex_go.md | Yandex Go 5.98.2: Ninebot BLE, команды, провайдер-заглушка |
 
 ## 2. Данные
 
@@ -37,8 +39,16 @@
 | --- | --- |
 | references/opcodes.csv | 54 опкода в машиночитаемом виде |
 | references/frames.json | 48 TX, 20 RX и 4 битых кадра |
+| references/apks.csv | инвентарь APK, размеры, хеши, подписи |
+| references/manifests.json | манифесты восьми приложений |
+| references/permissions.csv | 226 разрешений с категориями и риском |
+| references/components.csv | 497 компонентов приложений |
+| references/uuids.csv | UUID сервисов и характеристик Urent, Whoosh, Yandex Go |
+| references/ble_map.csv | карта BLE-профилей и шифрования |
+| references/ble_commands.csv | команды Whoosh и Yandex Go |
 | references/generate_frames.py | генератор frames.json |
 | references/verify_frames.py | независимая проверка всех кадров и CRC |
+| references/validate_all.py | проверка CSV, JSON, APK-хешей и кадров |
 | references/artifacts.md | хеши, подписи, происхождение, проверка |
 | references/schema.md | схемы CSV и JSON |
 | references/xddbot.md | публичное описание XDDbot и расхождения с APK |
@@ -54,14 +64,13 @@
 
 ## 4. Проверка данных
 
-```
 python references/generate_frames.py
-python references/verify_frames.py
-python -c "import csv; r=list(csv.DictReader(open('references/opcodes.csv',encoding='utf-8'))); print(len(r))"
-python -c "import json; d=json.load(open('references/frames.json',encoding='utf-8')); print(len(d['tx']),len(d['rx']),len(d['malformed']))"
-```
 
-Ожидаемый вывод: ok 72, затем 54 и 48 20 4.
+python references/verify_frames.py
+
+python references/validate_all.py
+
+Ожидаемый вывод: ok 72, затем счётчики validate_all.py и ok.
 
 ## 5. Уровни уверенности
 
@@ -74,6 +83,8 @@ python -c "import json; d=json.load(open('references/frames.json',encoding='utf-
 ## 6. Главные выводы
 
 - Официальное Urent 1.90.2 и 2.7.0 не содержит BLE-стека.
+- Whoosh 4.0.0 содержит IoT BLE-стек, но команды и ключ формируются на сервере.
+- Yandex Go 5.98.2 содержит Ninebot BLE-код, но провайдер UUID возвращает null.
 - LostBot и NineHack используют Nordic UART, A3 A4, CRC8 и XOR.
 - Ключи 4BKNwi77 и w4S3Hqn5 присутствуют в референсах.
 - 0x05 имеет две формы payload.

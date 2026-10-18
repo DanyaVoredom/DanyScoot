@@ -1,0 +1,56 @@
+code_hex,code_dec,name,variant,payload_template,builder_source,vector,status,notes
+01,1,COMMUNICATION_KEY,,ASCII key,LostBot C2/F.java:376; NineHack controlActivity.smali:736,handshake_ninehack; handshake_lostbot,confirmed,"auth key, key=0"
+05,5,UNLOCK,ninehack,01 x10,NineHack CommandCreator.smali:1147-1349,unlock_ninehack,confirmed,button unlock
+05,5,UNLOCK,lostbot,01 31 31 32 39 t4 00,LostBot C2/F.java:1306; C2/o.java:54; D2/C0141b.java:48,spam,confirmed,"spam unlock, t = UNIX seconds big-endian"
+10,16,ERROR,,,,,notification,device to phone only
+15,21,LOCK,,01,LostBot D2/C0141b.java:29; NineHack CommandCreator.smali,lock,confirmed,lock
+31,49,DEVICE_INFO,,01,LostBot D2/C0141b.java:31; D2/R0.java:51,device_info,confirmed,device info or IoT config
+34,52,HELMET_UNLOCK / MQTT_ACCOUNT,,ASCII account,LostBot D2/C0148e0.java:55,,confirmed,MQTT account or helmet unlock
+35,53,MQTT_PASSWORD,,ASCII password,LostBot D2/C0148e0.java:62,,confirmed,MQTT password
+37,55,INSTALLATION_MODE,,,,,catalog,payload unknown
+3D,61,AUTO_LOCK_MODE,,,,,catalog,payload unknown
+40,64,STEERING_MODE,,,,,catalog,payload unknown
+50,80,DISABLE_GSM_COMMUNICATION,,00 or 01,LostBot C2/o.java:125 and 128,gsm_off; gsm_on,confirmed,"00 disable, 01 enable"
+51,81,SCOOTER_OLD_DATA,,,,,catalog,payload unknown
+52,82,CLEAR_DATA,,,,,catalog,payload unknown
+53,83,GSM_AUTO_DETECT,,01,LostBot C2/o.java:131,gsm_detect,confirmed,auto-detect GSM
+54,84,CLEAR_BT_PAIRED_USERS,,01,LostBot D2/C0148e0.java:38,clear_bt,confirmed,clear paired users
+55,85,GPS_TRACKING_SETTINGS,,,,,catalog,"decoder only, flag + two u16 LE"
+56,86,METER_CONFIG,,,,,catalog,payload unknown
+60,96,SCOOTER_INFO,,01,LostBot D2/C0141b.java:33; D2/R0.java:48,scooter_info,confirmed,telemetry
+61,97,SCOOTER_SET,,light mode throttle 00,LostBot D2/C0141b.java:39 and 41; C2/o.java:79 and 82,set_on; set_off,confirmed,light 1 off 2 on 0 keep; mode 0 keep 1 low 2 med 3 high
+62,98,SCOOTER_CONFIG,,,,,catalog,"decoder only, config dump"
+63,99,VEHICLE_REALTIME_INFO,,01,LostBot D2/C0141b.java:35,realtime,confirmed,realtime telemetry
+64,100,SET_WHEEL_DIAMETER,,hi lo,,wheel,inferred,"u16 BE, 100..400 mm, builder not found"
+72,114,CALIBRATE_INSTRUMENT_TIME,,epoch4 BE tz,LostBot C2/o.java:105,calibrate,confirmed,UNIX seconds and signed hours
+73,115,METER_RESET,,01 01,LostBot D2/C0148e0.java:34,meter_reset,confirmed,meter reset
+74,116,NAVIGATION,,,,,catalog,payload unknown
+75,117,AUDIO_TOGGLE,,,,,catalog,"decoder only, audio state"
+76,118,START_TESTING,,01,LostBot C2/o.java:111,start_test,confirmed,test mode
+77,119,CLEAR_MILEAGE,,01,LostBot C2/o.java:108,clear_mileage,confirmed,clear mileage
+78,120,XM_FIND_CAR,,,,,catalog,"no builder, LostBot uses A2"
+79,121,AUTOMATIC_SCREEN_OFF,,,,,catalog,"decoder only, screen off result"
+81,129,SCOOTER_BATTERY / OUT_LOCK,,05,LostBot C2/o.java:62; D2/C0141b.java:37,eject,confirmed,battery eject
+82,130,SCOOTER_COLOR_LIGHT,,mode 00 R G B 00 00 00,LostBot D2/C0141b.java:58; D2/C0166n0.java:274,color,confirmed,RGB light
+85,133,READ_RFID_CARD,,01,LostBot C2/o.java:101; D2/C0141b.java:56,rfid_read,confirmed,read RFID
+86,134,DELETE_RFID,,id1 u32 BE id2 u32 BE,LostBot D2/C0175s0.java:36,rfid_delete,confirmed,delete two RFID
+90,144,XM_POWER_CONTROL,,,,,catalog,"decoder only, XM power state"
+91,145,POWER_CONTROL,,01,LostBot D2/C0148e0.java:30; C2/o.java:47,power_off,confirmed,power off
+92,146,IOT_RESTART,,01,LostBot D2/C0148e0.java:48; D2/C0141b.java:52,iot_restart,confirmed,IoT restart
+95,149,CHAIN_LOCK_PASSWORD_ENTRY,,,,,catalog,payload unknown
+96,150,CHAIN_LOCK_PASSWORD_DELETE,,,,,catalog,payload unknown
+97,151,CHAIN_LOCK_GET_USER_PASSWORD,,,,,catalog,payload unknown
+A0,160,VEHICLE_COMMANDS,,raw bytes,,vehicle_raw,inferred,"raw vehicle command, builder not found"
+A1,161,QR_CODE_READ_WRITE,,tag ASCII,,qr_tag0,inferred,"QR tag and string, builder not found"
+A2,162,FIND_CAR (sound),,01 or 02 or 03 or 06,LostBot D2/C0141b.java:43 and 45; C2/o.java:41 44 50,find1; find2; find3; find6,confirmed,find car sound
+C0,192,BATTERY_UNLOCK,,01,LostBot D2/C0141b.java:37; C2/o.java:62,battery_cover,confirmed,battery cover
+C3,195,ACCESSORY_CONTROL,,type action,,accessory_saddle; accessory_tail; accessory_helmet,inferred,type 1 saddle 3 tail-box 8 helmet; action 1 open 2 close
+C4,196,UPDATE_CERTIFICATE,,01,LostBot C2/o.java:141; D2/C0141b.java:62,cert,confirmed,update certificate
+C5,197,SWITCH_SIM,,slot,LostBot D2/C0148e0.java:66,switch_sim1; switch_sim2,confirmed,SIM slot
+C6,198,SWITCH_NEXT_SIM,,01,LostBot C2/o.java:138; D2/C0141b.java:60,next_sim,confirmed,next SIM
+C7,199,BATTERY/LIGHT or LOG_DATA,,,,,catalog,payload unknown
+DC,220,AVAS_SWITCH,,"ASCII *HBCS,NB,IMEI,V2,n,,,,,# 00",LostBot I1/a.java:737-745,avas_on; avas_off,confirmed,n 1 on 2 off
+DE,222,AVAS_SWITCH_2,,,,,catalog,payload unknown
+FA,250,FW_DEVICE_INFO,,empty,LostBot D2/C0141b.java:50; C2/F.java:456,fw_info,confirmed,firmware info
+FB,251,FW_DEVICE_DATA,,kind total2 BE crc2 BE type key,LostBot C2/F.java:797-829,fw_start,confirmed,START transmission
+FC,252,FW_GET_FIRMWARE_DATA,,idx2 BE type,LostBot C2/F.java:1325,fw_read,confirmed,request config packet

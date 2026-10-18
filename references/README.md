@@ -1,113 +1,138 @@
 # Референсы и данные
 
-Каталог содержит три APK для анализа BLE-протокола и машиночитаемые данные. Официальные APK Urent не добавлены: они большие и не являются исходниками DanyUrent. Их хеши и результаты анализа зафиксированы в analysis/references.md и analysis/report_urent.md.
+Каталог содержит шесть APK и машиночитаемые данные по BLE-протоколам Urent, Whoosh и Yandex Go. Официальные APK лежат в references/apks и хранятся через Git LFS. Старые исследовательские APK лежат в корне references.
 
-## 1. Файлы
+## 1. APK
 
 | Файл | Пакет | Версия | Размер, байт | SHA-256 |
 | --- | --- | --- | --- | --- |
-| FishBot.apk | FishBot.en.Milky | 1.0.0 (1) | 3 895 634 | 7E05FEEABDB3E2FB119FB60BFE437E8433EEE5BC33D473BFC4FB23BB09B1FEFA |
-| LostBot.apk | ru.lostbotapp.Free | 1.2.1 (4) | 2 536 378 | D1D8713820F3EBC480236E113020C0C547B94453D416EDE894D27A4205245882 |
-| NineHack.apk | com.timeylies.ninehack.ru | 1.2 (1) | 11 497 879 | E21272AC4C1A74E1BFE5AF824EE2257BB15D0BB5A8C014F75014C6DE1931D497 |
+| references/LostBot.apk | ru.lostbotapp.Free | 1.2.1 (4) | 2 536 378 | D1D8713820F3EBC480236E113020C0C547B94453D416EDE894D27A4205245882 |
+| references/FishBot.apk | FishBot.en.Milky | 1.0.0 (1) | 3 895 634 | 7E05FEEABDB3E2FB119FB60BFE437E8433EEE5BC33D473BFC4FB23BB09B1FEFA |
+| references/NineHack.apk | com.timeylies.ninehack.ru | 1.2 (1) | 11 497 879 | E21272AC4C1A74E1BFE5AF824EE2257BB15D0BB5A8C014F75014C6DE1931D497 |
+| references/apks/urent-2.7.0-base.apk | ru.urentbike.app | 2.7.0 (2070) | 82 428 322 | 503007AC2D084F95100145BD9D77D69B991E337F2642FF362BBF7F4A5EB8B7C3 |
+| references/apks/whoosh-4.0.0-base.apk | com.punicapp.whoosh | 4.0.0 (418060) | 54 707 264 | 912079486F06E84581C92055C3E87DAF8C3CB11F55B8F81F41BA907ADDB53C29 |
+| references/apks/yandex-go-5.98.2-base.apk | ru.yandex.taxi | 5.98.2 (50128633) | 192 834 008 | 27A75FDF62C9AB601BDDD89C6559E75231F868AC3F08FA463AE7A85D8B5C1862 |
 
-## 2. Документы
+Полный инвентарь, подписи и происхождение: references/apks.csv и references/apks/README.md.
+
+Официальные Urent 1.90.2 base APK и сборка DanyUrent в репозитории не хранятся. Их хеши есть в apks.csv.
+
+## 2. Официальные приложения
+
+| Приложение | BLE | Факт |
+| --- | --- | --- |
+| Urent 2.7.0 | нет | Нет BLUETOOTH-разрешений и классов android.bluetooth. Есть только uses-feature bluetooth_le. BLE-протокол Urent восстановлен по LostBot и NineHack. |
+| Whoosh 4.0.0 | да | IoT-профиль, строковые команды, ключ команды и шифрование через backend. UUID клиента: 1c18, 572a, 3d2a, 9f2a. |
+| Yandex Go 5.98.2 | да | Ninebot-протокол, команды AUTH, LOCK, UNLOCK, SOUND, CABLE_UNLOCK, UNLOCK_BATTERY_COVER. Провайдер UUID возвращает null, статических ключей нет. |
+
+Отчёты: analysis/report_whoosh.md и analysis/report_yandex_go.md.
+
+Для Urent официальное приложение не содержит BLE-стека, поэтому использовать его как источник UUID и ключей нельзя.
+
+## 3. Машиночитаемые файлы
 
 | Файл | Содержимое |
 | --- | --- |
-| artifacts.md | полные таблицы артефактов, подписей, происхождения и проверки |
-| schema.md | схемы opcodes.csv и frames.json |
-| opcodes.csv | 54 опкода: код, имя, направление, payload, источник, декодер, поддержка, уверенность |
-| frames.json | 48 TX, 20 RX, 4 битых кадра, CRC-константы |
-| generate_frames.py | генератор frames.json без внешних зависимостей |
-| verify_frames.py | независимая проверка кадров и CRC |
-| xddbot.md | публичное описание XDDbot и расхождения с APK |
+| apks.csv | инвентарь APK: пакет, версия, SDK, размер, SHA-256, подпись, источник |
+| manifests.json | манифесты восьми приложений: application, permissions, components, features, queries |
+| permissions.csv | 226 строк разрешений с категорией и риском |
+| components.csv | 497 компонентов: activity, service, receiver, provider |
+| opcodes.csv | 54 опкода Urent: код, имя, направление, payload, источник, декодер |
+| opcodes.json | те же опкоды в JSON |
+| builders.csv | 55 сборщиков payload Urent |
+| rx_fields.csv | 72 поля разбора ответов Urent |
+| frames.json | 48 TX, 20 RX, 4 битых кадра Urent |
+| uuids.csv | 16 UUID и ролей для Urent, Whoosh, Yandex Go |
+| ble_map.csv | карта BLE-профилей: сервис, write, notify, read, auth, encryption |
+| ble_commands.csv | 7 команд Whoosh и Yandex Go: сборщик, структура payload, источник |
+| verify_frames.py | проверка кадров Urent |
+| validate_all.py | проверка CSV, JSON, APK-хешей и кадров |
 
-## 3. Подписи
+Схемы: references/schema.md.
 
-| Файл | Результат apksigner | Сертификат |
+## 4. Документы
+
+| Файл | Содержимое |
+| --- | --- |
+| artifacts.md | артефакты, подписи, происхождение, проверка |
+| schema.md | схемы всех CSV и JSON |
+| analysis/report_urent.md | официальный Urent 1.90.2 и 2.7.0 |
+| analysis/report_lostbot.md | LostBot: кадры, команды, API, C2 |
+| analysis/report_fishbot.md | FishBot: упаковщик, инжектор, отличия |
+| analysis/report_ninehack.md | NineHack: минимальный BLE-клиент, ключи, команды |
+| analysis/report_whoosh.md | Whoosh 4.0.0: BLE, UUID, команды, шифрование |
+| analysis/report_yandex_go.md | Yandex Go 5.98.2: Ninebot, провайдер, команды |
+| analysis/protocol_full.md | полный протокол Urent |
+| analysis/opcode_builders.md | матрица сборщиков Urent |
+
+## 5. Происхождение
+
+Официальные APK получены через ADB с устройства SM-A175F, Android 16, SDK 36.
+
+| Пакет | Версия |
+| --- | --- |
+| ru.urentbike.app | 2.7.0 |
+| com.punicapp.whoosh | 4.0.0 |
+| ru.yandex.taxi | 5.98.2 |
+
+Декодирование:
+
+| Инструмент | Версия | Результат |
 | --- | --- | --- |
-| FishBot.apk | DOES NOT VERIFY, Missing META-INF/MANIFEST.MF | v1 отсутствует, проверка не проходит |
-| LostBot.apk | OK | CN=np, OU=np, O=np, L=??, ST=??, C=??, SHA-256 492682F877607EE99DF2DDD2BD5953FD727BDF6E19D397DE9DBBAFD582BCAD75 |
-| NineHack.apk | OK | тот же CN=np и SHA-256 492682F877607EE99DF2DDD2BD5953FD727BDF6E19D397DE9DBBAFD582BCAD75 |
+| apktool | 3.0.3 | AndroidManifest.xml, resources, smali |
+| jadx | 1.5.6 | Java-исходники Whoosh |
+| apksigner | 36.1.0 | сертификаты и проверка подписи |
 
-Совпадение сертификатов LostBot и NineHack означает общую подпись сборки, а не общий исходный код. FishBot не проходит проверку, потому что его пересобрали или удалили v1-подпись; для анализа кода это не препятствует.
+Дампы:
 
-## 4. Официальные Urent
+| Каталог | Приложение |
+| --- | --- |
+| urent_dec | Urent 2.7.0 |
+| whoosh_dec | Whoosh 4.0.0 |
+| whoosh_jadx | Whoosh 4.0.0, Java |
+| yandex_dec | Yandex Go 5.98.2 |
 
-| Артефакт | Версия | Размер, байт | SHA-256 |
-| --- | --- | --- | --- |
-| urent-1902.xapk | 1.90.2 (1902) | 95 646 408 | FA689FF0813A332F374D5A1FECDD4AF939F9780B1087FFDB3F75A7FEB50491E8 |
-| urent-1902 base APK | 1.90.2 | 68 207 063 | B42D28566AD4BCC600BBD7CFDF2D5197B2B0DA24B1291D217E80AFC7C0CF6B68 |
-| urent.xapk | 2.7.0 (2070) | 117 800 904 | 22CA0CF66B22EA13E67953ED9158B1DA5508B668A91A17BA373C69513063ADBF |
-| urent 2.7.0 base APK | 2.7.0 | 82 428 322 | 503007AC2D084F95100145BD9D77D69B991E337F2642FF362BBF7F4A5EB8B7C3 |
+Дампы находятся в C:/Users/Dmode/AppData/Local/Temp/opencode и не входят в репозиторий. В репозитории фиксируются факты, источники и хеши.
 
-Источник: APKPure, https://apkpure.com/urent/ru.urentbike.app и https://apkpure.com/urent/ru.urentbike.app/versions. Обе версии подписаны O=Urentbike, SHA-256 90E028E6D376C9E79F8D0332BFFA8667F8D41F6E5B7A114A4602EC68A0AAE2DD. В репозиторий не добавлены.
+## 6. Проверка
 
-## 5. Как получены дампы
+python references\verify_frames.py
 
-Использованы apktool 3.0.3 и jadx 1.5.6. Дампы лежат в analysis/FishBot, analysis/LostBot, analysis/NineHack и analysis/java/fishbot/sources. Официальные Urent разбирались во временных каталогах; результаты перенесены в analysis/report_urent.md.
+python references\validate_all.py
 
-Проверка подписи:
+Ожидаемый результат validate_all.py:
 
-```
-apksigner verify --print-certs <apk>
-```
+| Счётчик | Значение |
+| --- | --- |
+| apps | 8 |
+| apk | 8 |
+| permissions | 226 |
+| components | 497 |
+| opcodes | 54 |
+| uuids | 16 |
+| ble_map | 3 |
+| ble_commands | 7 |
+| Итог | ok |
 
-Проверка пакета и версии:
+Проверка APK:
 
-```
-aapt dump badging <apk>
-```
+Get-FileHash references\apks\urent-2.7.0-base.apk -Algorithm SHA256
 
-Поиск BLE-следов в Urent:
+Get-FileHash references\apks\whoosh-4.0.0-base.apk -Algorithm SHA256
 
-```
-rg -a -n "android/bluetooth|BluetoothGatt|BluetoothAdapter|BluetoothLeScanner" <dump>/smali*
-rg -a -n "6e400001|6e400002|6e400003|4BKNwi77|w4S3Hqn5" <dump>/smali*
-```
+Get-FileHash references\apks\yandex-go-5.98.2-base.apk -Algorithm SHA256
 
-## 6. Что искать в дампах
+C:\Android\Sdk\build-tools\36.1.0\apksigner.bat verify --print-certs references\apks\urent-2.7.0-base.apk
 
-| Что | Где в LostBot/FishBot | Где в NineHack |
-| --- | --- | --- |
-| UUID и GATT | z2/i.java, z2/i.smali | controlActivity.smali |
-| Кадр и CRC8 | A2/f.java, A2/f.smali, A2/c.java | CommandCreator.smali, Crc8.smali |
-| Рукопожатие | C2/F.java, C2/F.smali | controlActivity.smali |
-| Ключ по умолчанию | z2/l.java, D2/C0141b.java | strings.xml, controlActivity.smali |
-| Спам | C2/F.java, SpamService | нет |
-| Прошивка и CRC16 | C2/F.java | нет |
-| Телеметрия | A2/c.java | нет |
-| Сохранённые ключи | C2/C0121b.java, SavedBleKey | ninehack_settings |
+C:\Android\Sdk\build-tools\36.1.0\apksigner.bat verify --print-certs references\apks\whoosh-4.0.0-base.apk
 
-## 7. Машиночитаемые данные
+C:\Android\Sdk\build-tools\36.1.0\apksigner.bat verify --print-certs references\apks\yandex-go-5.98.2-base.apk
 
-Поле danyurent:
+## 7. Ограничения
 
-- yes: отдельная кнопка или метод;
-- decoder: только разбор ответа;
-- manual: отправка через общий диалог опкодов.
-
-Поле confidence:
-
-- confirmed: сборщик или декодер в APK;
-- inferred: payload из декодера;
-- catalog: только имя из каталога.
-
-## 8. Проверка
-
-```
-python references/generate_frames.py
-python references/verify_frames.py
-python -c "import csv; r=list(csv.DictReader(open('references/opcodes.csv',encoding='utf-8'))); print(len(r))"
-python -c "import json; d=json.load(open('references/frames.json',encoding='utf-8')); print(len(d['tx']),len(d['rx']),len(d['malformed']))"
-```
-
-Ожидаемый вывод: ok 72, затем 54 и 48 20 4.
-
-## 9. Ограничения
-
-- APK не содержат прошивку самоката. Все выводы о прошивке сделаны по клиентскому коду и тест-векторам.
-- Известные ключи 4BKNwi77 и w4S3Hqn5 могут не подойти к конкретному самокату. Это проверяется только на hardware.
-- Официальное Urent 1.90.2/2.7.0 не содержит BLE-стека и ключа. Это установленный факт, а не неудачный поиск.
-- FishBot не проходит проверку подписи; его код пригоден для анализа, но не как доверенный артефакт.
-- APK могут содержать вредоносный или нежелательный код. Запускать их на основном устройстве не следует.
+- Urent BLE не проверен на реальном самокате.
+- Whoosh команды и ключ формируются на сервере, алгоритм в APK отсутствует.
+- Yandex Go провайдер UUID возвращает null, рабочий BLE-путь в сборке не активируется.
+- Прошивка и OTA не проверены.
+- APK являются собственностью правообладателей и хранятся только для анализа совместимости.
+- Split APK и native-библиотеки не входят в references/apks.

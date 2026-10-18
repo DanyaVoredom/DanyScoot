@@ -1,0 +1,8 @@
+app,command,builder,frame,notes,source,confidence
+YandexGo5982,AUTH,nap0,serial2 08 00 00 01 key[9],key passed as ASCII string; bytes 6..14,yandex_dec/smali_classes17/nap0.smali,confirmed
+YandexGo5982,LOCK,nep0 index 1,serial2 01 00 arg 15 01 00,"cmd 0x15, param 1",yandex_dec/smali_classes17/nep0.smali; domain/ninebot/a.smali method d,confirmed
+YandexGo5982,UNLOCK,nep0 index 5 and 6,serial2 0a 00 arg 01 01 key4 time4 00 00; then serial2 01 00 arg 05 02 00,two writes; first has 4-byte key and UNIX seconds BE,yandex_dec/smali_classes17/nep0.smali; domain/ninebot/a.smali method g,confirmed
+YandexGo5982,SOUND,nep0 index 3,serial2 01 00 arg a2 08 00,"cmd 0xA2, param 8",yandex_dec/smali_classes17/nep0.smali method makeSound,confirmed
+YandexGo5982,CABLE_UNLOCK,nep0 index 0,serial2 01 00 arg 81 01 00,"cmd 0x81, param 1",yandex_dec/smali_classes17/nep0.smali method unlockCable,confirmed
+YandexGo5982,UNLOCK_BATTERY_COVER,nep0 index 6,serial2 01 00 arg 05 02 00,"cmd 0x05, param 2",yandex_dec/smali_classes17/nep0.smali; domain/ninebot/a.smali,confirmed
+Whoosh400,backend command,ClientBleSession,UTF-8 encrypted string on 0x9f2a,response CMD_EXE_SUCCESS or CMD_EXE_ERROR,whoosh_dec/.../BleControlPointChannel.smali,confirmed

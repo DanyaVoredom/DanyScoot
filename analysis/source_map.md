@@ -81,7 +81,41 @@
 | Нет UUID 6e400001/2/3 | поиск по всем smali |
 | Нет BluetoothAdapter, BluetoothGatt, BluetoothLeScanner | поиск по всем smali |
 
-## 4. Публичный источник
+## 4. Whoosh
+
+| Утверждение | Файл | Строки |
+| --- | --- | --- |
+| Сервис клиента 1c18 | library_client/BleServiceResolver.smali | 196 |
+| Digital output 572a | library_client/BleServiceResolver.smali | 278 |
+| String 3d2a | library_client/BleServiceResolver.smali | 292 |
+| User control point 9f2a | library_client/BleServiceResolver.smali | 306 |
+| Серверный сервис 181c | library_server/IotV1Specifications.smali | 50 |
+| Серверные характеристики 2a57, 2a3d, 2a9f | library_server/IotV1Specifications.smali | 60-80 |
+| Опрос ключа 500 мс | library_client/BleCommandKeyReader.smali | 64 |
+| Повтор команды 3 раза | library_client/BleControlPointChannel.smali | 311 |
+| Задержка повтора 500 мс | library_client/BleControlPointChannel.smali | 64 |
+| CMD_EXE_SUCCESS и CMD_EXE_ERROR | library_client/BleControlPointChannel.smali | 168, 192 |
+| Таймаут подключения 10 с | library_client/BleGattManager.smali | 72 |
+| Таймаут write 3 с | library_client/BleGattManager.smali | 80 |
+| CCCD 2902 | library_client/BleNotificationManager.smali | константа CCCD |
+| Серверное шифрование команды | ClientBleCommandEncryptor.smali, BleCommandRequestBody.smali | классы и API |
+
+## 5. Yandex Go
+
+| Утверждение | Файл | Строки |
+| --- | --- | --- |
+| Протоколы NINEBOT и WIND | api/ScootersBleProtocol.smali | 22-23 |
+| Команды AUTH, LOCK, UNLOCK, SOUND, CABLE_UNLOCK, UNLOCK_BATTERY_COVER | domain/model/ScootersBleCommandType.smali | enum |
+| Payload AUTH | nap0.smali | 36-107 |
+| Payload LOCK, UNLOCK, SOUND, CABLE_UNLOCK | nep0.smali | 100-630 |
+| Провайдер UUID возвращает null | fhq0.smali | 16-21 |
+| CCCD 2902 и включение notify | utils/ScootersBleConnectExtensionsKt$awaitConnect$2$bluetoothGatt$1.smali | 292-298 |
+| Ожидание ответа 5000 мс | data/ninebot/a.smali | 0x1388 |
+| Ожидание write 1000 мс | data/ninebot/a.smali | 0x3e8 |
+| Запись через za.f | data/ninebot/a.smali | метод b |
+| Разбор через za.g | data/ninebot/ScootersBleNinebotRepository$sendCommandWaitingResponse$response$1.smali | класс |
+
+## 6. Публичный источник
 
 | Утверждение | Источник |
 | --- | --- |
@@ -89,17 +123,25 @@
 | Публичная реализация | https://github.com/bitplugg/XDDbot |
 | Расхождение по handshake | wiki считает payload[0] deviceType; APK считают payload[0] статусом, payload[1] sessionKey |
 
-## 5. Машиночитаемые данные
+## 7. Машиночитаемые данные
 
 | Файл | Содержимое |
 | --- | --- |
 | references/opcodes.csv | 54 опкода, направление, payload, источник, декодер, поддержка DanyUrent |
 | references/frames.json | 48 TX, 20 RX, 4 битых кадра, CRC-константы |
+| references/apks.csv | инвентарь APK, размеры, SHA-256, подписи |
+| references/manifests.json | манифесты восьми приложений |
+| references/permissions.csv | разрешения с категориями и риском |
+| references/components.csv | компоненты приложений |
+| references/uuids.csv | UUID Urent, Whoosh, Yandex Go |
+| references/ble_map.csv | BLE-профили и шифрование |
+| references/ble_commands.csv | команды Whoosh и Yandex Go |
 | references/generate_frames.py | генератор frames.json без внешних зависимостей |
 | references/verify_frames.py | независимый разбор кадров и проверка CRC |
+| references/validate_all.py | проверка CSV, JSON, APK-хешей и кадров |
 | references/README.md | хеши APK, подписи, ссылки, команды проверки |
 
-## 6. DanyUrent
+## 8. DanyUrent
 
 | Утверждение | Файл | Строки |
 | --- | --- | --- |
@@ -116,7 +158,7 @@
 | Манифест | app/app/src/main/AndroidManifest.xml | 1-40 |
 | Сборка | app/app/build.gradle.kts | 1-80 |
 
-## 7. Документация
+## 9. Документация
 
 | Документ | Что проверять |
 | --- | --- |

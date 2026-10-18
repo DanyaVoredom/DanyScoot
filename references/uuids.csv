@@ -1,0 +1,17 @@
+app,role,uuid,short,source,confidence
+Urent270,service,6e400001-b5a3-f393-e0a9-e50e24dcca9e,,analysis/report_lostbot.md; analysis/report_ninehack.md,confirmed
+Urent270,write,6e400002-b5a3-f393-e0a9-e50e24dcca9e,,analysis/report_lostbot.md; analysis/report_ninehack.md,confirmed
+Urent270,notify,6e400003-b5a3-f393-e0a9-e50e24dcca9e,,analysis/report_lostbot.md; analysis/report_ninehack.md,confirmed
+Urent270,cccd,00002902-0000-1000-8000-00805f9b34fb,2902,analysis/report_lostbot.md; analysis/report_ninehack.md,confirmed
+Whoosh400,service,00001c18-0000-1000-8000-00805f9b34fb,1c18,whoosh_dec/smali_classes2/bike/whoosh/shared/ble/library_client/BleServiceResolver.smali,confirmed
+Whoosh400,digital output,0000572a-0000-1000-8000-00805f9b34fb,572a,whoosh_dec/smali_classes2/bike/whoosh/shared/ble/library_client/BleServiceResolver.smali,confirmed
+Whoosh400,string,00003d2a-0000-1000-8000-00805f9b34fb,3d2a,whoosh_dec/smali_classes2/bike/whoosh/shared/ble/library_client/BleServiceResolver.smali,confirmed
+Whoosh400,user control point,00009f2a-0000-1000-8000-00805f9b34fb,9f2a,whoosh_dec/smali_classes2/bike/whoosh/shared/ble/library_client/BleServiceResolver.smali,confirmed
+Whoosh400,cccd,00002902-0000-1000-8000-00805f9b34fb,2902,whoosh_dec/smali_classes2/bike/whoosh/shared/ble/library_client/BleNotificationManager.smali,confirmed
+Whoosh400,service server,0000181c-0000-1000-8000-00805f9b34fb,181c,whoosh_dec/smali_classes2/bike/whoosh/shared/ble/library_server/IotV1Specifications.smali,confirmed
+Whoosh400,digital output server,00002a57-0000-1000-8000-00805f9b34fb,2a57,whoosh_dec/smali_classes2/bike/whoosh/shared/ble/library_server/IotV1Specifications.smali,confirmed
+Whoosh400,string server,00002a3d-0000-1000-8000-00805f9b34fb,2a3d,whoosh_dec/smali_classes2/bike/whoosh/shared/ble/library_server/IotV1Specifications.smali,confirmed
+Whoosh400,user control point server,00002a9f-0000-1000-8000-00805f9b34fb,2a9f,whoosh_dec/smali_classes2/bike/whoosh/shared/ble/library_server/IotV1Specifications.smali,confirmed
+YandexGo5982,service,,,yandex_dec/smali_classes17/za.smali; fhq0.smali,unresolved
+YandexGo5982,write,,,yandex_dec/smali_classes17/za.smali; fhq0.smali,unresolved
+YandexGo5982,notify,,,yandex_dec/smali_classes17/za.smali; fhq0.smali,unresolved

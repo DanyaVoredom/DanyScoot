@@ -1,6 +1,6 @@
 # DanyUrent
 
-Android-приложение для работы с BLE-модулем электросамокатов Urent. Протокол восстановлен по трём референсным APK из каталога references: LostBot, FishBot и NineHack. Приложение объединяет транспорт и телеметрию LostBot с командами и семантикой NineHack, добавляет демо-режим для проверки интерфейса без самоката.
+Android-приложение для работы с BLE-модулем электросамокатов Urent. Протокол восстановлен по референсным APK из каталога references: LostBot, FishBot, NineHack, а также по официальным Urent, Whoosh и Yandex Go. Приложение объединяет транспорт и телеметрию LostBot с командами и семантикой NineHack, добавляет демо-режим для проверки интерфейса без самоката.
 
 Пакет: ru.dany.urent. Версия: 1.0.0 (1). Минимальная Android: 6.0 (API 23). Целевая: Android 15 (API 35).
 
@@ -110,10 +110,12 @@ app/app/src/main/java/ru/dany/urent/
 | references/LostBot.apk | ru.lostbotapp.Free | транспорт, кадр, спам, телеметрия, API |
 | references/FishBot.apk | FishBot.en.Milky | упаковщик, инжектор, отличия сборки |
 | references/NineHack.apk | com.timeylies.ninehack.ru | минимальный BLE-клиент, ключи, команды |
-| Urent 1.90.2 | ru.urentbike.app | официальный API, отсутствие BLE |
-| Urent 2.7.0 | ru.urentbike.app | официальный API, отсутствие BLE |
+| references/apks/urent-2.7.0-base.apk | ru.urentbike.app | официальный API, отсутствие BLE |
+| references/apks/whoosh-4.0.0-base.apk | com.punicapp.whoosh | IoT BLE, UUID, команды, серверное шифрование |
+| references/apks/yandex-go-5.98.2-base.apk | ru.yandex.taxi | Ninebot BLE, команды, провайдер-заглушка |
+| Urent 1.90.2 | ru.urentbike.app | официальный API, отсутствие BLE, APK не хранится |
 
-Хеши и подписи: references/README.md. Полный разбор: analysis/README.md.
+Хеши и подписи: references/README.md. Полный разбор: analysis/README.md. Отчёты по Whoosh и Yandex Go: analysis/report_whoosh.md и analysis/report_yandex_go.md.
 
 ## Ограничения
 
