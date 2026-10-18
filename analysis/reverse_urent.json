@@ -1,0 +1,1423 @@
+{
+  "meta": {
+    "title": "Reverse engineering of the Urent BLE protocol",
+    "scope": "Independent reconstruction from LostBot, NineHack and FishBot, cross-checked against DanyScoot",
+    "branch": "dev",
+    "date": "2026-10-18",
+    "labels": {
+      "confirmed": "proved by reference source code",
+      "inferred": "derived without direct confirmation",
+      "missing": "no data available"
+    },
+    "urent_apk_ble": {
+      "value": "absent",
+      "confidence": "confirmed",
+      "sources": [
+        "analysis/report_urent.md:102-109",
+        "analysis/report_urent.md:129",
+        "analysis/network.md:73",
+        "analysis/source_map.md:72"
+      ],
+      "note": "Official APK references/apks/urent-2.7.0-base.apk and unpacked trees urent_dec/urent1902_dec are present; searches for BluetoothGatt, BluetoothLeScanner, 6e400001, 4BKNwi77 and w4S3Hqn5 returned no matches"
+    }
+  },
+  "artifacts": [
+    {
+      "name": "LostBot transport",
+      "path": "analysis/LostBot/smali/z2/i.smali",
+      "role": "UUID, scan, connect, chunking, write type"
+    },
+    {
+      "name": "LostBot gatt callback",
+      "path": "analysis/LostBot/smali/z2/g.smali",
+      "role": "notifications, onMtuChanged, onCharacteristicWrite"
+    },
+    {
+      "name": "LostBot mtu request",
+      "path": "analysis/LostBot/smali/D2/s.1.smali",
+      "role": "requestMtu 247, fallback 3000 ms, CCCD"
+    },
+    {
+      "name": "FishBot frame",
+      "path": "analysis/java/fishbot/sources/A2/f.java",
+      "role": "build, parse, CRC"
+    },
+    {
+      "name": "FishBot catalog",
+      "path": "analysis/java/fishbot/sources/A2/c.java",
+      "role": "opcodes, response decoders, status helpers"
+    },
+    {
+      "name": "FishBot controller",
+      "path": "analysis/java/fishbot/sources/C2/F.java",
+      "role": "auth, send, timeouts, settings, demo"
+    },
+    {
+      "name": "FishBot builders",
+      "path": "analysis/java/fishbot/sources/D2/C0141b.java",
+      "role": "payload builders and default key generation"
+    },
+    {
+      "name": "FishBot calls",
+      "path": "analysis/java/fishbot/sources/C2/o.java",
+      "role": "battery cover, spam unlock, misc calls"
+    },
+    {
+      "name": "NineHack CommandCreator",
+      "path": "analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali",
+      "role": "independent frame builder and status handling"
+    },
+    {
+      "name": "NineHack CRC",
+      "path": "analysis/NineHack/smali_classes3/com/timeylies/ninehack/Crc8.smali",
+      "role": "CRC table and compute"
+    },
+    {
+      "name": "NineHack activity",
+      "path": "analysis/NineHack/smali_classes3/com/timeylies/ninehack/controlActivity.smali",
+      "role": "UUID, write, auth, UI mapping"
+    },
+    {
+      "name": "NineHack strings",
+      "path": "analysis/NineHack/res/values/strings.xml",
+      "role": "default BLE key"
+    },
+    {
+      "name": "FishBot plugin asset",
+      "path": "analysis/payload",
+      "role": "not related to Urent, see analysis/fishbot_handoff.md:11-12"
+    }
+  ],
+  "gatt": {
+    "service": {
+      "value": "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
+      "source": "analysis/LostBot/smali/z2/i.smali:68-78",
+      "confidence": "confirmed"
+    },
+    "write_characteristic": {
+      "value": "6e400002-b5a3-f393-e0a9-e50e24dcca9e",
+      "source": "analysis/LostBot/smali/z2/i.smali:80-88",
+      "confidence": "confirmed"
+    },
+    "notify_characteristic": {
+      "value": "6e400003-b5a3-f393-e0a9-e50e24dcca9e",
+      "source": "analysis/LostBot/smali/z2/i.smali:90-98",
+      "confidence": "confirmed"
+    },
+    "cccd": {
+      "value": "00002902-0000-1000-8000-00805f9b34fb",
+      "source": "analysis/LostBot/smali/z2/i.smali:100",
+      "confidence": "confirmed"
+    },
+    "cccd_value": {
+      "value": "ENABLE_NOTIFICATION_VALUE",
+      "source": "analysis/LostBot/smali/D2/s.1.smali:59",
+      "confidence": "confirmed"
+    },
+    "notification_enable": {
+      "value": "setCharacteristicNotification",
+      "source": "analysis/LostBot/smali/b/j.smali:160",
+      "confidence": "confirmed"
+    },
+    "mtu_request": {
+      "value": 247,
+      "source": "analysis/LostBot/smali/D2/s.1.smali:128-131",
+      "confidence": "confirmed"
+    },
+    "mtu_default": {
+      "value": 23,
+      "source": "analysis/LostBot/smali/z2/i.smali:159-161",
+      "confidence": "confirmed"
+    },
+    "mtu_timeout_ms": {
+      "value": 3000,
+      "source": "analysis/LostBot/smali/D2/s.1.smali:182-184",
+      "confidence": "confirmed"
+    },
+    "write_chunk": {
+      "value": "max(20, mtu - 3)",
+      "source": "analysis/LostBot/smali/z2/i.smali:1146-1154",
+      "confidence": "confirmed"
+    },
+    "write_type_rule": {
+      "value": "WRITE_TYPE_NO_RESPONSE (1) when properties bit 0x04 is set, otherwise WRITE_TYPE_DEFAULT (2)",
+      "source": "analysis/LostBot/smali/z2/i.smali:1128-1145",
+      "confidence": "confirmed"
+    },
+    "connect_timeout_ms": {
+      "value": 20000,
+      "source": "analysis/LostBot/smali/z2/i.smali:943-945",
+      "confidence": "confirmed"
+    },
+    "transport": {
+      "value": "TRANSPORT_LE",
+      "source": "analysis/LostBot/smali/z2/i.smali:954-956",
+      "confidence": "confirmed"
+    },
+    "scan": {
+      "value": "filter by UART service, ScanMode 2, CallbackType 1",
+      "source": "analysis/LostBot/smali/z2/i.smali:641-671",
+      "confidence": "confirmed"
+    },
+    "ninehack": {
+      "write_type": 2,
+      "write_source": "analysis/NineHack/smali_classes3/com/timeylies/ninehack/controlActivity.smali:656-658",
+      "mtu_request": "absent",
+      "connect_transport": 2,
+      "connect_source": "analysis/NineHack/smali_classes3/com/timeylies/ninehack/controlActivity.smali:233-237",
+      "confidence": "confirmed"
+    }
+  },
+  "frame": {
+    "layout": [
+      "0xA3",
+      "0xA4",
+      "len",
+      "rand_wire",
+      "key_wire",
+      "cmd_wire",
+      "payload_wire",
+      "crc"
+    ],
+    "payload_max": 255,
+    "frame_max": 262,
+    "rand_offset": 50,
+    "rand_wire": "(originalRand + 50) & 0xFF",
+    "rand_restore": "(wire - 50) & 0xFF",
+    "key_wire": "originalKey XOR originalRand",
+    "cmd_wire": "originalCmd XOR originalRand",
+    "payload_wire": "payload byte XOR originalRand",
+    "crc_scope": "all bytes before CRC, from 0xA3 through the last payload byte",
+    "crc": {
+      "name": "CRC-8/MAXIM",
+      "poly": "0x8C",
+      "init": "0x00",
+      "refin": true,
+      "refout": true,
+      "xorout": "0x00",
+      "check": "0xA1 for input 123456789",
+      "source": "analysis/java/fishbot/sources/A2/f.java:34-40",
+      "ninehack_source": "analysis/NineHack/smali_classes3/com/timeylies/ninehack/Crc8.smali:60-317",
+      "confidence": "confirmed"
+    },
+    "strict_length": "frame length must equal 7 + len",
+    "sources": [
+      "analysis/java/fishbot/sources/A2/f.java:16-31",
+      "analysis/java/fishbot/sources/A2/f.java:71-96",
+      "analysis/LostBot/smali/A2/f.smali:596",
+      "analysis/LostBot/smali/A2/f.smali:767-789"
+    ],
+    "rand_range_lostbot": {
+      "value": "0..254",
+      "source": "analysis/java/fishbot/sources/K1/a.java:10-11",
+      "confidence": "confirmed"
+    },
+    "rand_range_ninehack": {
+      "value": "1..254",
+      "source": "analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:1155-1171",
+      "confidence": "confirmed"
+    },
+    "escaping": {
+      "value": "none",
+      "confidence": "confirmed"
+    }
+  },
+  "auth": {
+    "cmd": "0x01",
+    "frame_key": 0,
+    "payload": "ASCII BLE key, no terminator",
+    "success": "payload[0] == 1 and payload length >= 2",
+    "session_key": "payload[1]",
+    "timeout_ms": 3000,
+    "key_before_auth": "0x42 default in LostBot",
+    "key_after_auth": "frame key equals payload[1]",
+    "sources": [
+      "analysis/java/fishbot/sources/A2/c.java:21",
+      "analysis/java/fishbot/sources/C2/F.java:365-379",
+      "analysis/java/fishbot/sources/C2/F.java:392-397",
+      "analysis/java/fishbot/sources/C2/F.java:564-572",
+      "analysis/java/fishbot/sources/cd/bn.java:117",
+      "analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:578-635",
+      "analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:93-107"
+    ],
+    "confidence": "confirmed",
+    "ninehack": {
+      "cmd": "0x01",
+      "frame_key": 0,
+      "payload_length": 8,
+      "success": "payload[0] == 1",
+      "timeout_ms": null,
+      "timeout_note": "no auth timeout found",
+      "source": "analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:578-680"
+    },
+    "default_keys": [
+      {
+        "app": "NineHack",
+        "key": "4BKNwi77",
+        "source": "analysis/NineHack/res/values/strings.xml:44",
+        "confidence": "confirmed"
+      },
+      {
+        "app": "LostBot",
+        "key": "w4S3Hqn5",
+        "source": "analysis/java/fishbot/sources/D2/C0141b.java:81-85",
+        "derivation_source": "analysis/java/fishbot/sources/z2/l.java:10-13",
+        "confidence": "confirmed",
+        "note": "computed by executing the formula b[i % 5] XOR a[i] XOR ((i * 31) & 0xFF)"
+      },
+      {
+        "app": "DanyScoot",
+        "key": "4BKNwi77",
+        "source": "app/app/src/main/java/ru/dany/scoot/core/Prefs.kt:116",
+        "confidence": "confirmed"
+      }
+    ],
+    "repeat_auth": {
+      "value": "not implemented in LostBot or NineHack",
+      "confidence": "inferred",
+      "missing": "firmware behavior for a second 0x01"
+    }
+  },
+  "commands": [
+    {
+      "cmd": "0x01",
+      "name": "COMMUNICATION_KEY",
+      "payload": "ASCII key",
+      "apps": [
+        "LostBot",
+        "NineHack",
+        "DanyScoot"
+      ],
+      "source": "analysis/java/fishbot/sources/A2/c.java:21",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0x05",
+      "name": "UNLOCK",
+      "variants": [
+        {
+          "payload": "01 31 31 32 39 + unix seconds big-endian + 00",
+          "apps": [
+            "LostBot"
+          ],
+          "source": "analysis/java/fishbot/sources/D2/C0141b.java:47-48"
+        },
+        {
+          "payload": "01 repeated 10 times",
+          "apps": [
+            "NineHack",
+            "DanyScoot"
+          ],
+          "source": "analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:1337-1348",
+          "note": "LostBot uses the timestamp variant only"
+        }
+      ]
+    },
+    {
+      "cmd": "0x10",
+      "name": "ERROR",
+      "payload": "rejected cmd, reason",
+      "direction": "notification",
+      "source": "analysis/java/fishbot/sources/A2/c.java:264-268",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0x15",
+      "name": "LOCK",
+      "payload": "01",
+      "apps": [
+        "LostBot",
+        "NineHack",
+        "DanyScoot"
+      ],
+      "source": "analysis/java/fishbot/sources/D2/C0141b.java:29",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0x31",
+      "name": "DEVICE_INFO",
+      "payload": "01",
+      "apps": [
+        "LostBot",
+        "DanyScoot"
+      ],
+      "source": "analysis/java/fishbot/sources/D2/C0141b.java:31",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0x34",
+      "name": "HELMET_UNLOCK / MQTT_ACCOUNT",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x35",
+      "name": "MQTT_PASSWORD",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x37",
+      "name": "INSTALLATION_MODE",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x3D",
+      "name": "AUTO_LOCK_MODE",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x40",
+      "name": "STEERING_MODE",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x50",
+      "name": "DISABLE_GSM_COMMUNICATION",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x51",
+      "name": "SCOOTER_OLD_DATA",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x52",
+      "name": "CLEAR_DATA",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x53",
+      "name": "GSM_AUTO_DETECT",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x54",
+      "name": "CLEAR_BT_PAIRED_USERS",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x56",
+      "name": "METER_CONFIG",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x55",
+      "name": "GPS_TRACKING_SETTINGS",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:112-118",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x60",
+      "name": "SCOOTER_INFO",
+      "payload": "01",
+      "apps": [
+        "LostBot",
+        "DanyScoot"
+      ],
+      "source": "analysis/java/fishbot/sources/D2/C0141b.java:33",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0x61",
+      "name": "SCOOTER_SET",
+      "payload": "headlight, mode, throttle, 00",
+      "apps": [
+        "NineHack",
+        "DanyScoot"
+      ],
+      "source": "analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:989-1003",
+      "confidence": "confirmed",
+      "lostbot_variant": {
+        "payloads": [
+          "02 00 00 00",
+          "01 00 00 00"
+        ],
+        "source": "analysis/java/fishbot/sources/D2/C0141b.java:39-41",
+        "note": "does not match the 4-byte NineHack layout, UI mapping unknown"
+      }
+    },
+    {
+      "cmd": "0x63",
+      "name": "VEHICLE_REALTIME_INFO",
+      "payload": "01",
+      "apps": [
+        "LostBot",
+        "DanyScoot"
+      ],
+      "source": "analysis/java/fishbot/sources/D2/C0141b.java:35",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0x62",
+      "name": "SCOOTER_CONFIG",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x64",
+      "name": "SET_WHEEL_DIAMETER",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x72",
+      "name": "CALIBRATE_INSTRUMENT_TIME",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x73",
+      "name": "METER_RESET",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x74",
+      "name": "NAVIGATION",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x75",
+      "name": "AUDIO_TOGGLE",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x76",
+      "name": "START_TESTING",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x77",
+      "name": "CLEAR_MILEAGE",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x78",
+      "name": "XM_FIND_CAR",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x79",
+      "name": "AUTOMATIC_SCREEN_OFF",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x90",
+      "name": "XM_POWER_CONTROL",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x91",
+      "name": "POWER_CONTROL",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x95",
+      "name": "CHAIN_LOCK_PASSWORD_ENTRY",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x96",
+      "name": "CHAIN_LOCK_PASSWORD_DELETE",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x97",
+      "name": "CHAIN_LOCK_GET_USER_PASSWORD",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0xA0",
+      "name": "VEHICLE_COMMANDS",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0xA1",
+      "name": "QR_CODE_READ_WRITE",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0xC3",
+      "name": "ACCESSORY_CONTROL",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0xC5",
+      "name": "SWITCH_SIM",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0xC7",
+      "name": "BATTERY/LIGHT or LOG_DATA",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0xDC",
+      "name": "AVAS_SWITCH",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0xDE",
+      "name": "AVAS_SWITCH_2",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:27",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0x81",
+      "name": "SCOOTER_BATTERY / OUT_LOCK",
+      "payload": "05",
+      "apps": [
+        "LostBot",
+        "NineHack",
+        "DanyScoot"
+      ],
+      "source": "analysis/java/fishbot/sources/C2/o.java:62",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0x82",
+      "name": "SCOOTER_COLOR_LIGHT",
+      "payload": "01 00 7C 6A E8 00 00 00",
+      "apps": [
+        "LostBot"
+      ],
+      "source": "analysis/java/fishbot/sources/D2/C0141b.java:58",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0x85",
+      "name": "READ_RFID_CARD",
+      "payload": "01",
+      "apps": [
+        "LostBot",
+        "DanyScoot"
+      ],
+      "source": "analysis/java/fishbot/sources/D2/C0141b.java:56",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0x92",
+      "name": "IOT_RESTART",
+      "payload": "01",
+      "apps": [
+        "LostBot"
+      ],
+      "source": "analysis/java/fishbot/sources/D2/C0141b.java:52",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0xA2",
+      "name": "FIND_CAR",
+      "payload": "01 or 06",
+      "apps": [
+        "LostBot"
+      ],
+      "source": "analysis/java/fishbot/sources/D2/C0141b.java:43-45",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0xC0",
+      "name": "BATTERY_UNLOCK",
+      "payload": "01",
+      "apps": [
+        "LostBot"
+      ],
+      "source": "analysis/java/fishbot/sources/D2/C0141b.java:37",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0xC4",
+      "name": "UPDATE_CERTIFICATE",
+      "payload": "01",
+      "apps": [
+        "LostBot"
+      ],
+      "source": "analysis/java/fishbot/sources/D2/C0141b.java:62",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0xC6",
+      "name": "SWITCH_NEXT_SIM",
+      "payload": "01",
+      "apps": [
+        "LostBot"
+      ],
+      "source": "analysis/java/fishbot/sources/D2/C0141b.java:60",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0xFA",
+      "name": "FW_DEVICE_INFO",
+      "payload": "empty",
+      "apps": [
+        "LostBot"
+      ],
+      "source": "analysis/java/fishbot/sources/D2/C0141b.java:50",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0xFB",
+      "name": "FW_DEVICE_DATA",
+      "payload": null,
+      "direction": "notification",
+      "source": "analysis/java/fishbot/sources/A2/c.java:373-390",
+      "confidence": "missing"
+    },
+    {
+      "cmd": "0xFC",
+      "name": "FW_GET_FIRMWARE_DATA",
+      "payload": null,
+      "source": "analysis/java/fishbot/sources/A2/c.java:391-395",
+      "confidence": "missing"
+    }
+  ],
+  "telemetry": [
+    {
+      "cmd": "0x31",
+      "name": "device info",
+      "binary": {
+        "voltage_raw": "b0..b1 u16 big-endian, divided by 100 for volts",
+        "flags": "b2",
+        "locked": "(flags & 1) == 0",
+        "firmware": "b4.b5.b6",
+        "min_length": 7
+      },
+      "text_branch": "payload contains ':' and all bytes printable, used as ASCII",
+      "source": "analysis/java/fishbot/sources/A2/c.java:271-286",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0x60",
+      "name": "scooter info",
+      "fields": {
+        "battery_percent": "b0",
+        "mode": "b1",
+        "speed_kmh": "u16 b2..b3 / 10",
+        "mileage_m": "u16 b4..b5 * 10",
+        "range_m": "u16 b6..b7 * 10"
+      },
+      "min_length": 8,
+      "source": "analysis/java/fishbot/sources/A2/c.java:299-303",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0x63",
+      "name": "realtime",
+      "fields": {
+        "battery_percent": "b0",
+        "speed": "u16 b1..b2 / 10",
+        "current": "u16 b3..b4 / 100",
+        "flags": "b5"
+      },
+      "min_length": 6,
+      "source": "analysis/java/fishbot/sources/A2/c.java:308-312",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0x85",
+      "name": "read RFID",
+      "fields": {
+        "card_id": "b0..b3 big-endian 32-bit"
+      },
+      "min_length": 4,
+      "source": "analysis/java/fishbot/sources/A2/c.java:338-342",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0x86",
+      "name": "delete RFID",
+      "fields": {
+        "first_id": "b0..b3",
+        "second_id": "b4..b7"
+      },
+      "response": "ACK only",
+      "source": "analysis/java/fishbot/sources/A2/c.java:101-105",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0x81",
+      "name": "battery status",
+      "fields": {
+        "tag": "b0",
+        "status": "b1"
+      },
+      "min_length": 2,
+      "source": "analysis/java/fishbot/sources/A2/c.java:331-335",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0xFC",
+      "name": "firmware packet request",
+      "fields": {
+        "index": "b0 << 8 | b1"
+      },
+      "source": "analysis/java/fishbot/sources/A2/c.java:391-395",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0xFA",
+      "name": "firmware info",
+      "fields": {
+        "text": "ASCII"
+      },
+      "source": "analysis/java/fishbot/sources/A2/c.java:371-372",
+      "confidence": "confirmed"
+    },
+    {
+      "cmd": "0xFB",
+      "name": "firmware transfer status",
+      "fields": {
+        "status": "0 password error, 1 ready, 2 complete, 3 timeout, 4 total CRC error"
+      },
+      "source": "analysis/java/fishbot/sources/A2/c.java:373-390",
+      "confidence": "confirmed"
+    }
+  ],
+  "statuses": {
+    "0x01": {
+      "lostbot": "payload[0] == 1 means accepted, payload[1] is session key",
+      "ninehack": "payload[0] == 1 means accepted, payload[1] is session key",
+      "dany": "payload size >= 2 and payload[0] == 1",
+      "sources": [
+        "analysis/java/fishbot/sources/C2/F.java:394-395",
+        "analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:100-107",
+        "app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt:604-605"
+      ],
+      "confidence": "confirmed"
+    },
+    "0x05": {
+      "lostbot": "0 = OK, 2 or empty = ACK, any other = FAIL",
+      "ninehack": "1 = success",
+      "dany": "1 or 2 = success",
+      "sources": [
+        "analysis/java/fishbot/sources/A2/c.java:427-443",
+        "analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:221-237",
+        "app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt:35"
+      ],
+      "confidence": "confirmed",
+      "conflict": true
+    },
+    "0x15": {
+      "lostbot": "0 = OK, 2 or empty = ACK, any other = FAIL",
+      "ninehack": "1 = success",
+      "dany": "1 or 2 = success",
+      "sources": [
+        "analysis/java/fishbot/sources/A2/c.java:269-270",
+        "analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:262-278",
+        "app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt:35"
+      ],
+      "confidence": "confirmed",
+      "conflict": true
+    },
+    "0x61": {
+      "lostbot": "payload[0] == 0 means OK",
+      "ninehack": "payload[0] == 0 means success",
+      "dany": "payload[0] == 0 means success",
+      "sources": [
+        "analysis/java/fishbot/sources/A2/c.java:304-305",
+        "analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:307-317",
+        "app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt:507"
+      ],
+      "confidence": "confirmed"
+    },
+    "0x81": {
+      "lostbot": "no dedicated ACK check, tag and status decoded",
+      "ninehack": "payload[0] == 1 means success",
+      "dany": "payload[0] == 1 means success",
+      "sources": [
+        "analysis/java/fishbot/sources/A2/c.java:331-335",
+        "analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:343-358",
+        "app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt:513"
+      ],
+      "confidence": "confirmed"
+    },
+    "0x10": {
+      "lostbot": "payload[0] rejected command, payload[1] reason",
+      "ninehack": "payload[0] == 1 interpreted as CRC error",
+      "dany": "payload[0] rejected command, payload[1] reason",
+      "sources": [
+        "analysis/java/fishbot/sources/A2/c.java:264-268",
+        "analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:194-208",
+        "app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt:494-503"
+      ],
+      "confidence": "confirmed"
+    }
+  },
+  "timeouts": {
+    "command_response": {
+      "lostbot_ms": 3000,
+      "ninehack_ms": null,
+      "dany_ms": null,
+      "source": "analysis/java/fishbot/sources/C2/F.java:298",
+      "constant_source": "analysis/java/fishbot/sources/cd/bn.java:117",
+      "confidence": "confirmed"
+    },
+    "auth": {
+      "lostbot_ms": 3000,
+      "ninehack_ms": null,
+      "dany_ms": 3000,
+      "source": "analysis/java/fishbot/sources/C2/F.java:379",
+      "dany_source": "app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt:33",
+      "confidence": "confirmed"
+    },
+    "mtu_fallback": {
+      "lostbot_ms": 3000,
+      "ninehack_ms": null,
+      "dany_ms": 1500,
+      "source": "analysis/LostBot/smali/D2/s.1.smali:182-184",
+      "dany_source": "app/app/src/main/java/ru/dany/scoot/ble/BleTransport.kt:63",
+      "confidence": "confirmed"
+    },
+    "connect": {
+      "lostbot_ms": 20000,
+      "ninehack_ms": null,
+      "dany_ms": 20000,
+      "source": "analysis/LostBot/smali/z2/i.smali:943-945",
+      "dany_source": "app/app/src/main/java/ru/dany/scoot/ble/BleTransport.kt:55",
+      "confidence": "confirmed"
+    },
+    "write": {
+      "lostbot": "queue advanced in onCharacteristicWrite, no explicit timeout",
+      "ninehack_ms": null,
+      "dany_ms": 2000,
+      "source": "analysis/LostBot/smali/z2/g.smali:158",
+      "dany_source": "app/app/src/main/java/ru/dany/scoot/ble/BleTransport.kt:58",
+      "confidence": "confirmed"
+    },
+    "descriptor": {
+      "lostbot": "not found",
+      "ninehack": null,
+      "dany_ms": 3000,
+      "dany_source": "app/app/src/main/java/ru/dany/scoot/ble/BleTransport.kt:59",
+      "confidence": "confirmed"
+    },
+    "spam_interval": {
+      "lostbot_ms": 500,
+      "lostbot_range": "2..max",
+      "dany_ms": 100,
+      "dany_range": "20..10000",
+      "source": "analysis/java/fishbot/sources/C2/F.java:255",
+      "dany_source": "app/app/src/main/java/ru/dany/scoot/core/Prefs.kt:117-119",
+      "confidence": "confirmed"
+    },
+    "reconnect": {
+      "lostbot_attempts": 20,
+      "lostbot_delay_ms": 250,
+      "lostbot_ranges": "1..200 attempts, 50..10000 ms",
+      "dany_attempts": 3,
+      "dany_delay_ms": 5000,
+      "dany_ranges": "0..20 attempts, 500..60000 ms",
+      "source": "analysis/java/fishbot/sources/C2/F.java:252-253",
+      "dany_source": "app/app/src/main/java/ru/dany/scoot/core/Prefs.kt:120-121",
+      "confidence": "confirmed"
+    }
+  },
+  "discrepancies": [
+    {
+      "id": "write_type",
+      "title": "write type priority differs",
+      "dany": "uses PROPERTY_WRITE (0x08) to decide NO_RESPONSE",
+      "reference": "LostBot uses PROPERTY_WRITE_NO_RESPONSE (0x04)",
+      "effect": "if a characteristic advertises both bits, Dany sends DEFAULT while LostBot sends NO_RESPONSE",
+      "sources": [
+        "app/app/src/main/java/ru/dany/scoot/ble/BleTransport.kt:264",
+        "app/app/src/main/java/ru/dany/scoot/ble/BleTransport.kt:510-514",
+        "analysis/LostBot/smali/z2/i.smali:1128-1145"
+      ],
+      "severity": "medium",
+      "confidence": "confirmed",
+      "missing": "real GATT dump"
+    },
+    {
+      "id": "unlock_status",
+      "title": "success codes for 0x05 and 0x15 differ",
+      "dany": [
+        1,
+        2
+      ],
+      "reference_lostbot": [
+        0,
+        2,
+        "empty"
+      ],
+      "reference_ninehack": [
+        1
+      ],
+      "effect": "status 00 shown as error by Dany, status 01 shown as FAIL by LostBot",
+      "sources": [
+        "app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt:35",
+        "analysis/java/fishbot/sources/A2/c.java:427-443",
+        "analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:225-237"
+      ],
+      "severity": "high",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "unlock_payload",
+      "title": "plain unlock payload differs",
+      "dany": "10 bytes 01",
+      "reference_lostbot": "1129 + unix seconds + 00",
+      "reference_ninehack": "10 bytes 01",
+      "effect": "Dany non-spam unlock matches NineHack only",
+      "sources": [
+        "app/app/src/main/java/ru/dany/scoot/ble/ScooterCodec.kt:59-60",
+        "analysis/java/fishbot/sources/C2/o.java:52-54",
+        "analysis/java/fishbot/sources/C2/F.java:1306",
+        "analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:1337-1348"
+      ],
+      "severity": "high",
+      "confidence": "confirmed",
+      "missing": "RX log of a successful unlock"
+    },
+    {
+      "id": "default_key",
+      "title": "default BLE key differs between references",
+      "dany": "4BKNwi77",
+      "reference_lostbot": "w4S3Hqn5",
+      "reference_ninehack": "4BKNwi77",
+      "effect": "auth fails if the scooter expects the other key",
+      "sources": [
+        "app/app/src/main/java/ru/dany/scoot/core/Prefs.kt:116",
+        "app/app/src/main/java/ru/dany/scoot/ble/ScooterCodec.kt:54",
+        "analysis/java/fishbot/sources/D2/C0141b.java:81-85",
+        "analysis/NineHack/res/values/strings.xml:44"
+      ],
+      "severity": "high",
+      "confidence": "confirmed",
+      "missing": "auth log from a real scooter"
+    },
+    {
+      "id": "rand_range",
+      "title": "originalRand range differs",
+      "dany": "1..254",
+      "reference_lostbot": "0..254",
+      "reference_ninehack": "1..254",
+      "effect": "none for parsing, statistical only",
+      "sources": [
+        "app/app/src/main/java/ru/dany/scoot/ble/Frame.kt:61-62",
+        "analysis/java/fishbot/sources/K1/a.java:10-11",
+        "analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:1155-1171"
+      ],
+      "severity": "info",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "timing_defaults",
+      "title": "spam and reconnect defaults differ",
+      "dany": "spam 100 ms, reconnect 3 attempts, delay 5000 ms",
+      "reference_lostbot": "spam 500 ms, reconnect 20 attempts, delay 250 ms",
+      "sources": [
+        "app/app/src/main/java/ru/dany/scoot/core/Prefs.kt:116-121",
+        "analysis/java/fishbot/sources/C2/F.java:252-255"
+      ],
+      "severity": "low",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "mtu_fallback_timeout",
+      "title": "discovery fallback timeout differs",
+      "dany": "1500 ms",
+      "reference_lostbot": "3000 ms",
+      "sources": [
+        "app/app/src/main/java/ru/dany/scoot/ble/BleTransport.kt:63",
+        "analysis/LostBot/smali/D2/s.1.smali:182-184"
+      ],
+      "severity": "low",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "error_frame",
+      "title": "0x10 payload interpretation differs from NineHack",
+      "dany": "rejected cmd and reason, matches LostBot",
+      "reference_ninehack": "payload[0] == 1 means CRC error",
+      "sources": [
+        "app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt:494-503",
+        "analysis/java/fishbot/sources/A2/c.java:264-268",
+        "analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:194-208"
+      ],
+      "severity": "low",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "missing_builders",
+      "title": "Dany has no builders for several catalog opcodes",
+      "dany": "names only",
+      "opcodes": [
+        "0x34",
+        "0x35",
+        "0x37",
+        "0x40",
+        "0x50",
+        "0x55",
+        "0x62",
+        "0x64",
+        "0x72",
+        "0x73",
+        "0x74",
+        "0x75",
+        "0x76",
+        "0x77",
+        "0x78",
+        "0x79",
+        "0x86",
+        "0xA0",
+        "0xA1",
+        "0xC3",
+        "0xC5",
+        "0xC7",
+        "0xDC",
+        "0xDE"
+      ],
+      "sources": [
+        "app/app/src/main/java/ru/dany/scoot/ble/OpcodeCatalog.kt:15-68",
+        "analysis/java/fishbot/sources/A2/c.java:21-27"
+      ],
+      "severity": "info",
+      "confidence": "confirmed",
+      "missing": "payload definitions for these opcodes"
+    },
+    {
+      "id": "61_layout",
+      "title": "0x61 payload layout not confirmed by LostBot",
+      "dany": "headlight, mode, throttle, 00",
+      "reference_ninehack": "same",
+      "reference_lostbot": "02 00 00 00 and 01 00 00 00 only",
+      "sources": [
+        "app/app/src/main/java/ru/dany/scoot/ble/ScooterCodec.kt:65-70",
+        "analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali:989-1003",
+        "analysis/java/fishbot/sources/D2/C0141b.java:39-41"
+      ],
+      "severity": "medium",
+      "confidence": "inferred",
+      "missing": "capture of 0x61 from the LostBot UI"
+    }
+  ],
+  "test_vectors": {
+    "conditions": {
+      "original_rand": 1,
+      "wire_rand": 51,
+      "command_key": 66,
+      "auth_key_field": 0,
+      "crc_verified": "table and bitwise implementations agree",
+      "crc_check_value": "A1"
+    },
+    "requests": [
+      {
+        "name": "auth key 4BKNwi77",
+        "cmd": "0x01",
+        "key": 0,
+        "payload": "34 42 4B 4E 77 69 37 37",
+        "frame": "A3A40833010035434A4F76683636E7"
+      },
+      {
+        "name": "auth key w4S3Hqn5",
+        "cmd": "0x01",
+        "key": 0,
+        "payload": "77 34 53 33 48 71 6E 35",
+        "frame": "A3A4083301007635523249706F3489"
+      },
+      {
+        "name": "unlock 10x01",
+        "cmd": "0x05",
+        "key": 66,
+        "payload": "01 repeated 10 times",
+        "frame": "A3A40A3343040000000000000000000092"
+      },
+      {
+        "name": "lock",
+        "cmd": "0x15",
+        "key": 66,
+        "payload": "01",
+        "frame": "A3A40133431400B0"
+      },
+      {
+        "name": "device info",
+        "cmd": "0x31",
+        "key": 66,
+        "payload": "01",
+        "frame": "A3A401334330004A"
+      },
+      {
+        "name": "scooter info",
+        "cmd": "0x60",
+        "key": 66,
+        "payload": "01",
+        "frame": "A3A40133436100F9"
+      },
+      {
+        "name": "realtime",
+        "cmd": "0x63",
+        "key": 66,
+        "payload": "01",
+        "frame": "A3A40133436200AC"
+      },
+      {
+        "name": "set 61",
+        "cmd": "0x61",
+        "key": 66,
+        "payload": "01 01 01 00",
+        "frame": "A3A40433436000000001C6"
+      },
+      {
+        "name": "battery eject",
+        "cmd": "0x81",
+        "key": 66,
+        "payload": "05",
+        "frame": "A3A4013343800429"
+      },
+      {
+        "name": "battery cover",
+        "cmd": "0xC0",
+        "key": 66,
+        "payload": "01",
+        "frame": "A3A4013343C10017"
+      },
+      {
+        "name": "read RFID",
+        "cmd": "0x85",
+        "key": 66,
+        "payload": "01",
+        "frame": "A3A4013343840073"
+      },
+      {
+        "name": "spam unlock ts 1700000000",
+        "cmd": "0x05",
+        "key": 66,
+        "payload": "01 31 31 32 39 65 52 F0 00 00",
+        "frame": "A3A40A33430400303033386452F0010160"
+      }
+    ],
+    "responses": [
+      {
+        "name": "auth ok session 2A",
+        "cmd": "0x01",
+        "payload": "01 2A",
+        "frame": "A3A402334300002BBC",
+        "decoded": "accepted, session key 0x2A"
+      },
+      {
+        "name": "auth fail",
+        "cmd": "0x01",
+        "payload": "00",
+        "frame": "A3A4013343000139",
+        "decoded": "rejected"
+      },
+      {
+        "name": "unlock status 00",
+        "cmd": "0x05",
+        "payload": "00",
+        "frame": "A3A4013343040102",
+        "decoded": "LostBot OK"
+      },
+      {
+        "name": "unlock status 02",
+        "cmd": "0x05",
+        "payload": "02",
+        "frame": "A3A40133430403BE",
+        "decoded": "LostBot ACK"
+      },
+      {
+        "name": "unlock status 01",
+        "cmd": "0x05",
+        "payload": "01",
+        "frame": "A3A401334304005C",
+        "decoded": "NineHack OK"
+      },
+      {
+        "name": "set status 00",
+        "cmd": "0x61",
+        "payload": "00",
+        "frame": "A3A4013343600163",
+        "decoded": "success"
+      },
+      {
+        "name": "device info",
+        "cmd": "0x31",
+        "payload": "10 68 01 00 01 04 02",
+        "frame": "A3A4073343301169000100050377",
+        "decoded": "voltage raw 4200, flags 01, locked true, firmware 1.4.2"
+      },
+      {
+        "name": "scooter info",
+        "cmd": "0x60",
+        "payload": "57 02 00 00 0B B8 0F A0",
+        "frame": "A3A408334361560301010AB90EA1BC",
+        "decoded": "battery 87, mode 2, speed 0.0, mileage 30000 m, range 40000 m"
+      },
+      {
+        "name": "realtime",
+        "cmd": "0x63",
+        "payload": "57 00 00 07 D0 01",
+        "frame": "A3A40633436256010106D100D9",
+        "decoded": "battery 87, speed 0.0, current 20.00, flags 01"
+      },
+      {
+        "name": "RFID",
+        "cmd": "0x85",
+        "payload": "12 34 56 78",
+        "frame": "A3A404334384133557797B",
+        "decoded": "card 0x12345678"
+      },
+      {
+        "name": "error rejected 05 reason 03",
+        "cmd": "0x10",
+        "payload": "05 03",
+        "frame": "A3A4023343110402D9",
+        "decoded": "rejected cmd 0x05, reason 0x03"
+      },
+      {
+        "name": "pack request 5",
+        "cmd": "0xFC",
+        "payload": "00 05",
+        "frame": "A3A4023343FD010487",
+        "decoded": "index 5"
+      },
+      {
+        "name": "firmware complete",
+        "cmd": "0xFB",
+        "payload": "02",
+        "frame": "A3A4013343FA03FB",
+        "decoded": "complete"
+      }
+    ]
+  },
+  "unknowns": [
+    {
+      "id": "no_capture",
+      "text": "no HCI or UART capture from Urent",
+      "needed": "link-layer capture with the Urent firmware"
+    },
+    {
+      "id": "unlock_payload",
+      "text": "10x01 or timestamp payload for 0x05",
+      "needed": "RX log of a successful unlock"
+    },
+    {
+      "id": "unlock_status",
+      "text": "authoritative success code for 0x05 and 0x15",
+      "needed": "RX log of successful unlock and lock"
+    },
+    {
+      "id": "response_key",
+      "text": "meaning of the key field in incoming frames",
+      "needed": "RX log with known session key"
+    },
+    {
+      "id": "repeat_auth",
+      "text": "behavior on a second 0x01 and session lifetime",
+      "needed": "experiment on a real scooter"
+    },
+    {
+      "id": "missing_payloads",
+      "text": "payload for 0x34, 0x35, 0x37, 0x40, 0x50, 0x52-0x56, 0x62, 0x64, 0x72-0x79, 0x86, 0x90-0x97, 0xA0, 0xA1, 0xC3, 0xC5, 0xC7, 0xDC, 0xDE, 0xFB, 0xFC",
+      "needed": "handlers or captures from a reference client"
+    },
+    {
+      "id": "voltage_units",
+      "text": "0x31 voltage unit is assumed to be 0.01 V",
+      "needed": "correlation with a known battery voltage"
+    },
+    {
+      "id": "mode_mapping",
+      "text": "LostBot mapping of headlight, mode and throttle for 0x61",
+      "needed": "capture of 0x61 issued from the LostBot UI"
+    },
+    {
+      "id": "urent_ble",
+      "text": "whether Urent ever uses BLE",
+      "needed": "traffic capture with the official Urent app"
+    }
+  ],
+  "sources": [
+    "analysis/java/fishbot/sources/A2/f.java",
+    "analysis/java/fishbot/sources/A2/c.java",
+    "analysis/java/fishbot/sources/C2/F.java",
+    "analysis/java/fishbot/sources/C2/o.java",
+    "analysis/java/fishbot/sources/D2/C0141b.java",
+    "analysis/java/fishbot/sources/z2/l.java",
+    "analysis/java/fishbot/sources/z2/i.java",
+    "analysis/java/fishbot/sources/J1/e.java",
+    "analysis/java/fishbot/sources/K1/a.java",
+    "analysis/java/fishbot/sources/cd/bn.java",
+    "analysis/LostBot/smali/A2/f.smali",
+    "analysis/LostBot/smali/z2/i.smali",
+    "analysis/LostBot/smali/z2/g.smali",
+    "analysis/LostBot/smali/D2/s.1.smali",
+    "analysis/LostBot/smali/b/j.smali",
+    "analysis/NineHack/smali_classes3/com/timeylies/ninehack/CommandCreator.smali",
+    "analysis/NineHack/smali_classes3/com/timeylies/ninehack/Crc8.smali",
+    "analysis/NineHack/smali_classes3/com/timeylies/ninehack/controlActivity.smali",
+    "analysis/NineHack/res/values/strings.xml",
+    "analysis/report_urent.md",
+    "analysis/network.md",
+    "analysis/source_map.md",
+    "analysis/fishbot_handoff.md",
+    "app/app/src/main/java/ru/dany/scoot/ble/Frame.kt",
+    "app/app/src/main/java/ru/dany/scoot/ble/ScooterCodec.kt",
+    "app/app/src/main/java/ru/dany/scoot/ble/OpcodeCatalog.kt",
+    "app/app/src/main/java/ru/dany/scoot/ble/BleTransport.kt",
+    "app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt",
+    "app/app/src/main/java/ru/dany/scoot/core/Prefs.kt"
+  ]
+}

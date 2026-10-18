@@ -32,6 +32,8 @@
 | report_urent.md | официальный Urent 1.90.2 и 2.7.0: манифест, API, отсутствие BLE |
 | report_whoosh.md | Whoosh 4.0.0: BLE-стек, UUID, команды, шифрование |
 | report_yandex_go.md | Yandex Go 5.98.2: Ninebot BLE, команды, провайдер-заглушка |
+| reverse_urent.md | независимая проверка Urent: рама, auth, команды, телеметрия, расхождения с DanyScoot |
+| reverse_yandex.md | независимая проверка Yandex Go: Ninebot BLE, провайдеры, отсутствующие UUID и ключи |
 
 ## 2. Данные
 
@@ -53,6 +55,8 @@
 | references/schema.md | схемы CSV и JSON |
 | references/xddbot.md | публичное описание XDDbot и расхождения с APK |
 | references/README.md | индекс данных и ограничения |
+| analysis/reverse_urent.json | машиночитаемые команды, статусы и тест-векторы Urent |
+| analysis/reverse_yandex.json | машиночитаемые команды, шаблоны payload и missing-значения Yandex Go |
 
 ## 3. Быстрый старт
 
