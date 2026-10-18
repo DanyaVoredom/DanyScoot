@@ -154,7 +154,7 @@ fun parseHex(text: String): ByteArray? {
     clean = clean.filterNot { it.isWhitespace() || it == ',' || it == ':' || it == '-' }
     if (clean.isEmpty()) return ByteArray(0)
     if (clean.length % 2 != 0) return null
-    if (!clean.all { it.isDigit() || it.lowercaseChar() in 'a'..'f' }) return null
+    if (!clean.all { it in '0'..'9' || it.lowercaseChar() in 'a'..'f' }) return null
     return ByteArray(clean.length / 2) { i ->
         clean.substring(i * 2, i * 2 + 2).toInt(16).toByte()
     }

@@ -492,8 +492,14 @@ object ScooterClient : BleTransport.Listener {
         when (frame.cmd) {
             ScooterCodec.CMD_KEY -> handleAuthFrame(frame)
             ScooterCodec.CMD_ERROR -> {
-                val bad = frame.payload.isNotEmpty() && frame.payload[0].toInt() == 1
-                LogBus.err("SCOOTER", if (bad) "Ошибка CRC на самокате" else "Самокат отклонил команду")
+                val rejected = frame.payload.getOrNull(0)?.toInt()?.and(0xFF)
+                val reason = frame.payload.getOrNull(1)?.toInt()?.and(0xFF)
+                val message = when {
+                    rejected == null -> "Самокат сообщил об ошибке без деталей"
+                    reason == null -> "Самокат отклонил команду 0x${hexByte(rejected)}"
+                    else -> "Самокат отклонил команду 0x${hexByte(rejected)}, причина 0x${hexByte(reason)}"
+                }
+                LogBus.err("SCOOTER", message)
             }
             ScooterCodec.CMD_UNLOCK -> report(frame, "Самокат разблокирован", "Ошибка разблокировки", LOCK_SUCCESS_CODES)
             ScooterCodec.CMD_LOCK -> report(frame, "Самокат заблокирован", "Ошибка блокировки", LOCK_SUCCESS_CODES)

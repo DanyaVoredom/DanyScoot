@@ -153,4 +153,20 @@ class FrameCodecTest {
         assertNull(parseHex("01a"))
         assertNull(parseHex("01 zz"))
     }
+
+    @Test
+    fun parseHexRejectsNonAsciiDigits() {
+        assertNull(parseHex("１２"))
+        assertNull(parseHex("0x１0"))
+    }
+
+    @Test
+    fun findFramesHandlesEmptyPayloadFrame() {
+        val frame = FrameCodec.build(0x15, 0x42, ByteArray(0))
+        val (frames, rest) = FrameCodec.findFrames(frame)
+        assertEquals(1, frames.size)
+        assertEquals(0x15, frames[0].cmd)
+        assertEquals(0, frames[0].payload.size)
+        assertEquals(0, rest.size)
+    }
 }

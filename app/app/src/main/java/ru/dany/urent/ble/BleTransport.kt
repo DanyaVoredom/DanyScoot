@@ -474,12 +474,14 @@ class BleTransport(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     fun write(data: ByteArray): Boolean {
-        if (gatt == null || writeChar == null) return false
-        if (writeQueue.size >= MAX_WRITE_QUEUE) {
+        if (gatt == null || writeChar == null || !connected || !servicesReady) return false
+        if (data.isEmpty()) return true
+        val chunkSize = (mtu - 3).coerceIn(MIN_CHUNK, 512)
+        val chunks = (data.size + chunkSize - 1) / chunkSize
+        if (chunks > MAX_WRITE_QUEUE || writeQueue.size + chunks > MAX_WRITE_QUEUE) {
             listener?.onError("BLE write queue overflow")
             return false
         }
-        val chunkSize = (mtu - 3).coerceIn(MIN_CHUNK, 512)
         var offset = 0
         while (offset < data.size) {
             val end = (offset + chunkSize).coerceAtMost(data.size)
