@@ -40,6 +40,7 @@ object ScooterClient : BleTransport.Listener {
     private val handler = Handler(Looper.getMainLooper())
     private var rxBuffer = ByteArray(0)
     private var authPending = false
+    private var authenticated = false
     private var authTimeout: Runnable? = null
     private var spamRunning = false
     private var spamRunnable: Runnable? = null
@@ -87,7 +88,7 @@ object ScooterClient : BleTransport.Listener {
     val isReady: Boolean
         get() = when (_state.value) {
             ClientState.DEMO -> true
-            ClientState.READY -> sessionKey != 0
+            ClientState.READY -> authenticated
             else -> false
         }
 
@@ -132,6 +133,7 @@ object ScooterClient : BleTransport.Listener {
         linkLost = false
         rxBuffer = ByteArray(0)
         authPending = false
+        authenticated = false
         authTimeout?.let { handler.removeCallbacks(it) }
         authTimeout = null
         sessionKey = 0
@@ -176,6 +178,7 @@ object ScooterClient : BleTransport.Listener {
         }
         sessionKey = 0
         authPending = false
+        authenticated = false
         authTimeout?.let { handler.removeCallbacks(it) }
         authTimeout = null
         rxBuffer = ByteArray(0)
@@ -208,6 +211,7 @@ object ScooterClient : BleTransport.Listener {
     fun authenticate() {
         if (isDemo) {
             sessionKey = 0x42
+            authenticated = true
             _state.value = ClientState.DEMO
             LogBus.ok(AUTH_TAG, "Ключ верный (демо)")
             onAuthenticated()
@@ -223,6 +227,7 @@ object ScooterClient : BleTransport.Listener {
         _state.value = ClientState.AUTHENTICATING
         if (!writeFrame(ScooterCodec.keyCommand(key), "ключ")) {
             authPending = false
+            authenticated = false
             _state.value = ClientState.READY
             return
         }
@@ -230,6 +235,7 @@ object ScooterClient : BleTransport.Listener {
         val timeout = Runnable {
             if (authPending) {
                 authPending = false
+                authenticated = false
                 sessionKey = 0
                 LogBus.err(AUTH_TAG, "Таймаут авторизации")
                 _state.value = ClientState.READY
@@ -319,8 +325,7 @@ object ScooterClient : BleTransport.Listener {
             return
         }
         if (!isReady) return
-        val key = if (sessionKey != 0) sessionKey else 0
-        val frame = ScooterCodec.spamUnlockCommand(key, System.currentTimeMillis())
+        val frame = ScooterCodec.spamUnlockCommand(sessionKey, System.currentTimeMillis())
         if (writeFrame(frame, null)) {
             _spamSent.value += 1
         }
@@ -329,11 +334,8 @@ object ScooterClient : BleTransport.Listener {
     private fun requireKey(): Int? {
         if (isDemo) return 0x42
         if (!isReady) {
-            LogBus.warn(TAG, "Нет подключения")
-            return null
-        }
-        if (sessionKey == 0) {
-            LogBus.warn(TAG, "Требуется авторизация")
+            val text = if (_state.value == ClientState.READY) "Требуется авторизация" else "Нет подключения"
+            LogBus.warn(TAG, text)
             return null
         }
         return sessionKey
@@ -442,6 +444,7 @@ object ScooterClient : BleTransport.Listener {
         _state.value = ClientState.IDLE
         sessionKey = 0
         authPending = false
+        authenticated = false
         authTimeout?.let { handler.removeCallbacks(it) }
         authTimeout = null
         rxBuffer = ByteArray(0)
@@ -594,12 +597,14 @@ object ScooterClient : BleTransport.Listener {
         authTimeout = null
         if (frame.payload.size >= 2 && (frame.payload[0].toInt() and 0xFF) == 1) {
             sessionKey = frame.payload[1].toInt() and 0xFF
+            authenticated = true
             reconnectAttempts = 0
             LogBus.ok(AUTH_TAG, "Ключ верный, сессионный ключ 0x${hexByte(sessionKey)}")
             _state.value = ClientState.READY
             onAuthenticated()
         } else {
             sessionKey = 0
+            authenticated = false
             LogBus.err(AUTH_TAG, "Неверный ключ: попробуйте другой ключ в настройках")
             _state.value = ClientState.READY
         }
@@ -643,6 +648,7 @@ object ScooterClient : BleTransport.Listener {
         demoLocked = false
         _state.value = ClientState.DEMO
         sessionKey = 0x42
+        authenticated = true
         _vehicle.value = VehicleInfo(batteryPercent = 87, mode = 2, speed = 0.0, singleMileage = 45230, remainingRange = 31000)
         _iot.value = IotInfo(value = 4200, flags = 0x01, locked = false, version = "1.4.2")
         LogBus.info(DEMO_TAG, "Демо-режим: подключено к $deviceName")
@@ -672,6 +678,7 @@ object ScooterClient : BleTransport.Listener {
         demoTick?.let { handler.removeCallbacks(it) }
         demoTick = null
         demoLocked = false
+        authenticated = false
         _vehicle.value = null
         _iot.value = null
     }
