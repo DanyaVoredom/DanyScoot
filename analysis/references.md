@@ -127,3 +127,31 @@ rand у LostBot 0..254, у NineHack 1..254. CRC-8/MAXIM: poly 0x31 отраже�
 | references/generate_frames.py | Генератор frames.json |
 | references/verify_frames.py | Независимая проверка кадров и CRC |
 | references/xddbot.md | Публичный XDDbot и расхождения с APK |
+| references/artifacts.md | Полные таблицы артефактов, подписей и происхождения |
+| references/schema.md | Схемы opcodes.csv и frames.json |
+| analysis/app_inventory.md | Пакеты, версии, SDK, компоненты и атрибуты приложений |
+| analysis/permissions.md | Матрица разрешений и опасные наборы |
+| analysis/network.md | Endpoint-ы LostBot, Urent, FishBot, отсутствие сети у NineHack |
+| analysis/storage.md | SharedPreferences, ключи, файлы, токены, приватность |
+| analysis/comparison.md | Сравнение функций, команд и архитектуры |
+| analysis/opcode_reference.md | Полная таблица 54 опкодов |
+| analysis/telemetry.md | Поля телеметрии и ограничения |
+| analysis/firmware.md | OTA 0xFA, 0xFB, 0xFC и риски |
+| analysis/errors.md | 0x10, статусы авторизации, команд и GATT |
+| analysis/test_vectors.md | Схема и проверка frames.json |
+| analysis/method.md | Инструменты, порядок анализа, уровни уверенности |
+| analysis/limitations.md | Неизвестные и blockers |
+| analysis/obfuscation.md | R8, StringFog и упаковщики |
+| analysis/ui_screens.md | Экраны референсов и DanyUrent |
+| docs/README.md | Индекс документации приложения |
+
+## 8. Уточнения после проверки кода
+
+- 0x10 ERROR: payload[0] - отклонённая команда, payload[1] - причина. Трактовка payload[0] как CRC в DanyUrent удалена.
+- 0x64 SET_WHEEL_DIAMETER, 0xC3 ACCESSORY_CONTROL и 0x78 XM_FIND_CAR не имеют подтверждённого сборщика. Для 0x64 и 0xC3 есть только декодер, для 0x78 только имя каталога.
+- 0x05 UNLOCK имеет две подтверждённые формы: 10 байт 01 у NineHack и 01 31 31 32 39 + время + 00 у LostBot. DanyUrent использует первую для кнопки, вторую для спама.
+- 0xA2 FIND_CAR подтверждён с payload 01, 02, 03 и 06. DanyUrent использует 01.
+- 0xDC AVAS payload завершается NUL: ASCII HBCS,NB,IMEI,V2,1 или 2,,,,,# и 00.
+- 0x81 в каталоге имеет два имени, SCOOTER_BATTERY и OUT_LOCK. DanyUrent использует код как изъятие батареи с payload 05.
+- 0x85 READ_RFID_CARD возвращает 4 байта big-endian. 0x86 DELETE_RFID принимает два идентификатора по 4 байта.
+- 0xFB и 0xFC относятся к прошивке. DanyUrent не выполняет OTA.

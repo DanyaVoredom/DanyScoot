@@ -1,6 +1,6 @@
-# Референсы
+# Референсы и данные
 
-Каталог содержит три APK для анализа BLE-протокола. Официальные APK Urent в репозиторий не добавлены: они большие и не являются исходниками DanyUrent. Их хэши и результаты анализа зафиксированы в analysis/references.md и analysis/report_urent.md.
+Каталог содержит три APK для анализа BLE-протокола и машиночитаемые данные. Официальные APK Urent не добавлены: они большие и не являются исходниками DanyUrent. Их хеши и результаты анализа зафиксированы в analysis/references.md и analysis/report_urent.md.
 
 ## 1. Файлы
 
@@ -10,7 +10,19 @@
 | LostBot.apk | ru.lostbotapp.Free | 1.2.1 (4) | 2 536 378 | D1D8713820F3EBC480236E113020C0C547B94453D416EDE894D27A4205245882 |
 | NineHack.apk | com.timeylies.ninehack.ru | 1.2 (1) | 11 497 879 | E21272AC4C1A74E1BFE5AF824EE2257BB15D0BB5A8C014F75014C6DE1931D497 |
 
-## 2. Подписи
+## 2. Документы
+
+| Файл | Содержимое |
+| --- | --- |
+| artifacts.md | полные таблицы артефактов, подписей, происхождения и проверки |
+| schema.md | схемы opcodes.csv и frames.json |
+| opcodes.csv | 54 опкода: код, имя, направление, payload, источник, декодер, поддержка, уверенность |
+| frames.json | 48 TX, 20 RX, 4 битых кадра, CRC-константы |
+| generate_frames.py | генератор frames.json без внешних зависимостей |
+| verify_frames.py | независимая проверка кадров и CRC |
+| xddbot.md | публичное описание XDDbot и расхождения с APK |
+
+## 3. Подписи
 
 | Файл | Результат apksigner | Сертификат |
 | --- | --- | --- |
@@ -20,7 +32,7 @@
 
 Совпадение сертификатов LostBot и NineHack означает общую подпись сборки, а не общий исходный код. FishBot не проходит проверку, потому что его пересобрали или удалили v1-подпись; для анализа кода это не препятствует.
 
-## 3. Официальные Urent
+## 4. Официальные Urent
 
 | Артефакт | Версия | Размер, байт | SHA-256 |
 | --- | --- | --- | --- |
@@ -31,24 +43,30 @@
 
 Источник: APKPure, https://apkpure.com/urent/ru.urentbike.app и https://apkpure.com/urent/ru.urentbike.app/versions. Обе версии подписаны O=Urentbike, SHA-256 90E028E6D376C9E79F8D0332BFFA8667F8D41F6E5B7A114A4602EC68A0AAE2DD. В репозиторий не добавлены.
 
-## 4. Как получены дампы
+## 5. Как получены дампы
 
 Использованы apktool 3.0.3 и jadx 1.5.6. Дампы лежат в analysis/FishBot, analysis/LostBot, analysis/NineHack и analysis/java/fishbot/sources. Официальные Urent разбирались во временных каталогах; результаты перенесены в analysis/report_urent.md.
 
 Проверка подписи:
 
-    apksigner verify --print-certs <apk>
+```
+apksigner verify --print-certs <apk>
+```
 
 Проверка пакета и версии:
 
-    aapt dump badging <apk>
+```
+aapt dump badging <apk>
+```
 
 Поиск BLE-следов в Urent:
 
-    rg -a -n "android/bluetooth|BluetoothGatt|BluetoothAdapter|BluetoothLeScanner" <dump>/smali*
-    rg -a -n "6e400001|6e400002|6e400003|4BKNwi77|w4S3Hqn5" <dump>/smali*
+```
+rg -a -n "android/bluetooth|BluetoothGatt|BluetoothAdapter|BluetoothLeScanner" <dump>/smali*
+rg -a -n "6e400001|6e400002|6e400003|4BKNwi77|w4S3Hqn5" <dump>/smali*
+```
 
-## 5. Что искать в дампах
+## 6. Что искать в дампах
 
 | Что | Где в LostBot/FishBot | Где в NineHack |
 | --- | --- | --- |
@@ -59,30 +77,34 @@
 | Спам | C2/F.java, SpamService | нет |
 | Прошивка и CRC16 | C2/F.java | нет |
 | Телеметрия | A2/c.java | нет |
-| Сохраненные ключи | C2/C0121b.java, SavedBleKey | ninehack_settings |
+| Сохранённые ключи | C2/C0121b.java, SavedBleKey | ninehack_settings |
 
-## 6. Машиночитаемые данные
+## 7. Машиночитаемые данные
 
-| Файл | Содержимое |
-| --- | --- |
-| opcodes.csv | 54 опкода: код, имя, направление, payload, сборщик, декодер, поддержка DanyUrent, уверенность |
-| frames.json | 48 TX, 20 RX, 4 битых кадра, CRC-константы |
-| generate_frames.py | Генератор frames.json без внешних зависимостей |
-| verify_frames.py | Независимый разбор всех кадров и проверка CRC |
-| xddbot.md | Публичный XDDbot, совпадения и расхождения с APK |
+Поле danyurent:
 
-Поле danyurent: yes означает отдельную кнопку или метод, decoder означает только разбор ответа, manual означает отправку через общий диалог опкодов. Поле confidence: confirmed означает сборщик или декодер в APK, inferred означает payload из декодера, catalog означает только имя из каталога.
+- yes: отдельная кнопка или метод;
+- decoder: только разбор ответа;
+- manual: отправка через общий диалог опкодов.
 
-Проверка:
+Поле confidence:
 
-    python references/generate_frames.py
-    python references/verify_frames.py
-    python -c "import csv; r=list(csv.DictReader(open('references/opcodes.csv',encoding='utf-8'))); print(len(r))"
-    python -c "import json; d=json.load(open('references/frames.json',encoding='utf-8')); print(len(d['tx']),len(d['rx']),len(d['malformed']))"
+- confirmed: сборщик или декодер в APK;
+- inferred: payload из декодера;
+- catalog: только имя из каталога.
+
+## 8. Проверка
+
+```
+python references/generate_frames.py
+python references/verify_frames.py
+python -c "import csv; r=list(csv.DictReader(open('references/opcodes.csv',encoding='utf-8'))); print(len(r))"
+python -c "import json; d=json.load(open('references/frames.json',encoding='utf-8')); print(len(d['tx']),len(d['rx']),len(d['malformed']))"
+```
 
 Ожидаемый вывод: ok 72, затем 54 и 48 20 4.
 
-## 7. Ограничения
+## 9. Ограничения
 
 - APK не содержат прошивку самоката. Все выводы о прошивке сделаны по клиентскому коду и тест-векторам.
 - Известные ключи 4BKNwi77 и w4S3Hqn5 могут не подойти к конкретному самокату. Это проверяется только на hardware.

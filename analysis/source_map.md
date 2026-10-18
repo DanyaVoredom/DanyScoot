@@ -98,3 +98,40 @@
 | references/generate_frames.py | генератор frames.json без внешних зависимостей |
 | references/verify_frames.py | независимый разбор кадров и проверка CRC |
 | references/README.md | хеши APK, подписи, ссылки, команды проверки |
+
+## 6. DanyUrent
+
+| Утверждение | Файл | Строки |
+| --- | --- | --- |
+| Кадр и CRC | app/app/src/main/java/ru/dany/urent/ble/Frame.kt | 55-161 |
+| Команды и декодеры | app/app/src/main/java/ru/dany/urent/ble/ScooterCodec.kt | 56-300 |
+| Каталог опкодов | app/app/src/main/java/ru/dany/urent/ble/OpcodeCatalog.kt | 1-200 |
+| Скан, GATT, MTU, очередь | app/app/src/main/java/ru/dany/urent/ble/BleTransport.kt | 37-529 |
+| Состояние, auth, спам, демо | app/app/src/main/java/ru/dany/urent/core/ScooterClient.kt | 24-780 |
+| Настройки | app/app/src/main/java/ru/dany/urent/core/Prefs.kt | 12-121 |
+| Журнал | app/app/src/main/java/ru/dany/urent/core/LogBus.kt | 16-47 |
+| Спам-сервис | app/app/src/main/java/ru/dany/urent/spam/SpamService.kt | 1-200 |
+| Разрешения и вкладки | app/app/src/main/java/ru/dany/urent/MainActivity.kt | 30-193 |
+| Темы | app/app/src/main/java/ru/dany/urent/AppTheme.kt, res/values/themes.xml | 8-24, 4-182 |
+| Манифест | app/app/src/main/AndroidManifest.xml | 1-40 |
+| Сборка | app/app/build.gradle.kts | 1-80 |
+
+## 7. Документация
+
+| Документ | Что проверять |
+| --- | --- |
+| analysis/app_inventory.md | пакеты, версии, SDK, компоненты, атрибуты |
+| analysis/permissions.md | разрешения и опасные наборы |
+| analysis/network.md | endpoint-ы и отсутствие сети |
+| analysis/storage.md | SharedPreferences, ключи, токены |
+| analysis/comparison.md | функции и команды референсов |
+| analysis/opcode_reference.md | 54 опкода и уверенность |
+| analysis/telemetry.md | поля и формулы телеметрии |
+| analysis/firmware.md | OTA 0xFA, 0xFB, 0xFC |
+| analysis/errors.md | 0x10 и статусы |
+| analysis/test_vectors.md | схема frames.json |
+| analysis/method.md | порядок анализа и уровни |
+| analysis/limitations.md | неизвестные и blockers |
+| analysis/obfuscation.md | R8, StringFog, упаковщики |
+| analysis/ui_screens.md | экраны референсов |
+| docs/README.md | индекс документации приложения |

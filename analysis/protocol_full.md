@@ -208,6 +208,7 @@ Session key может быть 0. Ответ 01 00 означает стату�
 - 0x15 lock: то же.
 - 0x61 set: LostBot g() считает payload[0] == 0 успехом, иначе FAIL.
 - 0x81 eject: NineHack ждет 1, LostBot g() ждет 0.
+- DanyUrent принимает 1 и 2 для 0x05 и 0x15, поэтому на прошивке с ответом 0 возможен ложный отказ в журнале.
 - 0x10 ERROR: payload[0] = отвергнутая команда, payload[1] = причина. NineHack отдельно трактует payload[0] == 1 как BUG CRC Bad.
 - Пустой payload в g() означает ACK без статуса.
 
