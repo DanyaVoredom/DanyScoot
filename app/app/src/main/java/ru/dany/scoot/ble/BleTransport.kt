@@ -32,6 +32,17 @@ data class ScannedDevice(
     val name: String,
     val rssi: Int,
     val hasUart: Boolean,
+    val hasProfile: Boolean = hasUart,
+)
+
+data class BleProfile(
+    val service: UUID,
+    val write: UUID,
+    val notify: UUID,
+    val cccd: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"),
+    val mtu: Int = 247,
+    val scanService: UUID? = null,
+    val writeWithoutResponse: Boolean? = null,
 )
 
 class BleTransport(private val context: Context) {
@@ -41,6 +52,7 @@ class BleTransport(private val context: Context) {
         fun onScanFinished()
         fun onConnected()
         fun onServicesReady(write: BluetoothGattCharacteristic, notify: BluetoothGattCharacteristic)
+        fun onCharacteristicRead(uuid: UUID, value: ByteArray)
         fun onFrame(data: ByteArray)
         fun onDisconnected(reason: String)
         fun onError(message: String)
@@ -72,7 +84,7 @@ class BleTransport(private val context: Context) {
     private var writeChar: BluetoothGattCharacteristic? = null
     private var notifyChar: BluetoothGattCharacteristic? = null
     private var scanning = false
-    private var scanFilterUart = false
+    private var scanFilterUuid: UUID? = null
     private var mtu = 23
     private var writeWithoutResponse = false
     private val writeQueue = ArrayDeque<ByteArray>()
@@ -116,10 +128,13 @@ class BleTransport(private val context: Context) {
     }
 
     var listener: Listener? = null
+    var profile: BleProfile = BleProfiles.URENT
 
     val isBluetoothEnabled: Boolean get() = adapter?.isEnabled == true
 
     val isSupported: Boolean get() = adapter != null
+
+    val negotiatedMtu: Int get() = mtu
 
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
@@ -137,9 +152,12 @@ class BleTransport(private val context: Context) {
                 return
             }
             val name = deviceName(device)
-            val hasUart = scanFilterUart ||
-                result.scanRecord?.serviceUuids?.contains(ParcelUuid(UART_SERVICE)) == true
-            listener?.onDevice(ScannedDevice(address, name, result.rssi, hasUart))
+            val services = result.scanRecord?.serviceUuids
+            val hasUart = services?.contains(ParcelUuid(UART_SERVICE)) == true
+            val profileUuid = profile.scanService
+            val hasProfile = scanFilterUuid != null ||
+                (profileUuid != null && services?.contains(ParcelUuid(profileUuid)) == true)
+            listener?.onDevice(ScannedDevice(address, name, result.rssi, hasUart, hasProfile))
         }
 
         override fun onScanFailed(errorCode: Int) {
@@ -167,6 +185,30 @@ class BleTransport(private val context: Context) {
 
         override fun onCharacteristicWrite(g: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
             handler.post { handleCharacteristicWrite(g, status) }
+        }
+
+        override fun onCharacteristicRead(
+            g: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            value: ByteArray,
+            status: Int,
+        ) {
+            val uuid = characteristic.uuid
+            val copy = value.copyOf()
+            handler.post { handleCharacteristicRead(g, uuid, copy, status) }
+        }
+
+        @Deprecated("Deprecated in Java")
+        override fun onCharacteristicRead(
+            g: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            status: Int,
+        ) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) return
+            @Suppress("DEPRECATION")
+            val value = characteristic.value?.copyOf() ?: ByteArray(0)
+            val uuid = characteristic.uuid
+            handler.post { handleCharacteristicRead(g, uuid, value, status) }
         }
 
         @Deprecated("Deprecated in Java")
@@ -203,7 +245,7 @@ class BleTransport(private val context: Context) {
                 handler.removeCallbacks(connectTimeout)
                 listener?.onConnected()
                 try {
-                    g.requestMtu(REQUESTED_MTU)
+                    g.requestMtu(profile.mtu)
                 } catch (e: SecurityException) {
                 }
                 handler.removeCallbacks(discoverFallback)
@@ -248,20 +290,22 @@ class BleTransport(private val context: Context) {
             failAndClose("Service discovery failed: $status")
             return
         }
-        val service = g.getService(UART_SERVICE)
+        val activeProfile = profile
+        val service = g.getService(activeProfile.service)
         if (service == null) {
-            failAndClose("UART service not found")
+            failAndClose("Service ${activeProfile.service} not found")
             return
         }
-        val write = service.getCharacteristic(UART_RX_CHAR)
-        val notify = service.getCharacteristic(UART_TX_CHAR)
+        val write = service.getCharacteristic(activeProfile.write)
+        val notify = service.getCharacteristic(activeProfile.notify)
         if (write == null || notify == null) {
-            failAndClose("UART characteristics not found")
+            failAndClose("Characteristics ${activeProfile.write}/${activeProfile.notify} not found")
             return
         }
         writeChar = write
         notifyChar = notify
-        writeWithoutResponse = (write.properties and BluetoothGattCharacteristic.PROPERTY_WRITE) == 0
+        writeWithoutResponse = activeProfile.writeWithoutResponse
+            ?: ((write.properties and BluetoothGattCharacteristic.PROPERTY_WRITE) == 0)
         val ok = try {
             g.setCharacteristicNotification(notify, true)
         } catch (e: SecurityException) {
@@ -271,7 +315,7 @@ class BleTransport(private val context: Context) {
             failAndClose("Failed to enable notifications")
             return
         }
-        val descriptor = notify.getDescriptor(CCCD)
+        val descriptor = notify.getDescriptor(activeProfile.cccd)
         if (descriptor == null) {
             markServicesReady(write, notify)
             return
@@ -303,7 +347,7 @@ class BleTransport(private val context: Context) {
 
     private fun handleDescriptorWrite(g: BluetoothGatt, uuid: UUID, status: Int) {
         if (g !== gatt || closing || servicesReady) return
-        if (uuid != CCCD) return
+        if (uuid != profile.cccd) return
         descriptorPending = false
         handler.removeCallbacks(descriptorTimeout)
         if (status != BluetoothGatt.GATT_SUCCESS) {
@@ -313,7 +357,7 @@ class BleTransport(private val context: Context) {
         val write = writeChar
         val notify = notifyChar
         if (write == null || notify == null) {
-            failAndClose("UART characteristics not found")
+            failAndClose("Characteristics not found")
             return
         }
         markServicesReady(write, notify)
@@ -332,9 +376,18 @@ class BleTransport(private val context: Context) {
         processWriteQueue()
     }
 
+    private fun handleCharacteristicRead(g: BluetoothGatt, uuid: UUID, value: ByteArray, status: Int) {
+        if (g !== gatt) return
+        if (status != BluetoothGatt.GATT_SUCCESS) {
+            listener?.onError("Read failed: $status")
+            return
+        }
+        listener?.onCharacteristicRead(uuid, value)
+    }
+
     private fun handleCharacteristicChanged(g: BluetoothGatt, uuid: UUID, value: ByteArray) {
         if (g !== gatt) return
-        if (uuid == UART_TX_CHAR) {
+        if (uuid == profile.notify) {
             listener?.onFrame(value)
         }
     }
@@ -375,7 +428,7 @@ class BleTransport(private val context: Context) {
     }
 
     @SuppressLint("MissingPermission")
-    fun startScan(filterUart: Boolean = false) {
+    fun startScan(filterUuid: UUID? = null) {
         val a = adapter
         if (a == null) {
             listener?.onError("Bluetooth not supported")
@@ -407,11 +460,9 @@ class BleTransport(private val context: Context) {
         val settings = ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
             .build()
-        scanFilterUart = filterUart
-        val filters = if (filterUart) {
-            listOf(ScanFilter.Builder().setServiceUuid(ParcelUuid(UART_SERVICE)).build())
-        } else {
-            null
+        scanFilterUuid = filterUuid
+        val filters = filterUuid?.let {
+            listOf(ScanFilter.Builder().setServiceUuid(ParcelUuid(it)).build())
         }
         scanning = true
         handler.removeCallbacks(scanTimeout)
@@ -535,6 +586,23 @@ class BleTransport(private val context: Context) {
         } else {
             handler.removeCallbacks(writeTimeout)
             handler.postDelayed(writeTimeout, WRITE_TIMEOUT_MS)
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun read(uuid: UUID): Boolean {
+        val g = gatt ?: return false
+        if (!connected || !servicesReady) return false
+        val ch = try {
+            g.getService(profile.service)?.getCharacteristic(uuid)
+        } catch (e: SecurityException) {
+            null
+        } ?: return false
+        return try {
+            @Suppress("DEPRECATION")
+            g.readCharacteristic(ch)
+        } catch (e: SecurityException) {
+            false
         }
     }
 

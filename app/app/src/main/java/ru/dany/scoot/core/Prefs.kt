@@ -40,6 +40,90 @@ class Prefs private constructor(context: Context) {
             sp.edit { putString(KEY_BLE_KEY, v) }
         }
 
+    var provider: String
+        get() = sp.getString(KEY_PROVIDER, Provider.URENT.key) ?: Provider.URENT.key
+        set(value) {
+            sp.edit { putString(KEY_PROVIDER, Provider.from(value).key) }
+        }
+
+    var whooshMode: String
+        get() = sp.getString(KEY_WHOOSH_MODE, WhooshMode.OFFLINE.key) ?: WhooshMode.OFFLINE.key
+        set(value) {
+            sp.edit { putString(KEY_WHOOSH_MODE, WhooshMode.from(value).key) }
+        }
+
+    var whooshToken: String
+        get() = sp.getString(KEY_WHOOSH_TOKEN, "").orEmpty()
+        set(value) {
+            sp.edit { putString(KEY_WHOOSH_TOKEN, value.trim()) }
+        }
+
+    var whooshStartId: String
+        get() = sp.getString(KEY_WHOOSH_START_ID, DEFAULT_WHOOSH_START_ID) ?: DEFAULT_WHOOSH_START_ID
+        set(value) {
+            sp.edit { putString(KEY_WHOOSH_START_ID, value.trim().ifEmpty { DEFAULT_WHOOSH_START_ID }) }
+        }
+
+    var whooshStopId: String
+        get() = sp.getString(KEY_WHOOSH_STOP_ID, DEFAULT_WHOOSH_STOP_ID) ?: DEFAULT_WHOOSH_STOP_ID
+        set(value) {
+            sp.edit { putString(KEY_WHOOSH_STOP_ID, value.trim().ifEmpty { DEFAULT_WHOOSH_STOP_ID }) }
+        }
+
+    var whooshUnlockHex: String
+        get() = sp.getString(KEY_WHOOSH_UNLOCK_HEX, "").orEmpty()
+        set(value) {
+            sp.edit { putString(KEY_WHOOSH_UNLOCK_HEX, value.trim()) }
+        }
+
+    var whooshLockHex: String
+        get() = sp.getString(KEY_WHOOSH_LOCK_HEX, "").orEmpty()
+        set(value) {
+            sp.edit { putString(KEY_WHOOSH_LOCK_HEX, value.trim()) }
+        }
+
+    var yandexServiceUuid: String
+        get() = sp.getString(KEY_YANDEX_SERVICE_UUID, "").orEmpty()
+        set(value) {
+            sp.edit { putString(KEY_YANDEX_SERVICE_UUID, value.trim()) }
+        }
+
+    var yandexWriteUuid: String
+        get() = sp.getString(KEY_YANDEX_WRITE_UUID, "").orEmpty()
+        set(value) {
+            sp.edit { putString(KEY_YANDEX_WRITE_UUID, value.trim()) }
+        }
+
+    var yandexNotifyUuid: String
+        get() = sp.getString(KEY_YANDEX_NOTIFY_UUID, "").orEmpty()
+        set(value) {
+            sp.edit { putString(KEY_YANDEX_NOTIFY_UUID, value.trim()) }
+        }
+
+    var yandexCccdUuid: String
+        get() = sp.getString(KEY_YANDEX_CCCD_UUID, DEFAULT_CCCD_UUID) ?: DEFAULT_CCCD_UUID
+        set(value) {
+            sp.edit { putString(KEY_YANDEX_CCCD_UUID, value.trim().ifEmpty { DEFAULT_CCCD_UUID }) }
+        }
+
+    var yandexDeviceId: String
+        get() = sp.getString(KEY_YANDEX_DEVICE_ID, "").orEmpty()
+        set(value) {
+            sp.edit { putString(KEY_YANDEX_DEVICE_ID, value.trim()) }
+        }
+
+    var yandexNonce: String
+        get() = sp.getString(KEY_YANDEX_NONCE, "").orEmpty()
+        set(value) {
+            sp.edit { putString(KEY_YANDEX_NONCE, value.trim()) }
+        }
+
+    var yandexKey: String
+        get() = sp.getString(KEY_YANDEX_KEY, "").orEmpty()
+        set(value) {
+            sp.edit { putString(KEY_YANDEX_KEY, value.trim()) }
+        }
+
     var spamIntervalMs: Int
         get() = sp.getInt(KEY_SPAM_INTERVAL, DEFAULT_SPAM_INTERVAL)
         set(value) {
@@ -114,6 +198,9 @@ class Prefs private constructor(context: Context) {
 
     companion object {
         const val DEFAULT_BLE_KEY = "4BKNwi77"
+        const val DEFAULT_WHOOSH_START_ID = "01"
+        const val DEFAULT_WHOOSH_STOP_ID = "02"
+        const val DEFAULT_CCCD_UUID = "00002902-0000-1000-8000-00805f9b34fb"
         const val DEFAULT_SPAM_INTERVAL = 100
         const val MIN_SPAM_INTERVAL = 20
         const val MAX_SPAM_INTERVAL = 10000
@@ -124,6 +211,20 @@ class Prefs private constructor(context: Context) {
         private const val PREFS_NAME = "danyscoot_prefs"
         private const val LEGACY_PREFS_NAME = "danyurent_prefs"
         private const val KEY_BLE_KEY = "ble_key"
+        private const val KEY_PROVIDER = "provider"
+        private const val KEY_WHOOSH_MODE = "whoosh_mode"
+        private const val KEY_WHOOSH_TOKEN = "whoosh_token"
+        private const val KEY_WHOOSH_START_ID = "whoosh_start_id"
+        private const val KEY_WHOOSH_STOP_ID = "whoosh_stop_id"
+        private const val KEY_WHOOSH_UNLOCK_HEX = "whoosh_unlock_hex"
+        private const val KEY_WHOOSH_LOCK_HEX = "whoosh_lock_hex"
+        private const val KEY_YANDEX_SERVICE_UUID = "yandex_service_uuid"
+        private const val KEY_YANDEX_WRITE_UUID = "yandex_write_uuid"
+        private const val KEY_YANDEX_NOTIFY_UUID = "yandex_notify_uuid"
+        private const val KEY_YANDEX_CCCD_UUID = "yandex_cccd_uuid"
+        private const val KEY_YANDEX_DEVICE_ID = "yandex_device_id"
+        private const val KEY_YANDEX_NONCE = "yandex_nonce"
+        private const val KEY_YANDEX_KEY = "yandex_key"
         private const val KEY_SPAM_INTERVAL = "unlock_spam_interval_ms"
         private const val KEY_AUTO_RECONNECT = "auto_reconnect_enabled"
         private const val KEY_AUTO_RECONNECT_ATTEMPTS = "auto_reconnect_max_attempts"

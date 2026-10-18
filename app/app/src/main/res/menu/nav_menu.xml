@@ -9,6 +9,10 @@
         android:icon="@drawable/ic_control"
         android:title="@string/tab_control" />
     <item
+        android:id="@+id/tabProviders"
+        android:icon="@drawable/ic_control"
+        android:title="@string/tab_providers" />
+    <item
         android:id="@+id/tabLog"
         android:icon="@drawable/ic_log"
         android:title="@string/tab_log" />

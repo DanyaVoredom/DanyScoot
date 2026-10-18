@@ -17,6 +17,7 @@ import ru.dany.scoot.ble.ScannedDevice
 import ru.dany.scoot.core.ClientState
 import ru.dany.scoot.core.LogBus
 import ru.dany.scoot.core.Prefs
+import ru.dany.scoot.core.Provider
 import ru.dany.scoot.core.ScooterClient
 import ru.dany.scoot.databinding.FragmentDevicesBinding
 import ru.dany.scoot.databinding.ItemDeviceBinding
@@ -98,6 +99,10 @@ class DevicesFragment : Fragment() {
 
     private fun startDemo() {
         val prefs = Prefs.get(requireContext())
+        if (Provider.from(prefs.provider) != Provider.URENT) {
+            LogBus.warn("DEMO", "Демо доступно только для Urent")
+            return
+        }
         if (ScooterClient.isDemo) {
             ScooterClient.disconnect()
             prefs.demoMode = false
@@ -111,8 +116,14 @@ class DevicesFragment : Fragment() {
     }
 
     private fun connect(device: ScannedDevice) {
+        val provider = Provider.from(Prefs.get(requireContext()).provider)
         ScooterClient.connect(device.address, device.name)
-        (activity as? MainActivity)?.showControlTab()
+        val activity = activity as? MainActivity
+        if (provider == Provider.URENT) {
+            activity?.showControlTab()
+        } else {
+            activity?.showProvidersTab()
+        }
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
@@ -123,6 +134,8 @@ class DevicesFragment : Fragment() {
     private fun refreshDemoButton() {
         val b = binding ?: return
         val demo = ScooterClient.isDemo
+        val provider = Provider.from(Prefs.get(requireContext()).provider)
+        b.demoButton.visibility = if (provider == Provider.URENT) View.VISIBLE else View.GONE
         b.demoButton.text = if (demo) getString(R.string.device_disconnect) else getString(R.string.settings_demo_mode)
     }
 
@@ -157,7 +170,11 @@ class DevicesFragment : Fragment() {
             holder.binding.deviceName.text = device.name
             holder.binding.deviceAddress.text = device.address
             holder.binding.deviceRssi.text = holder.binding.root.context.getString(
-                if (device.hasUart) R.string.device_rssi_uart else R.string.device_rssi,
+                when {
+                    device.hasUart -> R.string.device_rssi_uart
+                    device.hasProfile -> R.string.device_rssi_profile
+                    else -> R.string.device_rssi
+                },
                 device.rssi,
             )
             holder.binding.root.setOnClickListener { onClick(device) }

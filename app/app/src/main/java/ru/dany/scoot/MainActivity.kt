@@ -24,6 +24,7 @@ import ru.dany.scoot.databinding.ActivityMainBinding
 import ru.dany.scoot.ui.ControlFragment
 import ru.dany.scoot.ui.DevicesFragment
 import ru.dany.scoot.ui.LogFragment
+import ru.dany.scoot.ui.ProvidersFragment
 import ru.dany.scoot.ui.SettingsFragment
 import kotlinx.coroutines.launch
 
@@ -62,8 +63,9 @@ class MainActivity : AppCompatActivity() {
             val index = when (item.itemId) {
                 R.id.tabDevices -> 0
                 R.id.tabControl -> 1
-                R.id.tabLog -> 2
-                else -> 3
+                R.id.tabProviders -> 2
+                R.id.tabLog -> 3
+                else -> 4
             }
             if (index != currentTab) showTab(index)
             true
@@ -96,13 +98,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupFragments(savedInstanceState: Bundle?) {
         val manager = supportFragmentManager
-        val tags = arrayOf("devices", "control", "log", "settings")
-        fragments = Array(4) { i ->
+        val tags = arrayOf("devices", "control", "providers", "log", "settings")
+        fragments = Array(5) { i ->
             val existing = manager.findFragmentByTag(tags[i])
             val fragment = existing ?: when (i) {
                 0 -> DevicesFragment()
                 1 -> ControlFragment()
-                2 -> LogFragment()
+                2 -> ProvidersFragment()
+                3 -> LogFragment()
                 else -> SettingsFragment()
             }
             if (existing == null) {
@@ -129,8 +132,16 @@ class MainActivity : AppCompatActivity() {
         updateStatus()
     }
 
+    fun showDevicesTab() {
+        showTab(0)
+    }
+
     fun showControlTab() {
         showTab(1)
+    }
+
+    fun showProvidersTab() {
+        showTab(2)
     }
 
     private fun updateSpamBadge(sent: Int, active: Boolean) {
@@ -188,6 +199,12 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val KEY_TAB = "tab"
-        private val TAB_MENU_IDS = intArrayOf(R.id.tabDevices, R.id.tabControl, R.id.tabLog, R.id.tabSettings)
+        private val TAB_MENU_IDS = intArrayOf(
+            R.id.tabDevices,
+            R.id.tabControl,
+            R.id.tabProviders,
+            R.id.tabLog,
+            R.id.tabSettings,
+        )
     }
 }
