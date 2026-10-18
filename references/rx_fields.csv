@@ -2,7 +2,7 @@ cmd,condition,offset,size,encoding,formula,field,values,source,confidence
 01,len >= 2,0,1,u8,,status,1 = accepted,A2/c.java:262,confirmed
 01,len >= 2,1,1,u8,,sessionKey,"0..255, 0 valid",A2/c.java:262,confirmed
 01,len < 2,,,,,invalid auth reply,,A2/c.java:262,inferred
-05,payload non-empty,0,1,u8,,status,LostBot 0 ok 1 fail 2 ack; DanyUrent 1 or 2 ok,A2/c.java:266,confirmed
+05,payload non-empty,0,1,u8,,status,LostBot 0 ok 1 fail 2 ack; DanyScoot 1 or 2 ok,A2/c.java:266,confirmed
 05,payload empty,,,,,ack without status,,A2/c.java:266,inferred
 10,payload empty,,,,,error without details,,A2/c.java:258,confirmed
 10,len >= 1,0,1,u8,,rejected_cmd,opcode,A2/c.java:258,confirmed
@@ -43,7 +43,7 @@ cmd,condition,offset,size,encoding,formula,field,values,source,confidence
 78,payload non-empty,0,1,u8,,xm_find_result,,A2/c.java:316,catalog
 79,payload non-empty,0,1,u8,,screen_off_result,,A2/c.java:318,catalog
 81,len >= 2,0,1,u8,,tag,,A2/c.java:355,confirmed
-81,len >= 2,1,1,u8,,status,LostBot g() treats 0 as success; DanyUrent expects 1,A2/c.java:355,confirmed
+81,len >= 2,1,1,u8,,status,LostBot g() treats 0 as success; DanyScoot expects 1,A2/c.java:355,confirmed
 82,len >= 5,0,1,u8,,mode,,A2/c.java:357,confirmed
 82,len >= 5,2,3,bytes,,rgb,#RRGGBB at b2..b4,A2/c.java:357,confirmed
 85,len >= 4,0,4,u32 BE,,rfid_id,hex,A2/c.java:359,confirmed

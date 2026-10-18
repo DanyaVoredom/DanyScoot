@@ -1,4 +1,4 @@
-package ru.dany.urent.spam
+package ru.dany.scoot.spam
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -10,11 +10,11 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import ru.dany.urent.MainActivity
-import ru.dany.urent.R
-import ru.dany.urent.core.LogBus
-import ru.dany.urent.core.Prefs
-import ru.dany.urent.core.ScooterClient
+import ru.dany.scoot.MainActivity
+import ru.dany.scoot.R
+import ru.dany.scoot.core.LogBus
+import ru.dany.scoot.core.Prefs
+import ru.dany.scoot.core.ScooterClient
 
 class SpamService : Service() {
 
@@ -33,9 +33,9 @@ class SpamService : Service() {
     }
 
     companion object {
-        const val ACTION_START = "ru.dany.urent.spam.START"
-        const val ACTION_STOP = "ru.dany.urent.spam.STOP"
-        private const val CHANNEL_ID = "danyurent_spam"
+        const val ACTION_START = "ru.dany.scoot.spam.START"
+        const val ACTION_STOP = "ru.dany.scoot.spam.STOP"
+        private const val CHANNEL_ID = "danyscoot_spam"
         private const val NOTIFICATION_ID = 0x5A1
         private const val REFRESH_MS = 1000L
 

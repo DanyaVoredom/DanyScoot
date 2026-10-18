@@ -1,4 +1,4 @@
-package ru.dany.urent.ui
+package ru.dany.scoot.ui
 
 import android.graphics.Color
 import android.os.Bundle
@@ -13,12 +13,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import ru.dany.urent.R
-import ru.dany.urent.core.LogBus
-import ru.dany.urent.core.LogLevel
-import ru.dany.urent.core.LogLine
-import ru.dany.urent.databinding.FragmentLogBinding
-import ru.dany.urent.databinding.ItemLogBinding
+import ru.dany.scoot.R
+import ru.dany.scoot.core.LogBus
+import ru.dany.scoot.core.LogLevel
+import ru.dany.scoot.core.LogLine
+import ru.dany.scoot.databinding.FragmentLogBinding
+import ru.dany.scoot.databinding.ItemLogBinding
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date

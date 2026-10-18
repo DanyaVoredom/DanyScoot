@@ -34,7 +34,7 @@ versionName = "1.0.0"
 Для локального release нужен файл keystore вне репозитория. Пример:
 
 ```
-keytool -genkeypair -v -keystore danyurent-release.jks -alias danyurent -keyalg RSA -keysize 4096 -validity 10000
+keytool -genkeypair -v -keystore danyscoot-release.jks -alias danyscoot -keyalg RSA -keysize 4096 -validity 10000
 ```
 
 Параметры не коммитить. В CI использовать секреты. В build.gradle.kts добавить release signingConfig, читающий переменные окружения или local.properties.

@@ -14,14 +14,14 @@
 | tx_source | string | да | источник сборщика |
 | rx_decode | string | да | описание разбора |
 | rx_source | string | да | источник декодера |
-| danyurent | yes, decoder, manual | да | поддержка в приложении |
+| danyscoot | yes, decoder, manual | да | поддержка в приложении |
 | confidence | confirmed, inferred, catalog | да | уверенность |
 
 Инварианты:
 
 - code_dec равен code_hex.
 - code_hex уникален.
-- danyurent=yes только при наличии отдельной функции.
+- danyscoot=yes только при наличии отдельной функции.
 - confidence=confirmed требует источника сборщика или декодера.
 - confidence=catalog не должен содержать догадок о payload.
 
@@ -29,12 +29,12 @@
 
 Корневой объект:
 
-- schema: danyurent.opcodes/v1;
+- schema: danyscoot.opcodes/v1;
 - count: число записей;
 - source: references/opcodes.csv;
 - opcodes: массив.
 
-Поля opcodes[] совпадают с opcodes.csv: code, code_hex, name, direction, tx_payload, tx_source, rx_decode, rx_source, danyurent, confidence.
+Поля opcodes[] совпадают с opcodes.csv: code, code_hex, name, direction, tx_payload, tx_source, rx_decode, rx_source, danyscoot, confidence.
 
 Инварианты:
 
@@ -176,7 +176,7 @@
 
 Корневой объект:
 
-- schema: danyurent.manifests/v1;
+- schema: danyscoot.manifests/v1;
 - apps: массив.
 
 Поля app:
@@ -349,6 +349,6 @@ validate_all.py проверяет:
 - Нет JSON Schema для manifests.json.
 - Категории разрешений заданы эвристикой и не являются классификацией Android.
 - Нет проверки, что все 54 опкода покрыты кадрами.
-- Нет проверки, что все поля DanyUrent существуют в коде.
+- Нет проверки, что все поля DanyScoot существуют в коде.
 - SHA-256 больших APK замедляет validate_all.py.
 - CI не настроен.

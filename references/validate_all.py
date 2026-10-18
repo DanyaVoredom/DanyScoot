@@ -33,7 +33,7 @@ def sha256(path):
 
 def main():
     manifests = json.loads((ROOT / "manifests.json").read_text(encoding="utf-8"))
-    if manifests.get("schema") != "danyurent.manifests/v1":
+    if manifests.get("schema") != "danyscoot.manifests/v1":
         raise AssertionError("manifests.json: schema")
     apps = manifests["apps"]
     app_ids = [item["id"] for item in apps]
@@ -162,7 +162,7 @@ def main():
             "tx_source",
             "rx_decode",
             "rx_source",
-            "danyurent",
+            "danyscoot",
             "confidence",
         ],
     )
@@ -176,13 +176,13 @@ def main():
         seen.add(code)
         if row["direction"] not in {"BIDIR", "SET", "NOTIF"}:
             raise AssertionError(f"opcodes.csv: direction {row['code_hex']}")
-        if row["danyurent"] not in {"yes", "decoder", "manual"}:
-            raise AssertionError(f"opcodes.csv: danyurent {row['code_hex']}")
+        if row["danyscoot"] not in {"yes", "decoder", "manual"}:
+            raise AssertionError(f"opcodes.csv: danyscoot {row['code_hex']}")
         if row["confidence"] not in {"confirmed", "inferred", "catalog"}:
             raise AssertionError(f"opcodes.csv: confidence {row['code_hex']}")
 
     opcodes_json = json.loads((ROOT / "opcodes.json").read_text(encoding="utf-8"))
-    if opcodes_json.get("schema") != "danyurent.opcodes/v1":
+    if opcodes_json.get("schema") != "danyscoot.opcodes/v1":
         raise AssertionError("opcodes.json: schema")
     if opcodes_json.get("count") != len(opcodes) or opcodes_json.get("count") != len(opcodes_json["opcodes"]):
         raise AssertionError("opcodes.json: count")

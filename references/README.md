@@ -15,7 +15,7 @@
 
 Полный инвентарь, подписи и происхождение: references/apks.csv и references/apks/README.md.
 
-Официальные Urent 1.90.2 base APK и сборка DanyUrent в репозитории не хранятся. Их хеши есть в apks.csv.
+Официальные Urent 1.90.2 base APK и сборка DanyScoot в репозитории не хранятся. Их хеши есть в apks.csv.
 
 ## 2. Официальные приложения
 

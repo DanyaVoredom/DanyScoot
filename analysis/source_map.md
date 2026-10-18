@@ -127,7 +127,7 @@
 
 | Файл | Содержимое |
 | --- | --- |
-| references/opcodes.csv | 54 опкода, направление, payload, источник, декодер, поддержка DanyUrent |
+| references/opcodes.csv | 54 опкода, направление, payload, источник, декодер, поддержка DanyScoot |
 | references/frames.json | 48 TX, 20 RX, 4 битых кадра, CRC-константы |
 | references/apks.csv | инвентарь APK, размеры, SHA-256, подписи |
 | references/manifests.json | манифесты восьми приложений |
@@ -141,20 +141,20 @@
 | references/validate_all.py | проверка CSV, JSON, APK-хешей и кадров |
 | references/README.md | хеши APK, подписи, ссылки, команды проверки |
 
-## 8. DanyUrent
+## 8. DanyScoot
 
 | Утверждение | Файл | Строки |
 | --- | --- | --- |
-| Кадр и CRC | app/app/src/main/java/ru/dany/urent/ble/Frame.kt | 55-161 |
-| Команды и декодеры | app/app/src/main/java/ru/dany/urent/ble/ScooterCodec.kt | 56-300 |
-| Каталог опкодов | app/app/src/main/java/ru/dany/urent/ble/OpcodeCatalog.kt | 1-200 |
-| Скан, GATT, MTU, очередь | app/app/src/main/java/ru/dany/urent/ble/BleTransport.kt | 37-529 |
-| Состояние, auth, спам, демо | app/app/src/main/java/ru/dany/urent/core/ScooterClient.kt | 24-780 |
-| Настройки | app/app/src/main/java/ru/dany/urent/core/Prefs.kt | 12-121 |
-| Журнал | app/app/src/main/java/ru/dany/urent/core/LogBus.kt | 16-47 |
-| Спам-сервис | app/app/src/main/java/ru/dany/urent/spam/SpamService.kt | 1-200 |
-| Разрешения и вкладки | app/app/src/main/java/ru/dany/urent/MainActivity.kt | 30-193 |
-| Темы | app/app/src/main/java/ru/dany/urent/AppTheme.kt, res/values/themes.xml | 8-24, 4-182 |
+| Кадр и CRC | app/app/src/main/java/ru/dany/scoot/ble/Frame.kt | 55-161 |
+| Команды и декодеры | app/app/src/main/java/ru/dany/scoot/ble/ScooterCodec.kt | 56-300 |
+| Каталог опкодов | app/app/src/main/java/ru/dany/scoot/ble/OpcodeCatalog.kt | 1-200 |
+| Скан, GATT, MTU, очередь | app/app/src/main/java/ru/dany/scoot/ble/BleTransport.kt | 37-529 |
+| Состояние, auth, спам, демо | app/app/src/main/java/ru/dany/scoot/core/ScooterClient.kt | 24-780 |
+| Настройки | app/app/src/main/java/ru/dany/scoot/core/Prefs.kt | 12-121 |
+| Журнал | app/app/src/main/java/ru/dany/scoot/core/LogBus.kt | 16-47 |
+| Спам-сервис | app/app/src/main/java/ru/dany/scoot/spam/SpamService.kt | 1-200 |
+| Разрешения и вкладки | app/app/src/main/java/ru/dany/scoot/MainActivity.kt | 30-193 |
+| Темы | app/app/src/main/java/ru/dany/scoot/AppTheme.kt, res/values/themes.xml | 8-24, 4-182 |
 | Манифест | app/app/src/main/AndroidManifest.xml | 1-40 |
 | Сборка | app/app/build.gradle.kts | 1-80 |
 

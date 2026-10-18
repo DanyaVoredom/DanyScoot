@@ -2,7 +2,7 @@
 
 ## 1. Сравнение
 
-| Разрешение | LostBot | FishBot | NineHack | Urent | DanyUrent |
+| Разрешение | LostBot | FishBot | NineHack | Urent | DanyScoot |
 | --- | --- | --- | --- | --- | --- |
 | INTERNET | да | да | нет | да | нет |
 | ACCESS_NETWORK_STATE | да | да | нет | да | нет |
@@ -58,7 +58,7 @@
 
 Запрашивает INTERNET и сеть для лицензирования и телеметрии. Ключ BLE хранится локально, но приложение имеет сетевой API.
 
-### DanyUrent
+### DanyScoot
 
 Минимальный набор:
 
@@ -70,7 +70,7 @@
 
 ## 3. Разрешения по API
 
-| API | DanyUrent | Примечание |
+| API | DanyScoot | Примечание |
 | --- | --- | --- |
 | 23..30 | BLUETOOTH, BLUETOOTH_ADMIN, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION | геолокация обязательна для скана |
 | 31..32 | BLUETOOTH_SCAN neverForLocation, BLUETOOTH_CONNECT | геолокация не нужна |
@@ -89,15 +89,15 @@
 | Urent | SingleActivity | true | нет |
 | Urent | платёжные activity | true | внешние SDK |
 | Urent | push receiver | true | permission |
-| DanyUrent | MainActivity | true | launcher |
-| DanyUrent | SpamService | false | нет |
+| DanyScoot | MainActivity | true | launcher |
+| DanyScoot | SpamService | false | нет |
 
-DanyUrent не экспортирует сервис спама и не принимает внешние intent-ы, кроме запуска MainActivity.
+DanyScoot не экспортирует сервис спама и не принимает внешние intent-ы, кроме запуска MainActivity.
 
 ## 5. Практические выводы
 
 - FishBot не следует устанавливать на основное устройство.
 - Urent имеет широкий набор разрешений, но не BLE.
 - LostBot и NineHack ближе к задаче, но LostBot имеет сеть.
-- DanyUrent сокращает поверхность атаки до BLE и уведомлений.
+- DanyScoot сокращает поверхность атаки до BLE и уведомлений.
 - Отсутствие INTERNET не защищает от перехвата BLE, но исключает удалённую утечку.

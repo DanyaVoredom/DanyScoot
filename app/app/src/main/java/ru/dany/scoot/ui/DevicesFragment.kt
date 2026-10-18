@@ -1,4 +1,4 @@
-package ru.dany.urent.ui
+package ru.dany.scoot.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,15 +11,15 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import ru.dany.urent.MainActivity
-import ru.dany.urent.R
-import ru.dany.urent.ble.ScannedDevice
-import ru.dany.urent.core.ClientState
-import ru.dany.urent.core.LogBus
-import ru.dany.urent.core.Prefs
-import ru.dany.urent.core.ScooterClient
-import ru.dany.urent.databinding.FragmentDevicesBinding
-import ru.dany.urent.databinding.ItemDeviceBinding
+import ru.dany.scoot.MainActivity
+import ru.dany.scoot.R
+import ru.dany.scoot.ble.ScannedDevice
+import ru.dany.scoot.core.ClientState
+import ru.dany.scoot.core.LogBus
+import ru.dany.scoot.core.Prefs
+import ru.dany.scoot.core.ScooterClient
+import ru.dany.scoot.databinding.FragmentDevicesBinding
+import ru.dany.scoot.databinding.ItemDeviceBinding
 import kotlinx.coroutines.launch
 
 class DevicesFragment : Fragment() {

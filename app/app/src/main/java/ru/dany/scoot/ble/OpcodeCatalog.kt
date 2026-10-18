@@ -1,4 +1,4 @@
-package ru.dany.urent.ble
+package ru.dany.scoot.ble
 
 enum class OpcodeDirection { BIDIRECTIONAL, SET_ONLY, NOTIFICATION }
 

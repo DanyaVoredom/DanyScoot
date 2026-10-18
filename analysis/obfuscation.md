@@ -8,7 +8,7 @@
 | FishBot | com.px, mirrorb, cloudinject, sadfxg | StringFog, control-flow flattening | payload-плагин | высокий |
 | NineHack | нет | минимальная | Crashlytics, dump_syms, debuggable | низкий |
 | Urent | нет явного | коммерческая, R8 | аналитика и push | средний |
-| DanyUrent | нет | minify выключен | нет | низкий |
+| DanyScoot | нет | minify выключен | нет | низкий |
 
 ## 2. LostBot
 
@@ -71,7 +71,7 @@ Control-flow flattening:
 - Appsflyer, Yandex Metrica, MTS, Pushwoosh, Huawei, Firebase.
 - BLE-классов нет, поэтому обфускация не мешает выводу об отсутствии BLE.
 
-## 6. DanyUrent
+## 6. DanyScoot
 
 - minifyEnabled=false.
 - Нет R8.

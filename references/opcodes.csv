@@ -1,4 +1,4 @@
-code_hex,code_dec,name,direction,tx_payload,tx_source,rx_decode,rx_source,danyurent,confidence
+code_hex,code_dec,name,direction,tx_payload,tx_source,rx_decode,rx_source,danyscoot,confidence
 01,1,COMMUNICATION_KEY,BIDIR,ASCII key,LostBot C2/F.java:376; NineHack controlActivity.smali:736,status and sessionKey payload[0..1],A2/c.java:262,yes,confirmed
 05,5,UNLOCK,BIDIR,01 x10 or 01 31 31 32 39 t4 00,NineHack CommandCreator.smali:1147-1349; LostBot C2/F.java:1306,status 0/1/2,A2/c.java:266,yes,confirmed
 10,16,ERROR,NOTIF,unknown,unknown,rejected cmd and reason payload[0..1],A2/c.java:258,decoder,confirmed

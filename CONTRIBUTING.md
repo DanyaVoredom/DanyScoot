@@ -13,7 +13,7 @@
 
 ## Код
 
-- Пакет ru.dany.urent.
+- Пакет ru.dany.scoot.
 - Kotlin, 4 пробела.
 - Пользовательские строки в res/values/strings.xml.
 - Состояние через StateFlow.

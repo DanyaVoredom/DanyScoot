@@ -1,4 +1,4 @@
-package ru.dany.urent.core
+package ru.dany.scoot.core
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -7,7 +7,31 @@ import androidx.core.content.edit
 class Prefs private constructor(context: Context) {
 
     private val sp: SharedPreferences =
-        context.applicationContext.getSharedPreferences("danyurent_prefs", Context.MODE_PRIVATE)
+        context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    init {
+        migrateLegacy(context.applicationContext)
+    }
+
+    private fun migrateLegacy(context: Context) {
+        if (sp.all.isNotEmpty()) return
+        val legacy = context.getSharedPreferences(LEGACY_PREFS_NAME, Context.MODE_PRIVATE)
+        val values = legacy.all
+        if (values.isEmpty()) return
+        sp.edit {
+            for ((key, value) in values) {
+                when (value) {
+                    is String -> putString(key, value)
+                    is Int -> putInt(key, value)
+                    is Boolean -> putBoolean(key, value)
+                    is Long -> putLong(key, value)
+                    is Float -> putFloat(key, value)
+                    is Set<*> -> putStringSet(key, value.filterIsInstance<String>().toSet())
+                }
+            }
+        }
+        legacy.edit { clear() }
+    }
 
     var bleKey: String
         get() = sp.getString(KEY_BLE_KEY, DEFAULT_BLE_KEY)?.takeIf { it.isNotEmpty() } ?: DEFAULT_BLE_KEY
@@ -97,6 +121,8 @@ class Prefs private constructor(context: Context) {
         const val DEFAULT_RECONNECT_DELAY = 5000
         const val DEFAULT_THEME = "dark"
 
+        private const val PREFS_NAME = "danyscoot_prefs"
+        private const val LEGACY_PREFS_NAME = "danyurent_prefs"
         private const val KEY_BLE_KEY = "ble_key"
         private const val KEY_SPAM_INTERVAL = "unlock_spam_interval_ms"
         private const val KEY_AUTO_RECONNECT = "auto_reconnect_enabled"

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">DanyUrent</string>
+    <string name="app_name">DanyScoot</string>
 
     <string name="tab_devices">Устройства</string>
     <string name="tab_control">Управление</string>
@@ -134,8 +134,8 @@
     <string name="settings_device_type">Тип передачи</string>
     <string name="settings_save">Сохранить</string>
     <string name="settings_saved">Сохранено</string>
-    <string name="settings_about">DanyUrent объединяет протоколы LostBot и NineHack: кадры A3 A4, CRC-8/MAXIM, рукопожатие ключом, спам разблокировки, телеметрия, Nordic UART. Работает только с собственным самокатом.</string>
-    <string name="settings_about_version">%1$s\n\nDanyUrent %2$s (%3$d)</string>
+    <string name="settings_about">DanyScoot объединяет протоколы LostBot и NineHack: кадры A3 A4, CRC-8/MAXIM, рукопожатие ключом, спам разблокировки, телеметрия, Nordic UART. Работает только с собственным самокатом.</string>
+    <string name="settings_about_version">%1$s\n\nDanyScoot %2$s (%3$d)</string>
 
     <string name="notification_channel_name">Спам разблокировки</string>
     <string name="notification_channel_desc">Уведомление о работе спама разблокировки</string>

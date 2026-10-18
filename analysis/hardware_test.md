@@ -10,11 +10,11 @@
 - USB-UART переходник 3.3 В.
 - Мультиметр.
 - Программатор SWD/ISP под MCU самоката, если понадобится дамп.
-- DanyUrent debug build.
+- DanyScoot debug build.
 
 ## 2. Базовый сценарий
 
-1. Установить DanyUrent.
+1. Установить DanyScoot.
 2. Включить Bluetooth и выдать разрешения Nearby devices.
 3. Нажать сканирование.
 4. Найти самокат по имени или MAC.

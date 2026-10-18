@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.DanyUrent.Dark" parent="Theme.Material3.Dark.NoActionBar">
+    <style name="Theme.DanyScoot.Dark" parent="Theme.Material3.Dark.NoActionBar">
         <item name="colorPrimary">#FF3DDC84</item>
         <item name="colorOnPrimary">#FF062B18</item>
         <item name="colorPrimaryContainer">#FF1E4630</item>
@@ -37,7 +37,7 @@
         <item name="colorControlActivated">#FF3DDC84</item>
     </style>
 
-    <style name="Theme.DanyUrent.Black" parent="Theme.Material3.Dark.NoActionBar">
+    <style name="Theme.DanyScoot.Black" parent="Theme.Material3.Dark.NoActionBar">
         <item name="colorPrimary">#FF3DDC84</item>
         <item name="colorOnPrimary">#FF00210F</item>
         <item name="colorPrimaryContainer">#FF12351F</item>
@@ -73,7 +73,7 @@
         <item name="colorControlActivated">#FF3DDC84</item>
     </style>
 
-    <style name="Theme.DanyUrent.Amoled" parent="Theme.Material3.Dark.NoActionBar">
+    <style name="Theme.DanyScoot.Amoled" parent="Theme.Material3.Dark.NoActionBar">
         <item name="colorPrimary">#FF00E676</item>
         <item name="colorOnPrimary">#FF001B0C</item>
         <item name="colorPrimaryContainer">#FF002513</item>
@@ -109,7 +109,7 @@
         <item name="colorControlActivated">#FF00E676</item>
     </style>
 
-    <style name="Theme.DanyUrent.Light" parent="Theme.Material3.Light.NoActionBar">
+    <style name="Theme.DanyScoot.Light" parent="Theme.Material3.Light.NoActionBar">
         <item name="colorPrimary">#FF1B6B3A</item>
         <item name="colorOnPrimary">#FFFFFFFF</item>
         <item name="colorPrimaryContainer">#FFC8E6C9</item>
@@ -145,7 +145,7 @@
         <item name="colorControlActivated">#FF1B6B3A</item>
     </style>
 
-    <style name="Theme.DanyUrent.White" parent="Theme.Material3.Light.NoActionBar">
+    <style name="Theme.DanyScoot.White" parent="Theme.Material3.Light.NoActionBar">
         <item name="colorPrimary">#FF006D2C</item>
         <item name="colorOnPrimary">#FFFFFFFF</item>
         <item name="colorPrimaryContainer">#FFD7F5E2</item>
@@ -181,6 +181,6 @@
         <item name="colorControlActivated">#FF006D2C</item>
     </style>
 
-    <style name="Theme.DanyUrent" parent="Theme.DanyUrent.Dark" />
+    <style name="Theme.DanyScoot" parent="Theme.DanyScoot.Dark" />
 
 </resources>

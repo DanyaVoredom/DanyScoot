@@ -1,4 +1,4 @@
-package ru.dany.urent
+package ru.dany.scoot
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -16,15 +16,15 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import ru.dany.urent.core.ClientState
-import ru.dany.urent.core.LogBus
-import ru.dany.urent.core.Prefs
-import ru.dany.urent.core.ScooterClient
-import ru.dany.urent.databinding.ActivityMainBinding
-import ru.dany.urent.ui.ControlFragment
-import ru.dany.urent.ui.DevicesFragment
-import ru.dany.urent.ui.LogFragment
-import ru.dany.urent.ui.SettingsFragment
+import ru.dany.scoot.core.ClientState
+import ru.dany.scoot.core.LogBus
+import ru.dany.scoot.core.Prefs
+import ru.dany.scoot.core.ScooterClient
+import ru.dany.scoot.databinding.ActivityMainBinding
+import ru.dany.scoot.ui.ControlFragment
+import ru.dany.scoot.ui.DevicesFragment
+import ru.dany.scoot.ui.LogFragment
+import ru.dany.scoot.ui.SettingsFragment
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {

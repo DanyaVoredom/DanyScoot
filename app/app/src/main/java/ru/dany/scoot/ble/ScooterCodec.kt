@@ -1,4 +1,4 @@
-package ru.dany.urent.ble
+package ru.dany.scoot.ble
 
 data class IotInfo(
     val value: Int,

@@ -1,4 +1,4 @@
-# Референсы DanyUrent: артефакты, протокол, ключи, официальное приложение Urent
+# Референсы DanyScoot: артефакты, протокол, ключи, официальное приложение Urent
 
 Сводный индекс. Детальный протокол: analysis/protocol_full.md. Официальное приложение: analysis/report_urent.md. Отчёты по отдельным APK: report_lostbot.md, report_ninehack.md, report_fishbot.md, report_whoosh.md, report_yandex_go.md.
 
@@ -88,7 +88,7 @@ rand у LostBot 0..254, у NineHack 1..254. CRC-8/MAXIM: poly 0x31 отраже�
 
 Пути в приложении: /api/v1/scooters/openlock/{id} и /api/v1/scooters/closelock/{id}, база service.urentbike.ru, имя gateway из Flagr, авторизация Bearer через /api/v1/connect/token. OpenAPI дополнительно описывает /v3/transports/s.{id} с query useBluetooth и /v6/transports. В приложении параметр useBluetooth=false, поэтому BLE-ветка не используется.
 
-Следствие: из официального APK ключ BLE не извлекается, потому что BLE-кода и ключа там нет. Urent управляет замком через сервер, а не через прямой BLE. Для DanyUrent это означает, что w4S3Hqn5 и 4BKNwi77 остаются единственными известными кандидатами, а не гарантией для парка Urent.
+Следствие: из официального APK ключ BLE не извлекается, потому что BLE-кода и ключа там нет. Urent управляет замком через сервер, а не через прямой BLE. Для DanyScoot это означает, что w4S3Hqn5 и 4BKNwi77 остаются единственными известными кандидатами, а не гарантией для парка Urent.
 
 ## 5. Whoosh и Yandex Go
 
@@ -100,9 +100,9 @@ Yandex Go 5.98.2 содержит пакет com.yandex.go.scooters.ble с Nineb
 
 ## 6. Расхождения и неизвестное
 
-- XDDbot wiki иначе трактует поля ответа рукопожатия. LostBot и NineHack трактуют payload[0] как статус 1, payload[1] как sessionKey. Код APK важнее wiki; текущая реализация DanyUrent следует APK.
+- XDDbot wiki иначе трактует поля ответа рукопожатия. LostBot и NineHack трактуют payload[0] как статус 1, payload[1] как sessionKey. Код APK важнее wiki; текущая реализация DanyScoot следует APK.
 - Неизвестно, какой ключ прошит в конкретном самокате пользователя. Проверка возможна только на hardware.
-- Неизвестно, принимает ли конкретная прошивка sessionKey 0. NineHack явно показывает ответ с ключом 0, LostBot код допускает 0. DanyUrent должен допускать 0.
+- Неизвестно, принимает ли конкретная прошивка sessionKey 0. NineHack явно показывает ответ с ключом 0, LostBot код допускает 0. DanyScoot должен допускать 0.
 - Неизвестно, какой MTU согласует конкретный самокат. LostBot просит 247, но фактический размер зависит от прошивки.
 - Неизвестно, требует ли прошивка CRC входящих кадров. LostBot проверяет, NineHack нет.
 - Официальное Urent 1.90.2 и 2.7.0 не использует BLE, но более старые версии или отдельные сборки могут отличаться. Проверены только эти две.
@@ -152,16 +152,16 @@ Yandex Go 5.98.2 содержит пакет com.yandex.go.scooters.ble с Nineb
 | analysis/method.md | Инструменты, порядок анализа, уровни уверенности |
 | analysis/limitations.md | Неизвестные и blockers |
 | analysis/obfuscation.md | R8, StringFog и упаковщики |
-| analysis/ui_screens.md | Экраны референсов и DanyUrent |
+| analysis/ui_screens.md | Экраны референсов и DanyScoot |
 | docs/README.md | Индекс документации приложения |
 
 ## 8. Уточнения после проверки кода
 
-- 0x10 ERROR: payload[0] - отклонённая команда, payload[1] - причина. Трактовка payload[0] как CRC в DanyUrent удалена.
+- 0x10 ERROR: payload[0] - отклонённая команда, payload[1] - причина. Трактовка payload[0] как CRC в DanyScoot удалена.
 - 0x64 SET_WHEEL_DIAMETER, 0xC3 ACCESSORY_CONTROL и 0x78 XM_FIND_CAR не имеют подтверждённого сборщика. Для 0x64 и 0xC3 есть только декодер, для 0x78 только имя каталога.
-- 0x05 UNLOCK имеет две подтверждённые формы: 10 байт 01 у NineHack и 01 31 31 32 39 + время + 00 у LostBot. DanyUrent использует первую для кнопки, вторую для спама.
-- 0xA2 FIND_CAR подтверждён с payload 01, 02, 03 и 06. DanyUrent использует 01.
+- 0x05 UNLOCK имеет две подтверждённые формы: 10 байт 01 у NineHack и 01 31 31 32 39 + время + 00 у LostBot. DanyScoot использует первую для кнопки, вторую для спама.
+- 0xA2 FIND_CAR подтверждён с payload 01, 02, 03 и 06. DanyScoot использует 01.
 - 0xDC AVAS payload завершается NUL: ASCII HBCS,NB,IMEI,V2,1 или 2,,,,,# и 00.
-- 0x81 в каталоге имеет два имени, SCOOTER_BATTERY и OUT_LOCK. DanyUrent использует код как изъятие батареи с payload 05.
+- 0x81 в каталоге имеет два имени, SCOOTER_BATTERY и OUT_LOCK. DanyScoot использует код как изъятие батареи с payload 05.
 - 0x85 READ_RFID_CARD возвращает 4 байта big-endian. 0x86 DELETE_RFID принимает два идентификатора по 4 байта.
-- 0xFB и 0xFC относятся к прошивке. DanyUrent не выполняет OTA.
+- 0xFB и 0xFC относятся к прошивке. DanyScoot не выполняет OTA.

@@ -1,4 +1,4 @@
-package ru.dany.urent.ble
+package ru.dany.scoot.ble
 
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals

@@ -208,7 +208,7 @@ Session key может быть 0. Ответ 01 00 означает стату�
 - 0x15 lock: то же.
 - 0x61 set: LostBot g() считает payload[0] == 0 успехом, иначе FAIL.
 - 0x81 eject: NineHack ждет 1, LostBot g() ждет 0.
-- DanyUrent принимает 1 и 2 для 0x05 и 0x15, поэтому на прошивке с ответом 0 возможен ложный отказ в журнале.
+- DanyScoot принимает 1 и 2 для 0x05 и 0x15, поэтому на прошивке с ответом 0 возможен ложный отказ в журнале.
 - 0x10 ERROR: payload[0] = отвергнутая команда, payload[1] = причина. NineHack отдельно трактует payload[0] == 1 как BUG CRC Bad.
 - Пустой payload в g() означает ACK без статуса.
 
@@ -471,7 +471,7 @@ LostBot demo controller:
 - Urent 1.90.2 и 2.7.0 требуют hardware.bluetooth_le, но не содержат android.bluetooth и не имеют BLE-разрешений. useBluetooth всегда false.
 - Urent LockType: NA, Code, Electro, Carbine, Electronic, TwoInOne. Это серверная модель, не BLE-протокол.
 
-## 11. Чеклист для DanyUrent
+## 11. Чеклист для DanyScoot
 
 1. GATT: сервис 6e400001, write 6e400002, notify 6e400003, CCCD 00002902. Подключаться с TRANSPORT_LE.
 2. Включить notifications: setCharacteristicNotification(true) плюс запись ENABLE_NOTIFICATION_VALUE в CCCD. Для API 33+ использовать writeDescriptor с проверкой кода 0.

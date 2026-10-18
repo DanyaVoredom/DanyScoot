@@ -37,7 +37,7 @@ Android 11 и ниже:
 Если разрешение отозвано после запуска, скан завершится ошибкой Scan permission denied. Проверить:
 
 ```
-adb shell dumpsys package ru.dany.urent | Select-String BLUETOOTH
+adb shell dumpsys package ru.dany.scoot | Select-String BLUETOOTH
 ```
 
 ## 3. Bluetooth выключен
@@ -68,7 +68,7 @@ adb shell dumpsys package ru.dany.urent | Select-String BLUETOOTH
 - включён показ всех устройств;
 - скан не остановлен через 15 секунд.
 
-Если устройство видно в nRF Connect, но не в DanyUrent, проверить сервисный UUID. Если не видно нигде, проблема на стороне самоката или телефона.
+Если устройство видно в nRF Connect, но не в DanyScoot, проверить сервисный UUID. Если не видно нигде, проблема на стороне самоката или телефона.
 
 ## 6. Ошибка UART service not found
 
@@ -216,4 +216,4 @@ java -version
 - журнал без персональных данных;
 - HCI snoop, если возможно;
 - результат nRF Connect;
-- версия DanyUrent.
+- версия DanyScoot.

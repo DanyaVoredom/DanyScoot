@@ -1,4 +1,4 @@
-package ru.dany.urent.core
+package ru.dany.scoot.core
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

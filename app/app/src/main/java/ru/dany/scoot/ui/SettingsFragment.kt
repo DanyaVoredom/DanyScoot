@@ -1,4 +1,4 @@
-package ru.dany.urent.ui
+package ru.dany.scoot.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -7,14 +7,14 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import ru.dany.urent.AppTheme
-import ru.dany.urent.BuildConfig
-import ru.dany.urent.R
-import ru.dany.urent.ble.ScooterCodec
-import ru.dany.urent.core.LogBus
-import ru.dany.urent.core.Prefs
-import ru.dany.urent.core.ScooterClient
-import ru.dany.urent.databinding.FragmentSettingsBinding
+import ru.dany.scoot.AppTheme
+import ru.dany.scoot.BuildConfig
+import ru.dany.scoot.R
+import ru.dany.scoot.ble.ScooterCodec
+import ru.dany.scoot.core.LogBus
+import ru.dany.scoot.core.Prefs
+import ru.dany.scoot.core.ScooterClient
+import ru.dany.scoot.databinding.FragmentSettingsBinding
 
 class SettingsFragment : Fragment() {
 

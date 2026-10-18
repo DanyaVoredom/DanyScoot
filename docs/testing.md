@@ -110,7 +110,7 @@ python -c "import csv; r=list(csv.DictReader(open('references/opcodes.csv',encod
 1. Включить HCI snoop log.
 2. Подключиться официальным приложением или эталонным клиентом.
 3. Снять лог.
-4. Повторить с DanyUrent.
+4. Повторить с DanyScoot.
 5. Сравнить кадры, ключи, тайминги и ответы.
 6. Проверить каждую команду отдельно.
 7. Зафиксировать результаты в analysis/hardware_test.md.

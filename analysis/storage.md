@@ -8,7 +8,7 @@
 | FishBot | те же | assets/oTMnsXXVnU, baseline.prof, baseline.profm | не найдена | C2 не подтверждён |
 | NineHack | ninehack_settings | нет | нет | нет |
 | Urent | множество SDK | кэш, файлы, push | Room-сервис в манифесте | да |
-| DanyUrent | danyurent_prefs | нет | нет | нет |
+| DanyScoot | danyscoot_prefs | нет | нет | нет |
 
 ## 2. LostBot
 
@@ -81,9 +81,9 @@ SharedPreferences: ninehack_settings.
 
 Полный аудит хранилищ не проводился. Для задачи BLE достаточно факта: BLE-ключей и UUID в APK нет.
 
-## 6. DanyUrent
+## 6. DanyScoot
 
-SharedPreferences: danyurent_prefs.
+SharedPreferences: danyscoot_prefs.
 
 Ключи:
 
@@ -113,14 +113,14 @@ SharedPreferences: danyurent_prefs.
 
 - LostBot и FishBot имеют сеть и токены.
 - NineHack не имеет сети, но хранит ключ в открытом виде.
-- DanyUrent не имеет сети, но хранит ключ и последнее устройство.
+- DanyScoot не имеет сети, но хранит ключ и последнее устройство.
 - Urent имеет широкий профиль данных и аналитику.
 
 ## 8. Рекомендации
 
 - Не публиковать prefs и журналы без очистки.
 - Использовать Keystore для ключа в публичной сборке.
-- Отключить backup, что уже сделано в DanyUrent.
+- Отключить backup, что уже сделано в DanyScoot.
 - Не хранить токены в открытом виде, если появится сеть.
 - Добавить очистку журнала при выходе.
 - Проверять экспортированные компоненты.

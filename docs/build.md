@@ -4,10 +4,10 @@
 
 | Параметр | Значение |
 | --- | --- |
-| applicationId | ru.dany.urent |
-| namespace | ru.dany.urent |
-| versionCode | 1 |
-| versionName | 1.0.0 |
+| applicationId | ru.dany.scoot |
+| namespace | ru.dany.scoot |
+| versionCode | 2 |
+| versionName | 1.1.0 |
 | compileSdk | 36 |
 | minSdk | 23 |
 | targetSdk | 35 |
@@ -100,13 +100,13 @@ cd app
 ```
 adb devices
 adb install -r app\app\build\outputs\apk\debug\app-debug.apk
-adb shell am start -n ru.dany.urent/.MainActivity
+adb shell am start -n ru.dany.scoot/.MainActivity
 ```
 
 Если установлена другая подпись, использовать:
 
 ```
-adb uninstall ru.dany.urent
+adb uninstall ru.dany.scoot
 adb install app\app\build\outputs\apk\debug\app-debug.apk
 ```
 
@@ -117,7 +117,7 @@ aapt dump badging app\app\build\outputs\apk\debug\app-debug.apk
 apksigner verify --print-certs app\app\build\outputs\apk\debug\app-debug.apk
 ```
 
-Ожидаемые признаки: package ru.dany.urent, versionName 1.0.0, minSdk 23, targetSdk 35, label DanyUrent.
+Ожидаемые признаки: package ru.dany.scoot, versionName 1.1.0, minSdk 23, targetSdk 35, label DanyScoot.
 
 ## 10. Типовые проблемы
 

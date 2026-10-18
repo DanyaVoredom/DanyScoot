@@ -1,8 +1,8 @@
-# DanyUrent
+# DanyScoot
 
 Android-приложение для работы с BLE-модулем электросамокатов Urent. Протокол восстановлен по референсным APK из каталога references: LostBot, FishBot, NineHack, а также по официальным Urent, Whoosh и Yandex Go. Приложение объединяет транспорт и телеметрию LostBot с командами и семантикой NineHack, добавляет демо-режим для проверки интерфейса без самоката.
 
-Пакет: ru.dany.urent. Версия: 1.0.0 (1). Минимальная Android: 6.0 (API 23). Целевая: Android 15 (API 35).
+Пакет: ru.dany.scoot. Версия: 1.1.0 (2). Минимальная Android: 6.0 (API 23). Целевая: Android 15 (API 35).
 
 ## Быстрый старт
 
@@ -80,7 +80,7 @@ cd app
 ## Архитектура
 
 ```
-app/app/src/main/java/ru/dany/urent/
+app/app/src/main/java/ru/dany/scoot/
   App.kt                    инициализация клиента и журнала
   AppTheme.kt               пять тем и выбор текущей
   MainActivity.kt           нижняя навигация, разрешения, статус
@@ -89,7 +89,7 @@ app/app/src/main/java/ru/dany/urent/
   ble/BleTransport.kt       скан, GATT, MTU, очередь записи, уведомления
   ble/OpcodeCatalog.kt      каталог опкодов и направлений
   core/ScooterClient.kt     состояние, авторизация, спам, телеметрия
-  core/Prefs.kt             SharedPreferences danyurent_prefs
+  core/Prefs.kt             SharedPreferences danyscoot_prefs
   core/LogBus.kt            кольцевой журнал и StateFlow
   spam/SpamService.kt       foreground-сервис спама
   ui/                       устройства, управление, журнал, настройки

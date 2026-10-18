@@ -24,7 +24,7 @@
 | urent.xapk | 2.7.0 (2070) | 117 800 904 | 22CA0CF66B22EA13E67953ED9158B1DA5508B668A91A17BA373C69513063ADBF |
 | whoosh-4.0.0-arm64.apk | 4.0.0 | 21 705 584 | не зафиксирован |
 | yandex-go-5.98.2-arm64.apk | 5.98.2 | 116 139 945 | не зафиксирован |
-| app-release.apk DanyUrent | 1.0.0 | не зафиксирован | не зафиксирован |
+| app-release.apk DanyScoot | 1.0.0 | не зафиксирован | не зафиксирован |
 
 Urent 1.90.2 и 2.7.0 xapk не хранятся. Urent 2.7.0 base APK уже в references/apks. Split APK Whoosh и Yandex Go не хранятся, потому что BLE-код находится в dex base APK.
 

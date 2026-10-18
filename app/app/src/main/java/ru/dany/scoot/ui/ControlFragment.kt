@@ -1,4 +1,4 @@
-package ru.dany.urent.ui
+package ru.dany.scoot.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -10,19 +10,19 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import ru.dany.urent.R
-import ru.dany.urent.ble.OpcodeCatalog
-import ru.dany.urent.ble.OpcodeDirection
-import ru.dany.urent.ble.OpcodeInfo
-import ru.dany.urent.ble.ScooterCodec
-import ru.dany.urent.ble.hexByte
-import ru.dany.urent.ble.parseHex
-import ru.dany.urent.core.ClientState
-import ru.dany.urent.core.LogBus
-import ru.dany.urent.core.Prefs
-import ru.dany.urent.core.ScooterClient
-import ru.dany.urent.databinding.FragmentControlBinding
-import ru.dany.urent.spam.SpamService
+import ru.dany.scoot.R
+import ru.dany.scoot.ble.OpcodeCatalog
+import ru.dany.scoot.ble.OpcodeDirection
+import ru.dany.scoot.ble.OpcodeInfo
+import ru.dany.scoot.ble.ScooterCodec
+import ru.dany.scoot.ble.hexByte
+import ru.dany.scoot.ble.parseHex
+import ru.dany.scoot.core.ClientState
+import ru.dany.scoot.core.LogBus
+import ru.dany.scoot.core.Prefs
+import ru.dany.scoot.core.ScooterClient
+import ru.dany.scoot.databinding.FragmentControlBinding
+import ru.dany.scoot.spam.SpamService
 import kotlinx.coroutines.launch
 
 class ControlFragment : Fragment() {

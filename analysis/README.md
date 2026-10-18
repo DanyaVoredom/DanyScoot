@@ -25,7 +25,7 @@
 | storage.md | SharedPreferences, ключи, файлы, токены, приватность |
 | comparison.md | сравнение функций, команд и архитектуры |
 | obfuscation.md | R8, StringFog, упаковщики, отладочные артефакты |
-| ui_screens.md | экраны LostBot, FishBot, NineHack, Urent, DanyUrent |
+| ui_screens.md | экраны LostBot, FishBot, NineHack, Urent, DanyScoot |
 | report_lostbot.md | LostBot/FishBot: транспорт, auth, спам, прошивка, лицензирование, UI |
 | report_ninehack.md | NineHack: минимальный клиент, ключи, команды, ошибки, UI |
 | report_fishbot.md | FishBot: инжектор, payload, отличия от LostBot |
@@ -91,7 +91,7 @@ python references/validate_all.py
 - 0x10 содержит отклонённую команду и причину.
 - 0xFA, 0xFB и 0xFC относятся к прошивке.
 - FishBot содержит упаковщик и опасные разрешения, но инжектор нерабочий.
-- DanyUrent не имеет сети и использует минимальный набор разрешений.
+- DanyScoot не имеет сети и использует минимальный набор разрешений.
 
 ## 7. Ограничения
 

@@ -9,7 +9,7 @@
 | NineHack | com.timeylies.ninehack.ru | 1.2 (1) | 11 497 879 | E21272AC4C1A74E1BFE5AF824EE2257BB15D0BB5A8C014F75014C6DE1931D497 |
 | Urent 1.90.2 base | ru.urentbike.app | 1.90.2 (1902) | 68 207 063 | B42D28566AD4BCC600BBD7CFDF2D5197B2B0DA24B1291D217E80AFC7C0CF6B68 |
 | Urent 2.7.0 base | ru.urentbike.app | 2.7.0 (2070) | 82 428 322 | 503007AC2D084F95100145BD9D77D69B991E337F2642FF362BBF7F4A5EB8B7C3 |
-| DanyUrent debug | ru.dany.urent | 1.0.0 (1) | зависит от сборки | вычисляется после сборки |
+| DanyScoot debug | ru.dany.scoot | 1.1.0 (2) | зависит от сборки | вычисляется после сборки |
 
 ## 2. SDK и версии
 
@@ -20,7 +20,7 @@
 | NineHack | 3 | 49 | 34 | apktool.yml, AndroidManifest.xml |
 | Urent 1.90.2 | 24 | 36 | 36 | AndroidManifest.xml |
 | Urent 2.7.0 | 24 | 36 | 36 | AndroidManifest.xml |
-| DanyUrent | 23 | 35 | 36 | app/app/build.gradle.kts |
+| DanyScoot | 23 | 35 | 36 | app/app/build.gradle.kts |
 
 Значения targetSdk 42 и 49 у LostBot и NineHack выглядят аномальными для публичных приложений и, вероятно, являются артефактом патча или apktool. Они не используются для выводов о совместимости.
 
@@ -45,7 +45,7 @@
 | NineHack | 5 | 0 | 1 | 1 |
 | Urent 1.90.2 | 21 | 24 | 19 | 14 |
 | Urent 2.7.0 | 20 | 24 | 19 | 15 |
-| DanyUrent | 1 | 1 | 0 | 0 |
+| DanyScoot | 1 | 1 | 0 | 0 |
 
 Ключевые компоненты:
 
@@ -53,7 +53,7 @@
 - FishBot: те же компоненты, но манифест пропатчен и содержит дополнительные разрешения.
 - NineHack: mainActivity exported=true; controlActivity, scanActivity, bleSettingsActivity, permissionsActivity exported=false.
 - Urent: SingleActivity exported=true; множество сервисов push, оплаты, аналитики и камеры.
-- DanyUrent: MainActivity exported=true, SpamService exported=false, foregroundServiceType=connectedDevice.
+- DanyScoot: MainActivity exported=true, SpamService exported=false, foregroundServiceType=connectedDevice.
 
 ## 5. Разрешения
 
@@ -98,7 +98,7 @@
 
 Официальное приложение существенно шире по разрешениям, но не содержит BLE-разрешений. Это согласуется с отсутствием BLE-стека.
 
-### DanyUrent
+### DanyScoot
 
 - BLUETOOTH, BLUETOOTH_ADMIN, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION до API 30;
 - BLUETOOTH_SCAN с neverForLocation, BLUETOOTH_CONNECT;
@@ -116,7 +116,7 @@
 | NineHack | true | не задан | true | нет |
 | Urent 1.90.2 | false | false | нет | есть |
 | Urent 2.7.0 | false | false | нет | есть |
-| DanyUrent | false | не задан | debug только | нет |
+| DanyScoot | false | не задан | debug только | нет |
 
 NineHack собран с debuggable=true. Это упрощает анализ, но недопустимо для публичной сборки.
 
@@ -125,8 +125,8 @@ NineHack собран с debuggable=true. Это упрощает анализ, 
 - LostBot и NineHack используют одинаковую подпись, но разные архитектуры: LostBot имеет сеть и лицензирование, NineHack является минимальным BLE-клиентом.
 - FishBot является пропатченной сборкой LostBot с нерабочим инжектором и опасным набором разрешений.
 - Официальное Urent не содержит BLE-стека и не может быть источником ключа.
-- DanyUrent имеет минимальный набор разрешений, необходимый для BLE и foreground-сервиса.
-- DanyUrent не содержит сетевых разрешений, что отличает его от LostBot, FishBot и Urent.
+- DanyScoot имеет минимальный набор разрешений, необходимый для BLE и foreground-сервиса.
+- DanyScoot не содержит сетевых разрешений, что отличает его от LostBot, FishBot и Urent.
 
 ## 8. Источники
 

@@ -5,12 +5,12 @@
 - confirmed: 32.
 - inferred: 4.
 - catalog: 18.
-- Поддержка DanyUrent: 18 отдельных функций, 2 декодера, 34 через консоль.
+- Поддержка DanyScoot: 18 отдельных функций, 2 декодера, 34 через консоль.
 - Направления: 37 SET, 16 BIDIR, 1 NOTIF.
 
 ## 1. Полная таблица
 
-| Код | Имя | Направление | TX payload | RX разбор | DanyUrent | Уверенность |
+| Код | Имя | Направление | TX payload | RX разбор | DanyScoot | Уверенность |
 | --- | --- | --- | --- | --- | --- | --- |
 | 01 | COMMUNICATION_KEY | BIDIR | ASCII key | status and sessionKey payload[0..1] | yes | confirmed |
 | 05 | UNLOCK | BIDIR | 01 x10 or 01 31 31 32 39 t4 00 | status 0/1/2 | yes | confirmed |
@@ -128,7 +128,7 @@ references/opcodes.csv содержит колонки:
 - tx_source;
 - rx_decode;
 - rx_source;
-- danyurent;
+- danyscoot;
 - confidence.
 
 Проверка:

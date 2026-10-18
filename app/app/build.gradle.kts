@@ -4,15 +4,15 @@ plugins {
 }
 
 android {
-    namespace = "ru.dany.urent"
+    namespace = "ru.dany.scoot"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "ru.dany.urent"
+        applicationId = "ru.dany.scoot"
         minSdk = 23
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
     }
 
     buildTypes {

@@ -2,7 +2,7 @@
 
 ## 1. Матрица функций
 
-| Функция | LostBot | FishBot | NineHack | Urent | DanyUrent |
+| Функция | LostBot | FishBot | NineHack | Urent | DanyScoot |
 | --- | --- | --- | --- | --- | --- |
 | BLE UART | да | да | да | нет | да |
 | Рукопожатие 0x01 | да | да | да | нет | да |
@@ -23,7 +23,7 @@
 
 ## 2. Транспорт
 
-| Параметр | LostBot | NineHack | DanyUrent |
+| Параметр | LostBot | NineHack | DanyScoot |
 | --- | --- | --- | --- |
 | Сервис | 6e400001 | 6e400001 | 6e400001 |
 | Запись | 6e400002 | 6e400002 | 6e400002 |
@@ -41,11 +41,11 @@
 - LostBot и NineHack генерируют rand 1..254;
 - LostBot использует key=0 для 0x01;
 - NineHack использует actualKey для последующих кадров;
-- DanyUrent повторяет LostBot и NineHack.
+- DanyScoot повторяет LostBot и NineHack.
 
 ## 4. Команды
 
-| Команда | LostBot | NineHack | DanyUrent |
+| Команда | LostBot | NineHack | DanyScoot |
 | --- | --- | --- | --- |
 | 0x05 unlock | время | 10 x 01 | 10 x 01, спам со временем |
 | 0x15 lock | 01 | 01 | 01 |
@@ -97,7 +97,7 @@ Urent:
 - нет BLE;
 - широкая аналитика и платежи.
 
-DanyUrent:
+DanyScoot:
 
 - один модуль;
 - минимальные зависимости;
@@ -153,4 +153,4 @@ DanyUrent:
 - NineHack подтверждает ключ и альтернативную форму команд.
 - FishBot не добавляет протокольных фактов.
 - Urent подтверждает, что официальный клиент не использует BLE.
-- DanyUrent объединяет подтверждённые части и не переносит сетевые и опасные функции.
+- DanyScoot объединяет подтверждённые части и не переносит сетевые и опасные функции.
