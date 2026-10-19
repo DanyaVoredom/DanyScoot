@@ -18,6 +18,20 @@
 | Поле Prefs | Ключ | Тип | По умолчанию | Диапазон |
 | --- | --- | --- | --- | --- |
 | bleKey | ble_key | String | 4BKNwi77 | непустая строка |
+| provider | provider | String | urent | urent, whoosh, yandex |
+| whooshMode | whoosh_mode | String | offline | offline, online |
+| whooshToken | whoosh_token | String | пусто | Base64 или hex |
+| whooshStartId | whoosh_start_id | String | 01 | один байт hex |
+| whooshStopId | whoosh_stop_id | String | 02 | один байт hex |
+| whooshUnlockHex | whoosh_unlock_hex | String | пусто | hex |
+| whooshLockHex | whoosh_lock_hex | String | пусто | hex |
+| yandexServiceUuid | yandex_service_uuid | String | пусто | UUID |
+| yandexWriteUuid | yandex_write_uuid | String | пусто | UUID |
+| yandexNotifyUuid | yandex_notify_uuid | String | пусто | UUID |
+| yandexCccdUuid | yandex_cccd_uuid | String | 00002902-0000-1000-8000-00805f9b34fb | UUID |
+| yandexDeviceId | yandex_device_id | String | пусто | 16-bit hex |
+| yandexNonce | yandex_nonce | String | пусто | 4 байта hex |
+| yandexKey | yandex_key | String | пусто | до 9 UTF-8 байт |
 | spamIntervalMs | unlock_spam_interval_ms | Int | 100 | 20..10000 |
 | autoReconnect | auto_reconnect_enabled | Boolean | true | - |
 | autoReconnectAttempts | auto_reconnect_max_attempts | Int | 3 | 0..20 |

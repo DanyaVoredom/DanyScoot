@@ -34,6 +34,7 @@ cd app
 | ui/ControlFragment.kt | основные команды и телеметрия |
 | ui/LogFragment.kt | журнал |
 | ui/SettingsFragment.kt | настройки и темы |
+| ui/ProvidersFragment.kt | операторы Whoosh и Yandex Go |
 | res/layout | разметка экранов |
 | res/values/strings.xml | все пользовательские строки |
 | res/values/themes.xml | пять тем |

@@ -105,14 +105,7 @@ object FrameCodec {
         val frames = ArrayList<ScooterFrame>()
         var offset = 0
         while (offset < buffer.size) {
-            var start = -1
-            for (i in offset until buffer.size) {
-                if ((buffer[i].toInt() and 0xFF) != FRAME_HEADER_1) continue
-                if (i + 1 >= buffer.size || (buffer[i + 1].toInt() and 0xFF) == FRAME_HEADER_2) {
-                    start = i
-                    break
-                }
-            }
+            val start = buffer.indexOfHeader(offset)
             if (start < 0) return frames to ByteArray(0)
             if (start + 6 >= buffer.size) return frames to buffer.copyOfRange(start, buffer.size)
             val len = buffer[start + 2].toInt() and 0xFF
@@ -127,6 +120,21 @@ object FrameCodec {
             }
         }
         return frames to ByteArray(0)
+    }
+
+    private fun ByteArray.indexOfHeader(from: Int): Int {
+        var index = from
+        while (index < size) {
+            if ((this[index].toInt() and 0xFF) != FRAME_HEADER_1) {
+                index += 1
+                continue
+            }
+            if (index + 1 >= size || (this[index + 1].toInt() and 0xFF) == FRAME_HEADER_2) {
+                return index
+            }
+            index += 1
+        }
+        return -1
     }
 }
 

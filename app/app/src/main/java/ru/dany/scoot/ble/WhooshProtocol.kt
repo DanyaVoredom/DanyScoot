@@ -58,14 +58,9 @@ object WhooshProtocol {
         val text = input.trim()
         if (text.isEmpty()) return null
         if (text.startsWith("hex:", ignoreCase = true)) {
-            val raw = text.substring(4)
-            val bytes = parseHex(raw) ?: return null
-            return bytes.toHexUpper()
+            return parseHex(text.substring(4))?.toHexUpper()
         }
-        val bytes = base64Decode(text) ?: run {
-            val raw = parseHex(text) ?: return null
-            return raw.toHexUpper()
-        }
+        val bytes = base64Decode(text) ?: return parseHex(text)?.toHexUpper()
         return bytes.toHexUpper()
     }
 

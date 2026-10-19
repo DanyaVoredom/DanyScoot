@@ -15,7 +15,7 @@ DanyScoot решает четыре задачи:
 
 ```
 UI
-  MainActivity, четыре фрагмента, ViewBinding
+  MainActivity, пять фрагментов, ViewBinding
     |
 Core
   ScooterClient, Prefs, LogBus
@@ -36,6 +36,7 @@ Android
 | MainActivity | навигация, разрешения, общий статус, badge спама | не отправляет команды |
 | DevicesFragment | скан, список, выбор устройства, демо | не выполняет GATT-операции |
 | ControlFragment | ключ, команды, телеметрия, консоль, спам | не парсит кадры |
+| ProvidersFragment | профиль оператора, команды Whoosh и Yandex Go | не работает с GATT напрямую |
 | LogFragment | отображение журнала, фильтры, копирование | не хранит журнал на диске |
 | SettingsFragment | ключ, интервал, переподключение, темы, демо | не подключается к самокату |
 | ScooterClient | состояние, авторизация, команды, ответы, спам, демо | не сканирует BLE напрямую |

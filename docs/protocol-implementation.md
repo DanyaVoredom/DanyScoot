@@ -104,7 +104,7 @@ DanyScoot использует форму NineHack для обычной кно�
 | UNLOCK | 0x05 | payload[0] 1 или 2 - успех |
 | LOCK | 0x15 | payload[0] 1 или 2 - успех |
 | SCOOTER_SET | 0x61 | payload[0] 0 - успех |
-| EJECT | 0x81 | payload[0] 1 - успех |
+| EJECT | 0x81 | при длине 2 и более payload[0] тег, payload[1] статус, успех при 0 или 1; более короткий ответ считается ACK |
 | DEVICE_INFO | 0x31 | ASCII с двоеточием или 7 байт IoT |
 | SCOOTER_INFO | 0x60 | 8 байт телеметрии |
 | REALTIME | 0x63 | 6 байт телеметрии |

@@ -54,6 +54,7 @@ object ScooterCodec {
     val KEY_PRESETS: List<String> = listOf("4BKNwi77", "w4S3Hqn5")
 
     private val LOCK_SUCCESS_STATUSES = setOf(0, 1, 2)
+    private val EJECT_SUCCESS_STATUSES = setOf(0, 1)
 
     fun keyCommand(key: String): ByteArray =
         FrameCodec.build(CMD_KEY, 0, key.toByteArray(Charsets.UTF_8))
@@ -80,6 +81,12 @@ object ScooterCodec {
 
     fun isLockStatusSuccess(payload: ByteArray): Boolean =
         payload.isEmpty() || (payload[0].toInt() and 0xFF) in LOCK_SUCCESS_STATUSES
+
+    fun isEjectSuccess(payload: ByteArray): Boolean {
+        if (payload.size < 2) return true
+        val status = payload[1].toInt() and 0xFF
+        return status in EJECT_SUCCESS_STATUSES
+    }
 
     fun lockCommand(actualKey: Int): ByteArray =
         FrameCodec.build(CMD_LOCK, actualKey, byteArrayOf(0x01))

@@ -41,6 +41,15 @@ class ScooterCodecTest {
     }
 
     @Test
+    fun ejectStatusAcceptsBothReferenceLayouts() {
+        assertTrue(ScooterCodec.isEjectSuccess(ByteArray(0)))
+        assertTrue(ScooterCodec.isEjectSuccess(byteArrayOf(0x01)))
+        assertTrue(ScooterCodec.isEjectSuccess(byteArrayOf(0x05, 0x00)))
+        assertTrue(ScooterCodec.isEjectSuccess(byteArrayOf(0x05, 0x01)))
+        assertFalse(ScooterCodec.isEjectSuccess(byteArrayOf(0x05, 0x02)))
+    }
+
+    @Test
     fun findCarUsesSoundOpcode() {
         val frame = FrameCodec.parse(ScooterCodec.findCarCommand(0x42))
         assertEquals(0xA2, frame.cmd)

@@ -221,12 +221,13 @@ class ControlFragment : Fragment() {
     }
 
     private fun parseCode(text: String): Int? {
-        if (text.isEmpty()) return null
         val lower = text.trim().lowercase()
+        if (lower.isEmpty()) return null
         return try {
             when {
                 lower.startsWith("0x") -> lower.substring(2).toInt(16)
-                lower.startsWith("d") -> lower.substring(1).toInt()
+                lower.startsWith("d") && lower.substring(1).isNotEmpty() &&
+                    lower.substring(1).all { it.isDigit() } -> lower.substring(1).toInt()
                 lower.all { it.isDigit() || it in 'a'..'f' } -> lower.toInt(16)
                 else -> lower.toInt()
             }

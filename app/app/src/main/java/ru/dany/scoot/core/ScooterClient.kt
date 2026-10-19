@@ -138,7 +138,7 @@ object ScooterClient : BleTransport.Listener {
             else -> false
         }
 
-    val hasLink: Boolean get() = isDemo || isConnected()
+    val hasLink: Boolean get() = !isDemo && isConnected()
 
     fun init(context: Context) {
         if (transport == null) {
@@ -1381,7 +1381,13 @@ object ScooterClient : BleTransport.Listener {
                     if (ok) "Настройки применены" else "Настройки не применены",
                 )
             }
-            ScooterCodec.CMD_EJECT_BATTERY -> report(frame, "Успешное изъятие батареи", "Ошибка изъятия батареи")
+            ScooterCodec.CMD_EJECT_BATTERY -> {
+                val ok = ScooterCodec.isEjectSuccess(frame.payload)
+                LogBus.log(
+                    if (ok) LogLevel.OK else LogLevel.WARN, "SCOOTER",
+                    if (ok) "Успешное изъятие батареи" else "Ошибка изъятия батареи",
+                )
+            }
             ScooterCodec.CMD_DEVICE_INFO -> handleDeviceInfo(frame)
             ScooterCodec.CMD_SCOOTER_INFO -> {
                 val info = ScooterCodec.parseVehicleInfo(frame.payload)
@@ -1459,12 +1465,6 @@ object ScooterClient : BleTransport.Listener {
             else -> "статус $code"
         }
         LogBus.log(if (code == 2) LogLevel.OK else LogLevel.INFO, "FW", "Передача прошивки: $text")
-    }
-
-    private fun report(frame: ScooterFrame, okText: String, failText: String, successCodes: Set<Int> = setOf(1)) {
-        val code = frame.payload.firstOrNull()?.toInt()?.and(0xFF)
-        val ok = code != null && code in successCodes
-        LogBus.log(if (ok) LogLevel.OK else LogLevel.WARN, "SCOOTER", if (ok) okText else failText)
     }
 
     private fun reportLock(frame: ScooterFrame, okText: String, failText: String) {

@@ -16,8 +16,8 @@ Release-вариант собирается, но использует debug sig
 versionCode и versionName задаются в app/app/build.gradle.kts:
 
 ```
-versionCode = 1
-versionName = "1.0.0"
+versionCode = 6
+versionName = "1.3.1"
 ```
 
 Правила:
