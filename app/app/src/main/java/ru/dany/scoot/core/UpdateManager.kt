@@ -33,7 +33,7 @@ object UpdateManager {
     }
 
     private const val TAG = "UPDATE"
-    private const val API = "https://api.github.com/repos/FANATFANATA/DanyScoot/releases/latest"
+    private const val API = "https://api.github.com/repos/DanyaVoredom/DanyScoot/releases/latest"
     private const val APK_TYPE = "application/vnd.android.package-archive"
     private const val AUTO_CHECK_INTERVAL_MS = 24L * 60 * 60 * 1000
     private const val CONNECT_TIMEOUT_MS = 15000
