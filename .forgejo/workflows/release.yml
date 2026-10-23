@@ -22,7 +22,7 @@ jobs:
         run: |
           set -euo pipefail
           find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +
-          git clone --depth 1 --branch "${{ forgejo.ref_name }}" "https://${{ forgejo.repository }}.git" .
+          git clone --depth 1 --branch "${{ forgejo.ref_name }}" "${{ forgejo.server_url }}/${{ forgejo.repository }}.git" .
 
       - name: Prepare
         shell: bash
