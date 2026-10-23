@@ -2,14 +2,24 @@
 
 ## 1. Текущее состояние
 
-Release-вариант собирается, но использует debug signingConfig. Это значит:
+Release-вариант подписывается signingConfig release, который читает keystore из переменных окружения:
 
-- APK можно установить для проверки;
+| Переменная | По умолчанию |
+| --- | --- |
+| DANYSCOOT_KEYSTORE | ~/.android/debug.keystore |
+| DANYSCOOT_KEYSTORE_PASSWORD | android |
+| DANYSCOOT_KEY_ALIAS | androiddebugkey |
+| DANYSCOOT_KEY_PASSWORD | android |
+
+В CI keystore берется из секрета DEBUG_KEYSTORE_BASE64 и распаковывается в RUNNER_TEMP. Workflow проверяет, что отпечаток сертификата равен a52c629f6bf570936fecdf522b468b35646523d90bf72665257c92d5943e648e, иначе сборка падает. Это гарантирует установку обновления поверх предыдущей версии.
+
+Ограничения:
+
 - APK нельзя публиковать в RuStore, Google Play или другом магазине;
 - обновление поверх другой сборки возможно только при совпадении подписи;
 - хеш и сертификат не являются доверенными.
 
-Для публичного выпуска нужен отдельный keystore и signingConfig release.
+Для публичного выпуска нужен отдельный keystore и свои значения переменных окружения.
 
 ## 2. Версионирование
 
@@ -31,13 +41,15 @@ versionName = "1.5.0"
 
 ## 3. Подпись
 
-Для локального release нужен файл keystore вне репозитория. Пример:
+Для локального release достаточно keystore, указанного в DANYSCOOT_KEYSTORE. По умолчанию используется ~/.android/debug.keystore, поэтому локальная и CI-сборки совпадают по подписи.
+
+Параметры не коммитить. Для публичного выпуска сгенерировать отдельный ключ:
 
 ```
 keytool -genkeypair -v -keystore danyscoot-release.jks -alias danyscoot -keyalg RSA -keysize 4096 -validity 10000
 ```
 
-Параметры не коммитить. В CI использовать секреты. В build.gradle.kts добавить release signingConfig, читающий переменные окружения или local.properties.
+и задать DANYSCOOT_KEYSTORE, DANYSCOOT_KEYSTORE_PASSWORD, DANYSCOOT_KEY_ALIAS, DANYSCOOT_KEY_PASSWORD.
 
 Проверка подписи:
 
@@ -83,7 +95,7 @@ Get-FileHash app\app\build\outputs\apk\release\app-release.apk -Algorithm SHA256
 - versionCode увеличен.
 - versionName соответствует изменениям.
 - Release подписан постоянным ключом.
-- Debug-подпись не используется.
+- Отпечаток сертификата совпадает с предыдущей версией, CI это проверяет.
 - Сетевые разрешения только для обновлений и настроенного AI-сервера.
 - Ключи не печатаются в журнал в открытом виде.
 - AI-ключ не попадает в журнал и релизные заметки.

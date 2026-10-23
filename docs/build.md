@@ -44,7 +44,7 @@ cd app
 app\app\build\outputs\apk\release\app-release.apk
 ```
 
-Важно: в текущей конфигурации release использует debug signingConfig и отключённый minify. Это удобно для локальной проверки, но не подходит для публикации. Порядок выпуска описан в docs/release.md.
+Важно: в текущей конфигурации release использует signingConfig release с debug-keystore по умолчанию и отключённый minify. Это удобно для локальной проверки, но не подходит для публикации. Порядок выпуска описан в docs/release.md.
 
 ## 4. Тесты
 
