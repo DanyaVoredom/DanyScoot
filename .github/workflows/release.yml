@@ -29,6 +29,8 @@ jobs:
 
       - name: Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools platforms;android-36 build-tools;36.0.0
 
       - name: Prepare
         env:
@@ -50,7 +52,6 @@ jobs:
           mkdir -p "$HOME/.android"
           printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$HOME/.android/debug.keystore"
           chmod 600 "$HOME/.android/debug.keystore"
-          yes | sdkmanager "platforms;android-36" "build-tools;36.0.0" > /dev/null
 
       - name: Build
         run: |
