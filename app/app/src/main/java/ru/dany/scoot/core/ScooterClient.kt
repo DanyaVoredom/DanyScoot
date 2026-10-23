@@ -5,8 +5,18 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import java.util.Locale
+import java.util.UUID
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import ru.dany.scoot.ble.BleProfiles
 import ru.dany.scoot.ble.BleTransport
+import ru.dany.scoot.ble.DeviceKind
 import ru.dany.scoot.ble.FrameCodec
 import ru.dany.scoot.ble.GattDump
 import ru.dany.scoot.ble.IotInfo
@@ -16,31 +26,55 @@ import ru.dany.scoot.ble.ScooterFrame
 import ru.dany.scoot.ble.VehicleInfo
 import ru.dany.scoot.ble.hex
 import ru.dany.scoot.ble.hexByte
-import java.util.Locale
-import java.util.UUID
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import ru.dany.scoot.ble.shortUuid
 
-enum class ClientState { IDLE, SCANNING, CONNECTING, DISCOVERING, AUTHENTICATING, READY, DEMO, ERROR }
+data class RemoteInfo(
+    val name: String = "",
+    val batteryPercent: Int? = null,
+    val manufacturer: String = "",
+    val model: String = "",
+    val serial: String = "",
+    val firmware: String = "",
+    val hardware: String = "",
+    val software: String = "",
+    val txPower: Int? = null,
+    val lastUuid: String = "",
+    val lastHex: String = "",
+)
+
+data class BleNotification(
+    val timeMs: Long,
+    val uuid: UUID,
+    val data: ByteArray,
+)
+
+enum class ClientState { IDLE, SCANNING, CONNECTING, DISCOVERING, AUTHENTICATING, READY, ERROR }
 
 object ScooterClient : BleTransport.Listener {
-
-    const val DEMO_ADDRESS = "DEMO:00:00:00:00:01"
-    const val DEMO_NAME = "Демо-самокат"
 
     private const val TAG = "BLE"
     private const val AUTH_TAG = "AUTH"
     private const val SPAM_TAG = "SPAM"
-    private const val DEMO_TAG = "DEMO"
     private const val GATT_TAG = "GATT"
+    private const val EXT_TAG = "DEVICE"
     private const val AUTH_TIMEOUT_MS = 3000L
     private const val UNLOCK_TIMEOUT_MS = 3000L
-    private const val DEMO_TICK_MS = 1500L
     private const val BYPASS_TAG = "BYPASS"
     private const val BRUTE_INTERVAL_MS = 30L
+    private const val NOTIFY_LIMIT = 120
+
+    private const val CHAR_BATTERY = "00002a19-0000-1000-8000-00805f9b34fb"
+    private const val CHAR_DEVICE_NAME = "00002a00-0000-1000-8000-00805f9b34fb"
+    private const val CHAR_MODEL = "00002a24-0000-1000-8000-00805f9b34fb"
+    private const val CHAR_SERIAL = "00002a25-0000-1000-8000-00805f9b34fb"
+    private const val CHAR_FIRMWARE = "00002a26-0000-1000-8000-00805f9b34fb"
+    private const val CHAR_HARDWARE = "00002a27-0000-1000-8000-00805f9b34fb"
+    private const val CHAR_SOFTWARE = "00002a28-0000-1000-8000-00805f9b34fb"
+    private const val CHAR_MANUFACTURER = "00002a29-0000-1000-8000-00805f9b34fb"
+    private const val CHAR_TX_POWER = "00002a07-0000-1000-8000-00805f9b34fb"
 
     private lateinit var prefs: Prefs
+
     @SuppressLint("StaticFieldLeak")
     private var transport: BleTransport? = null
     private val handler = Handler(Looper.getMainLooper())
@@ -65,8 +99,7 @@ object ScooterClient : BleTransport.Listener {
     private var reconnectRunnable: Runnable? = null
     private var linkLost = true
     private var wantedSpam = false
-    private var demoTick: Runnable? = null
-    private var demoLocked = false
+    private val pendingReads = HashMap<UUID, CompletableDeferred<ByteArray?>>()
 
     private val _state = MutableStateFlow(ClientState.IDLE)
     val state: StateFlow<ClientState> = _state.asStateFlow()
@@ -79,6 +112,12 @@ object ScooterClient : BleTransport.Listener {
 
     private val _iot = MutableStateFlow<IotInfo?>(null)
     val iot: StateFlow<IotInfo?> = _iot.asStateFlow()
+
+    private val _remote = MutableStateFlow<RemoteInfo?>(null)
+    val remote: StateFlow<RemoteInfo?> = _remote.asStateFlow()
+
+    private val _notifications = MutableStateFlow<List<BleNotification>>(emptyList())
+    val notifications: StateFlow<List<BleNotification>> = _notifications.asStateFlow()
 
     private val _spamActive = MutableStateFlow(false)
     val spamActive: StateFlow<Boolean> = _spamActive.asStateFlow()
@@ -104,18 +143,19 @@ object ScooterClient : BleTransport.Listener {
     var deviceAddress: String = ""
         private set
 
-    val isDemo: Boolean get() = _state.value == ClientState.DEMO
+    var activeKind: DeviceKind = DeviceKind.OTHER
+        private set
+
+    val isScooter: Boolean get() = activeKind == DeviceKind.SCOOTER
+
+    val isHeadset: Boolean get() = activeKind == DeviceKind.HEADSET
 
     val spamWanted: Boolean get() = wantedSpam
 
     val isReady: Boolean
-        get() = when (_state.value) {
-            ClientState.DEMO -> true
-            ClientState.READY -> authenticated
-            else -> false
-        }
+        get() = _state.value == ClientState.READY && authenticated
 
-    val hasLink: Boolean get() = !isDemo && isConnected()
+    val hasLink: Boolean get() = isConnected()
 
     fun init(context: Context) {
         if (transport == null) {
@@ -132,10 +172,6 @@ object ScooterClient : BleTransport.Listener {
     fun bluetoothEnabled(): Boolean = transport?.isBluetoothEnabled == true
 
     fun startScan() {
-        if (prefs.demoMode) {
-            LogBus.info(DEMO_TAG, "Режим демо: сканирование отключено")
-            return
-        }
         cancelReconnect()
         _devices.value = emptyList()
         _state.value = ClientState.SCANNING
@@ -146,8 +182,7 @@ object ScooterClient : BleTransport.Listener {
             LogBus.err(TAG, "Bluetooth не инициализирован")
             return
         }
-        val filter = if (prefs.showAllDevices) null else BleTransport.UART_SERVICE
-        t.startScan(filter)
+        t.startScan()
     }
 
     fun stopScan() {
@@ -157,7 +192,7 @@ object ScooterClient : BleTransport.Listener {
         }
     }
 
-    fun connect(address: String, name: String) {
+    fun connect(address: String, name: String, kind: DeviceKind = DeviceKind.SCOOTER) {
         cancelReconnect()
         val dump = _gatt.value
         if (dump != null && dump.address != address) _gatt.value = null
@@ -174,30 +209,28 @@ object ScooterClient : BleTransport.Listener {
         bypassPending = false
         sessionKey = 0
         _lastError.value = ""
+        _remote.value = null
+        _notifications.value = emptyList()
+        pendingReads.values.forEach { it.complete(null) }
+        pendingReads.clear()
         stopSpam()
-        if (prefs.demoMode && address != DEMO_ADDRESS) prefs.demoMode = false
-        if (prefs.demoMode && address == DEMO_ADDRESS) {
-            transport?.disconnect()
-            deviceAddress = DEMO_ADDRESS
-            deviceName = name.ifEmpty { DEMO_NAME }
-            reconnectAttempts = 0
-            startDemo()
-            return
-        }
-        stopDemo()
         val t = transport
         if (t == null) {
             _state.value = ClientState.IDLE
             LogBus.err(TAG, "Bluetooth не инициализирован")
             return
         }
+        activeKind = kind
         deviceAddress = address
         deviceName = name.ifEmpty { address }
         prefs.lastDeviceAddress = address
         prefs.lastDeviceName = deviceName
+        prefs.lastDeviceKind = kind
         reconnectAttempts = 0
+        t.profile = BleProfiles.forKind(kind)
+        t.allowAutoProfile = kind != DeviceKind.SCOOTER
         _state.value = ClientState.CONNECTING
-        LogBus.info(TAG, "Подключение к $deviceName ($address)")
+        LogBus.info(TAG, "Подключение к $deviceName ($address, ${kindLabel(kind)})")
         t.connect(address)
     }
 
@@ -207,11 +240,7 @@ object ScooterClient : BleTransport.Listener {
         stopSpam()
         wantedSpam = false
         reconnectAttempts = prefs.autoReconnectAttempts + 1
-        if (isDemo) {
-            stopDemo()
-        } else {
-            transport?.disconnect()
-        }
+        transport?.disconnect()
         sessionKey = 0
         authPending = false
         authenticated = false
@@ -223,6 +252,10 @@ object ScooterClient : BleTransport.Listener {
         stopKeyBrute()
         bypassPending = false
         rxBuffer = ByteArray(0)
+        pendingReads.values.forEach { it.complete(null) }
+        pendingReads.clear()
+        _remote.value = null
+        _notifications.value = emptyList()
         _state.value = ClientState.IDLE
         LogBus.info(TAG, "Отключено")
     }
@@ -233,29 +266,17 @@ object ScooterClient : BleTransport.Listener {
     }
 
     fun reconnectLast(): Boolean {
-        if (prefs.demoMode) {
-            connect(DEMO_ADDRESS, DEMO_NAME)
-            return true
-        }
         val address = prefs.lastDeviceAddress
         if (address.isEmpty()) return false
-        connect(address, prefs.lastDeviceName)
+        connect(address, prefs.lastDeviceName, prefs.lastDeviceKind)
         return true
     }
 
-    fun hasLastDevice(): Boolean {
-        if (prefs.demoMode) return true
-        val address = prefs.lastDeviceAddress
-        return address.isNotEmpty()
-    }
+    fun hasLastDevice(): Boolean = prefs.lastDeviceAddress.isNotEmpty()
 
     fun authenticate() {
-        if (isDemo) {
-            sessionKey = 0x42
-            authenticated = true
-            _state.value = ClientState.DEMO
-            LogBus.ok(AUTH_TAG, "Ключ верный (демо)")
-            onAuthenticated()
+        if (activeKind != DeviceKind.SCOOTER) {
+            LogBus.info(AUTH_TAG, "Устройство без авторизации по ключу")
             return
         }
         if (!isConnected()) {
@@ -274,7 +295,7 @@ object ScooterClient : BleTransport.Listener {
         authKey = key
         authTried.add(key)
         cancelUnlock()
-        LogBus.info(AUTH_TAG, "Отправка ключа: $key")
+        LogBus.info(AUTH_TAG, "Отправка ключа: ***")
         authPending = true
         _state.value = ClientState.AUTHENTICATING
         if (!writeFrame(ScooterCodec.keyCommand(key), "ключ")) {
@@ -313,7 +334,7 @@ object ScooterClient : BleTransport.Listener {
             _state.value = ClientState.READY
             return
         }
-        LogBus.warn(AUTH_TAG, "$reason, пробую ключ $next")
+        LogBus.warn(AUTH_TAG, "$reason, пробую другой известный ключ")
         sendAuthKey(next)
     }
 
@@ -347,11 +368,8 @@ object ScooterClient : BleTransport.Listener {
     }
 
     fun sendRaw(cmd: Int, payload: ByteArray) {
-        if (!isReady) {
-            LogBus.warn(TAG, "Требуется авторизация")
-            return
-        }
-        writeCommand(FrameCodec.build(cmd, sessionKey, payload), "ручная команда ${hexByte(cmd)}")
+        val key = requireKey() ?: return
+        writeCommand(FrameCodec.build(cmd, key, payload), "ручная команда ${hexByte(cmd)}")
     }
 
     fun sendService(cmd: Int, payload: ByteArray) {
@@ -359,7 +377,79 @@ object ScooterClient : BleTransport.Listener {
         writeCommand(FrameCodec.build(cmd, key, payload), "сервис ${hexByte(cmd)}")
     }
 
+    fun sendFrameKey(cmd: Int, payload: ByteArray, key: Int): Boolean {
+        if (!isConnected()) {
+            LogBus.warn(TAG, "Нет подключения")
+            return false
+        }
+        return writeCommand(FrameCodec.build(cmd, key, payload), "кадр ${hexByte(cmd)} key ${hexByte(key)}")
+    }
+
+    fun sendProfileBytes(data: ByteArray): Boolean {
+        if (!isConnected()) {
+            LogBus.warn(TAG, "Нет подключения")
+            return false
+        }
+        return writeFrame(data, "ручная запись")
+    }
+
+    fun readCharacteristic(uuid: UUID): Boolean = transport?.read(uuid) == true
+
+    suspend fun readValue(uuid: UUID, timeoutMs: Long = 3500L): ByteArray? =
+        withContext(Dispatchers.Main.immediate) {
+            if (!isConnected()) return@withContext null
+            val deferred = CompletableDeferred<ByteArray?>()
+            pendingReads[uuid]?.complete(null)
+            pendingReads[uuid] = deferred
+            try {
+                if (transport?.read(uuid) != true) return@withContext null
+                withTimeoutOrNull(timeoutMs) { deferred.await() }
+            } finally {
+                if (pendingReads[uuid] === deferred) pendingReads.remove(uuid)
+            }
+        }
+
+    fun writeCharacteristic(uuid: UUID, data: ByteArray, withoutResponse: Boolean? = null): Boolean =
+        transport?.writeTo(uuid, data, withoutResponse) == true
+
+    fun subscribeCharacteristic(uuid: UUID, enable: Boolean = true): Boolean =
+        transport?.setNotify(uuid, enable) == true
+
+    fun gattText(): String = _gatt.value?.toText().orEmpty()
+
+    fun recentNotifications(limit: Int): List<BleNotification> =
+        _notifications.value.takeLast(limit.coerceIn(1, NOTIFY_LIMIT))
+
+    fun refreshRemoteInfo() {
+        if (!isConnected() || activeKind == DeviceKind.SCOOTER) return
+        val available = _gatt.value?.services
+            ?.flatMap { service -> service.characteristics.map { it.uuid.toString() } }
+            ?.toSet()
+            ?: return
+        val wanted = listOf(
+            CHAR_DEVICE_NAME,
+            CHAR_BATTERY,
+            CHAR_MANUFACTURER,
+            CHAR_MODEL,
+            CHAR_SERIAL,
+            CHAR_FIRMWARE,
+            CHAR_HARDWARE,
+            CHAR_SOFTWARE,
+            CHAR_TX_POWER,
+        )
+        val targets = wanted.filter { available.contains(it) }
+        targets.forEachIndexed { index, text ->
+            handler.postDelayed({
+                if (isConnected()) transport?.read(UUID.fromString(text))
+            }, 150L + index * 220L)
+        }
+    }
+
     fun bypassUnlock() {
+        if (activeKind != DeviceKind.SCOOTER) {
+            LogBus.warn(BYPASS_TAG, "Команда только для самоката")
+            return
+        }
         if (!isConnected()) {
             LogBus.warn(BYPASS_TAG, "Нет подключения")
             return
@@ -379,6 +469,10 @@ object ScooterClient : BleTransport.Listener {
     }
 
     fun startKeyBrute() {
+        if (activeKind != DeviceKind.SCOOTER) {
+            LogBus.warn(BYPASS_TAG, "Команда только для самоката")
+            return
+        }
         if (!isConnected()) {
             LogBus.warn(BYPASS_TAG, "Нет подключения")
             return
@@ -436,6 +530,10 @@ object ScooterClient : BleTransport.Listener {
     }
 
     fun startSpam() {
+        if (activeKind != DeviceKind.SCOOTER) {
+            LogBus.warn(SPAM_TAG, "Спам доступен только для самоката")
+            return
+        }
         if (spamRunning) return
         if (!isReady) {
             LogBus.warn(SPAM_TAG, "Сначала авторизуйтесь")
@@ -473,10 +571,6 @@ object ScooterClient : BleTransport.Listener {
     }
 
     private fun spamTick() {
-        if (isDemo) {
-            _spamSent.value += 1
-            return
-        }
         if (!isReady) return
         val frame = ScooterCodec.spamUnlockCommand(sessionKey, System.currentTimeMillis())
         if (writeFrame(frame, null)) {
@@ -485,7 +579,10 @@ object ScooterClient : BleTransport.Listener {
     }
 
     private fun requireKey(): Int? {
-        if (isDemo) return 0x42
+        if (activeKind != DeviceKind.SCOOTER) {
+            LogBus.warn(TAG, "Действие доступно только для самоката")
+            return null
+        }
         if (!isReady) {
             val text = if (_state.value == ClientState.READY) "Требуется авторизация" else "Нет подключения"
             LogBus.warn(TAG, text)
@@ -498,17 +595,10 @@ object ScooterClient : BleTransport.Listener {
         transport != null && _state.value != ClientState.IDLE && _state.value != ClientState.CONNECTING &&
             _state.value != ClientState.SCANNING && _state.value != ClientState.ERROR
 
-    private fun writeCommand(frame: ByteArray, label: String): Boolean {
-        if (isDemo) {
-            LogBus.tx("TX", "${label}: ${hex(frame)}")
-            demoReply(frame)
-            return true
-        }
-        return writeFrame(frame, label)
-    }
+    private fun writeCommand(frame: ByteArray, label: String): Boolean = writeFrame(frame, label)
 
     private fun sendUnlockVariant() {
-        if (!isDemo && !isReady) {
+        if (!isReady) {
             cancelUnlock()
             return
         }
@@ -522,7 +612,6 @@ object ScooterClient : BleTransport.Listener {
             cancelUnlock()
             return
         }
-        if (isDemo) return
         scheduleUnlockTimeout()
     }
 
@@ -586,14 +675,21 @@ object ScooterClient : BleTransport.Listener {
         val list = ArrayList(current)
         if (existing >= 0) {
             val old = list[existing]
-            list[existing] = device.copy(name = if (device.name == "Unknown") old.name else device.name)
+            list[existing] = device.copy(
+                name = if (device.name == "Unknown") old.name else device.name,
+                hasUart = old.hasUart || device.hasUart,
+                hasEdifier = old.hasEdifier || device.hasEdifier,
+                kind = if (device.kind == DeviceKind.OTHER) old.kind else device.kind,
+            )
         } else {
-            if (!prefs.showAllDevices && !device.hasUart) return
+            val unknown = device.name.isBlank() || device.name == "Unknown"
+            if (prefs.hideUnknownDevices && unknown && device.kind == DeviceKind.OTHER) return
+            if (!prefs.showAllDevices && device.kind == DeviceKind.OTHER) return
             list.add(device)
             if (prefs.showScanLog) {
                 LogBus.info(
                     "SCAN",
-                    "${device.name} ${device.address} RSSI=${device.rssi} UART=${device.hasUart} ${device.advert}",
+                    "${device.name} ${device.address} RSSI=${device.rssi} ${device.kind} ${device.advert}",
                 )
             }
         }
@@ -627,7 +723,14 @@ object ScooterClient : BleTransport.Listener {
                 _incompatible.value = _incompatible.value - deviceAddress
             }
             LogBus.info(TAG, "Сервисы готовы, канал уведомлений включен")
-            authenticate()
+            if (activeKind == DeviceKind.SCOOTER) {
+                authenticate()
+            } else {
+                authenticated = true
+                _state.value = ClientState.READY
+                LogBus.ok(EXT_TAG, "Канал ${kindLabel(activeKind)} готов")
+                refreshRemoteInfo()
+            }
         }
     }
 
@@ -643,11 +746,61 @@ object ScooterClient : BleTransport.Listener {
     }
 
     private fun handleCharacteristicRead(uuid: UUID, value: ByteArray) {
-        LogBus.info(TAG, "Read $uuid: ${hex(value)}")
+        LogBus.info(TAG, "Read ${shortUuid(uuid)}: ${hex(value)}")
+        pendingReads.remove(uuid)?.complete(value.copyOf())
+        updateRemote(uuid, value)
     }
 
-    override fun onFrame(data: ByteArray) {
-        handler.post { processFrame(data) }
+    override fun onFrame(uuid: UUID, data: ByteArray) {
+        handler.post { handleFrame(uuid, data) }
+    }
+
+    private fun handleFrame(uuid: UUID, data: ByteArray) {
+        if (uuid == BleTransport.UART_TX_CHAR) {
+            processFrame(data)
+            return
+        }
+        LogBus.rx("RX", "${shortUuid(uuid)}: ${hex(data)}")
+        appendNotification(uuid, data)
+        updateRemote(uuid, data)
+    }
+
+    private fun appendNotification(uuid: UUID, data: ByteArray) {
+        val list = ArrayList(_notifications.value)
+        list.add(BleNotification(System.currentTimeMillis(), uuid, data.copyOf()))
+        if (list.size > NOTIFY_LIMIT) list.subList(0, list.size - NOTIFY_LIMIT).clear()
+        _notifications.value = list
+    }
+
+    private fun updateRemote(uuid: UUID, value: ByteArray) {
+        val key = uuid.toString()
+        val current = _remote.value ?: RemoteInfo()
+        val text = ascii(value)
+        val updated = when (key) {
+            CHAR_BATTERY -> {
+                val battery = value.firstOrNull()?.toInt()?.and(0xFF)
+                current.copy(batteryPercent = battery)
+            }
+            CHAR_DEVICE_NAME -> current.copy(name = text)
+            CHAR_MANUFACTURER -> current.copy(manufacturer = text)
+            CHAR_MODEL -> current.copy(model = text)
+            CHAR_SERIAL -> current.copy(serial = text)
+            CHAR_FIRMWARE -> current.copy(firmware = text)
+            CHAR_HARDWARE -> current.copy(hardware = text)
+            CHAR_SOFTWARE -> current.copy(software = text)
+            CHAR_TX_POWER -> {
+                val power = value.firstOrNull()?.toInt()?.and(0xFF) ?: current.txPower ?: 0
+                current.copy(txPower = power)
+            }
+            else -> current
+        }
+        _remote.value = updated.copy(lastUuid = shortUuid(uuid), lastHex = hex(value))
+    }
+
+    private fun ascii(value: ByteArray): String {
+        var end = value.size
+        while (end > 0 && value[end - 1].toInt() == 0) end--
+        return String(value, 0, end, Charsets.UTF_8).trim()
     }
 
     private fun processFrame(data: ByteArray) {
@@ -683,6 +836,9 @@ object ScooterClient : BleTransport.Listener {
         stopKeyBrute()
         bypassPending = false
         rxBuffer = ByteArray(0)
+        pendingReads.values.forEach { it.complete(null) }
+        pendingReads.clear()
+        _remote.value = null
         _spamActive.value = false
         LogBus.warn(TAG, "Соединение потеряно ($reason)")
         if (spamRunning) {
@@ -695,13 +851,13 @@ object ScooterClient : BleTransport.Listener {
         }
         val fatal = transport?.lastFailureIsFatal == true
         val canReconnect = !fatal && prefs.autoReconnect && reconnectAttempts < prefs.autoReconnectAttempts &&
-            deviceAddress.isNotEmpty() && !prefs.demoMode
+            deviceAddress.isNotEmpty()
         if (canReconnect) {
             reconnectAttempts += 1
             LogBus.info(TAG, "Переподключение $reconnectAttempts/${prefs.autoReconnectAttempts} через ${prefs.autoReconnectDelayMs} мс")
             val runnable = Runnable {
                 reconnectRunnable = null
-                if (!prefs.demoMode && deviceAddress.isNotEmpty()) {
+                if (deviceAddress.isNotEmpty()) {
                     linkLost = false
                     _state.value = ClientState.CONNECTING
                     transport?.connect(deviceAddress)
@@ -727,7 +883,7 @@ object ScooterClient : BleTransport.Listener {
             }
             LogBus.warn(
                 GATT_TAG,
-                "Устройство не отдало Nordic UART. Полный список сервисов выше. Если сервисов нет, прошивка закрыта",
+                "Устройство не отдало Nordic UART или Edifier канал. Полный список сервисов выше",
             )
         }
     }
@@ -908,7 +1064,7 @@ object ScooterClient : BleTransport.Listener {
     }
 
     fun requestTelemetry() {
-        if (!isReady) return
+        if (!isReady || activeKind != DeviceKind.SCOOTER) return
         sendService(ScooterCodec.CMD_DEVICE_INFO, byteArrayOf(0x01))
         sendService(ScooterCodec.CMD_SCOOTER_INFO, byteArrayOf(0x01))
         sendService(ScooterCodec.CMD_REALTIME, byteArrayOf(0x01))
@@ -929,130 +1085,9 @@ object ScooterClient : BleTransport.Listener {
         }
     }
 
-    private fun startDemo() {
-        stopDemo()
-        linkLost = true
-        demoLocked = false
-        _state.value = ClientState.DEMO
-        sessionKey = 0x42
-        authenticated = true
-        _vehicle.value = VehicleInfo(batteryPercent = 87, mode = 2, speed = 0.0, singleMileage = 45230, remainingRange = 31000)
-        _iot.value = IotInfo(value = 4200, flags = 0x01, locked = false, version = "1.4.2")
-        LogBus.info(DEMO_TAG, "Демо-режим: подключено к $deviceName")
-        LogBus.ok(AUTH_TAG, "Ключ верный, сессионный ключ 0x42")
-        var speed = 0.0
-        val tick = object : Runnable {
-            override fun run() {
-                if (_state.value != ClientState.DEMO) return
-                speed = when {
-                    speed > 24.0 -> 0.0
-                    else -> speed + 1.7
-                }
-                val v = _vehicle.value ?: VehicleInfo(87, 2, 0.0, 0, 0)
-                _vehicle.value = v.copy(
-                    speed = speed,
-                    singleMileage = v.singleMileage + 3,
-                    remainingRange = (v.remainingRange - 3).coerceAtLeast(0),
-                )
-                handler.postDelayed(this, DEMO_TICK_MS)
-            }
-        }
-        demoTick = tick
-        handler.postDelayed(tick, DEMO_TICK_MS)
-    }
-
-    private fun stopDemo() {
-        demoTick?.let { handler.removeCallbacks(it) }
-        demoTick = null
-        demoLocked = false
-        authenticated = false
-        _vehicle.value = null
-        _iot.value = null
-    }
-
-    private fun demoReply(frame: ByteArray) {
-        try {
-            val parsed = FrameCodec.parse(frame)
-            val vehicle = _vehicle.value
-            if (parsed.cmd == ScooterCodec.CMD_UNLOCK) demoLocked = false
-            if (parsed.cmd == ScooterCodec.CMD_LOCK) demoLocked = true
-            val reply = when (parsed.cmd) {
-                ScooterCodec.CMD_KEY -> FrameCodec.build(0x01, 0x42, byteArrayOf(1, 0x42))
-                ScooterCodec.CMD_UNLOCK -> FrameCodec.build(0x05, 0x42, byteArrayOf(1))
-                ScooterCodec.CMD_LOCK -> FrameCodec.build(0x15, 0x42, byteArrayOf(1))
-                ScooterCodec.CMD_EJECT_BATTERY -> FrameCodec.build(0x81, 0x42, byteArrayOf(1))
-                ScooterCodec.CMD_SCOOTER_SET -> FrameCodec.build(0x61, 0x42, byteArrayOf(0))
-                ScooterCodec.CMD_DEVICE_INFO -> FrameCodec.build(
-                    ScooterCodec.CMD_DEVICE_INFO,
-                    0x42,
-                    byteArrayOf(0x10, 0x68, if (demoLocked) 0x00 else 0x01, 0x00, 1, 4, 2),
-                )
-                ScooterCodec.CMD_SCOOTER_INFO -> {
-                    val v = vehicle ?: VehicleInfo(87, 2, 0.0, 45230, 31000)
-                    FrameCodec.build(
-                        ScooterCodec.CMD_SCOOTER_INFO,
-                        0x42,
-                        byteArrayOf(
-                            v.batteryPercent.toByte(),
-                            v.mode.toByte(),
-                            ((v.speed * 10).toInt() shr 8).toByte(),
-                            ((v.speed * 10).toInt() and 0xFF).toByte(),
-                            ((v.singleMileage / 10) shr 8).toByte(),
-                            ((v.singleMileage / 10) and 0xFF).toByte(),
-                            ((v.remainingRange / 10) shr 8).toByte(),
-                            ((v.remainingRange / 10) and 0xFF).toByte(),
-                        ),
-                    )
-                }
-                ScooterCodec.CMD_REALTIME -> {
-                    val v = vehicle ?: VehicleInfo(87, 2, 0.0, 45230, 31000)
-                    val speedRaw = (v.speed * 10).toInt()
-                    FrameCodec.build(
-                        ScooterCodec.CMD_REALTIME,
-                        0x42,
-                        byteArrayOf(
-                            v.batteryPercent.toByte(),
-                            (speedRaw shr 8).toByte(),
-                            (speedRaw and 0xFF).toByte(),
-                            0x00,
-                            0x8C.toByte(),
-                            0x01,
-                        ),
-                    )
-                }
-                ScooterCodec.CMD_RFID -> FrameCodec.build(
-                    ScooterCodec.CMD_RFID,
-                    0x42,
-                    byteArrayOf(0x12, 0x34, 0x56, 0x78),
-                )
-                ScooterCodec.CMD_FW_INFO -> FrameCodec.build(
-                    ScooterCodec.CMD_FW_INFO,
-                    0x42,
-                    "FW 1.2.3 demo".toByteArray(Charsets.US_ASCII),
-                )
-                ScooterCodec.CMD_RFID_DELETE -> FrameCodec.build(
-                    ScooterCodec.CMD_RFID_DELETE,
-                    0x42,
-                    byteArrayOf(0x12, 0x34, 0x56, 0x78, 0x00, 0x00, 0x00, 0x01),
-                )
-                ScooterCodec.CMD_FIND_CAR -> FrameCodec.build(ScooterCodec.CMD_FIND_CAR, 0x42, byteArrayOf(1))
-                else -> FrameCodec.build(parsed.cmd, 0x42, byteArrayOf(1))
-            }
-            handler.postDelayed({
-                if (_state.value == ClientState.DEMO) handleFrame(FrameCodec.parse(reply))
-            }, 120)
-            if (parsed.cmd == ScooterCodec.CMD_LOCK || parsed.cmd == ScooterCodec.CMD_UNLOCK) {
-                val info = FrameCodec.build(
-                    ScooterCodec.CMD_DEVICE_INFO,
-                    0x42,
-                    byteArrayOf(0x10, 0x68, if (demoLocked) 0x00 else 0x01, 0x00, 1, 4, 2),
-                )
-                handler.postDelayed({
-                    if (_state.value == ClientState.DEMO) handleFrame(FrameCodec.parse(info))
-                }, 260)
-            }
-        } catch (e: Exception) {
-            LogBus.err(DEMO_TAG, "Ошибка демо-ответа: ${e.message}")
-        }
+    private fun kindLabel(kind: DeviceKind): String = when (kind) {
+        DeviceKind.SCOOTER -> "самокат"
+        DeviceKind.HEADSET -> "гарнитура"
+        DeviceKind.OTHER -> "BLE"
     }
 }

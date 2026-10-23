@@ -34,7 +34,13 @@ data class ScannedDevice(
     val rssi: Int,
     val hasUart: Boolean,
     val advert: String = "",
-)
+    val hasEdifier: Boolean = false,
+    val kind: DeviceKind = DeviceKind.OTHER,
+) {
+    val distanceMeters: Double get() = DeviceClassifier.distanceMeters(rssi)
+
+    val reachable: Boolean get() = hasUart || hasEdifier || kind != DeviceKind.OTHER
+}
 
 data class BleProfile(
     val service: UUID,
@@ -43,6 +49,7 @@ data class BleProfile(
     val cccd: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"),
     val mtu: Int = 247,
     val writeWithoutResponse: Boolean? = null,
+    val extraNotify: List<UUID> = emptyList(),
 )
 
 class BleTransport(private val context: Context) {
@@ -54,7 +61,7 @@ class BleTransport(private val context: Context) {
         fun onServicesReady(write: BluetoothGattCharacteristic, notify: BluetoothGattCharacteristic)
         fun onGattDump(dump: GattDump)
         fun onCharacteristicRead(uuid: UUID, value: ByteArray)
-        fun onFrame(data: ByteArray)
+        fun onFrame(uuid: UUID, data: ByteArray)
         fun onDisconnected(reason: String)
         fun onError(message: String)
     }
@@ -78,6 +85,12 @@ class BleTransport(private val context: Context) {
         private const val DISCOVERY_TIMEOUT_MS = 12000L
     }
 
+    private data class PendingWrite(
+        val characteristic: BluetoothGattCharacteristic,
+        val data: ByteArray,
+        val withoutResponse: Boolean,
+    )
+
     private val handler = Handler(Looper.getMainLooper())
     private val manager: BluetoothManager? =
         context.applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
@@ -89,8 +102,9 @@ class BleTransport(private val context: Context) {
     private var scanning = false
     private var mtu = 23
     private var writeWithoutResponse = false
-    private val writeQueue = ArrayDeque<ByteArray>()
+    private val writeQueue = ArrayDeque<PendingWrite>()
     private var writeBusy = false
+    private var currentWriteWithoutResponse = false
     private var connected = false
     private var servicesReady = false
     private var descriptorPending = false
@@ -98,6 +112,9 @@ class BleTransport(private val context: Context) {
     private var rediscoveryTried = false
     private var failureFatal = false
     private var gattAddress = ""
+    private val subscribed = LinkedHashSet<UUID>()
+    private val cccdQueue = ArrayDeque<BluetoothGattCharacteristic>()
+    private var cccdActive: BluetoothGattCharacteristic? = null
     private val writeTimeout = Runnable {
         if (writeBusy) {
             writeBusy = false
@@ -147,6 +164,7 @@ class BleTransport(private val context: Context) {
 
     var listener: Listener? = null
     var profile: BleProfile = BleProfiles.URENT
+    var allowAutoProfile: Boolean = false
 
     val isBluetoothEnabled: Boolean get() = adapter?.isEnabled == true
 
@@ -172,8 +190,14 @@ class BleTransport(private val context: Context) {
                 return
             }
             val name = deviceName(device)
-            val services = result.scanRecord?.serviceUuids
-            val hasUart = services?.contains(ParcelUuid(UART_SERVICE)) == true
+            val uuids = try {
+                result.scanRecord?.serviceUuids?.map { it.uuid }
+            } catch (e: SecurityException) {
+                null
+            }
+            val kind = DeviceClassifier.classify(name, uuids)
+            val hasUart = kind == DeviceKind.SCOOTER
+            val hasEdifier = kind == DeviceKind.HEADSET
             listener?.onDevice(
                 ScannedDevice(
                     address = address,
@@ -181,6 +205,8 @@ class BleTransport(private val context: Context) {
                     rssi = result.rssi,
                     hasUart = hasUart,
                     advert = advertisement(result),
+                    hasEdifier = hasEdifier,
+                    kind = kind,
                 ),
             )
         }
@@ -325,41 +351,95 @@ class BleTransport(private val context: Context) {
         listener?.onGattDump(dump)
         val activeProfile = profile
         val service = g.getService(activeProfile.service)
-        if (service == null) {
-            if (!rediscoveryTried) {
-                rediscoveryTried = true
-                handler.removeCallbacks(rediscover)
-                handler.postDelayed(rediscover, REDISCOVER_DELAY_MS)
+        var write = service?.getCharacteristic(activeProfile.write)
+        var notify = service?.getCharacteristic(activeProfile.notify)
+        var extras = activeProfile.extraNotify
+        if (write == null || notify == null) {
+            val auto = if (allowAutoProfile) findAutoPair(g) else null
+            if (auto != null) {
+                write = auto.first
+                notify = auto.second
+                extras = emptyList()
+                listener?.onError("Профиль не найден, используется GATT ${shortUuid(auto.first.uuid)} / ${shortUuid(auto.second.uuid)}")
+            } else {
+                if (service == null && !rediscoveryTried) {
+                    rediscoveryTried = true
+                    handler.removeCallbacks(rediscover)
+                    handler.postDelayed(rediscover, REDISCOVER_DELAY_MS)
+                    return
+                }
+                if (service == null) {
+                    failAndClose("Service ${activeProfile.service} not found", fatal = true)
+                } else {
+                    failAndClose(
+                        "Characteristics ${activeProfile.write}/${activeProfile.notify} not found",
+                        fatal = true,
+                    )
+                }
                 return
             }
-            failAndClose("Service ${activeProfile.service} not found", fatal = true)
-            return
-        }
-        val write = service.getCharacteristic(activeProfile.write)
-        val notify = service.getCharacteristic(activeProfile.notify)
-        if (write == null || notify == null) {
-            failAndClose("Characteristics ${activeProfile.write}/${activeProfile.notify} not found", fatal = true)
-            return
         }
         writeChar = write
         notifyChar = notify
         writeWithoutResponse = activeProfile.writeWithoutResponse
             ?: ((write.properties and BluetoothGattCharacteristic.PROPERTY_WRITE) == 0)
-        val ok = try {
-            g.setCharacteristicNotification(notify, true)
-        } catch (e: SecurityException) {
-            false
+        val notifyChars = ArrayList<BluetoothGattCharacteristic>()
+        notifyChars.add(notify)
+        for (uuid in extras) {
+            val extra = findCharacteristic(g, uuid) ?: continue
+            if (extra.uuid != notify.uuid) notifyChars.add(extra)
         }
-        if (!ok) {
-            failAndClose("Failed to enable notifications")
-            return
+        for (char in notifyChars) {
+            val ok = try {
+                g.setCharacteristicNotification(char, true)
+            } catch (e: SecurityException) {
+                false
+            }
+            if (!ok) {
+                if (char.uuid == notify.uuid) {
+                    failAndClose("Failed to enable notifications")
+                    return
+                }
+                listener?.onError("Notify ${shortUuid(char.uuid)} недоступен")
+                continue
+            }
+            subscribed.add(char.uuid)
         }
-        val descriptor = notify.getDescriptor(activeProfile.cccd)
-        if (descriptor == null) {
+        cccdQueue.clear()
+        val cccd = activeProfile.cccd
+        for (char in notifyChars) {
+            if (char.getDescriptor(cccd) != null) cccdQueue.addLast(char)
+        }
+        if (cccdQueue.isEmpty()) {
             markServicesReady(write, notify)
             return
         }
         descriptorPending = true
+        writeNextCccd()
+    }
+
+    private fun writeNextCccd() {
+        val g = gatt
+        if (g == null) {
+            descriptorPending = false
+            return
+        }
+        val char = cccdQueue.removeFirstOrNull()
+        if (char == null) {
+            descriptorPending = false
+            cccdActive = null
+            handler.removeCallbacks(descriptorTimeout)
+            val write = writeChar
+            val notify = notifyChar
+            if (write != null && notify != null) markServicesReady(write, notify)
+            return
+        }
+        val descriptor = char.getDescriptor(profile.cccd)
+        if (descriptor == null) {
+            writeNextCccd()
+            return
+        }
+        cccdActive = char
         handler.removeCallbacks(descriptorTimeout)
         handler.postDelayed(descriptorTimeout, DESCRIPTOR_TIMEOUT_MS)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -369,7 +449,13 @@ class BleTransport(private val context: Context) {
                 BluetoothStatusCodes.ERROR_MISSING_BLUETOOTH_CONNECT_PERMISSION
             }
             if (result != BluetoothStatusCodes.SUCCESS) {
-                failAndClose("Notification descriptor write failed: $result")
+                if (char.uuid == notifyChar?.uuid) {
+                    failAndClose("Notification descriptor write failed: $result")
+                } else {
+                    descriptorPending = false
+                    listener?.onError("Notify ${shortUuid(char.uuid)}: $result")
+                    writeNextCccd()
+                }
             }
         } else {
             descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
@@ -379,32 +465,41 @@ class BleTransport(private val context: Context) {
                 false
             }
             if (!result) {
-                failAndClose("Notification descriptor write failed")
+                if (char.uuid == notifyChar?.uuid) {
+                    failAndClose("Notification descriptor write failed")
+                } else {
+                    descriptorPending = false
+                    listener?.onError("Notify ${shortUuid(char.uuid)} не включен")
+                    writeNextCccd()
+                }
             }
         }
     }
 
     private fun handleDescriptorWrite(g: BluetoothGatt, uuid: UUID, status: Int) {
-        if (g !== gatt || closing || servicesReady) return
+        if (g !== gatt || closing) return
         if (uuid != profile.cccd) return
+        if (servicesReady) {
+            if (status != BluetoothGatt.GATT_SUCCESS) listener?.onError("Descriptor write failed: $status")
+            return
+        }
+        val char = cccdActive
+        cccdActive = null
         descriptorPending = false
         handler.removeCallbacks(descriptorTimeout)
         if (status != BluetoothGatt.GATT_SUCCESS) {
-            failAndClose("Notification descriptor write failed: $status")
-            return
+            if (char != null && char.uuid == notifyChar?.uuid) {
+                failAndClose("Notification descriptor write failed: $status")
+                return
+            }
+            listener?.onError("Notify ${char?.let { shortUuid(it.uuid) } ?: "?"}: $status")
         }
-        val write = writeChar
-        val notify = notifyChar
-        if (write == null || notify == null) {
-            failAndClose("Characteristics not found")
-            return
-        }
-        markServicesReady(write, notify)
+        writeNextCccd()
     }
 
     private fun handleCharacteristicWrite(g: BluetoothGatt, status: Int) {
         if (g !== gatt) return
-        if (writeWithoutResponse) return
+        if (currentWriteWithoutResponse) return
         handler.removeCallbacks(writeTimeout)
         if (status != BluetoothGatt.GATT_SUCCESS) {
             listener?.onError("Write failed: $status")
@@ -418,7 +513,7 @@ class BleTransport(private val context: Context) {
     private fun handleCharacteristicRead(g: BluetoothGatt, uuid: UUID, value: ByteArray, status: Int) {
         if (g !== gatt) return
         if (status != BluetoothGatt.GATT_SUCCESS) {
-            listener?.onError("Read failed: $status")
+            listener?.onError("Read ${shortUuid(uuid)} failed: $status")
             return
         }
         listener?.onCharacteristicRead(uuid, value)
@@ -426,9 +521,8 @@ class BleTransport(private val context: Context) {
 
     private fun handleCharacteristicChanged(g: BluetoothGatt, uuid: UUID, value: ByteArray) {
         if (g !== gatt) return
-        if (uuid == profile.notify) {
-            listener?.onFrame(value)
-        }
+        if (!subscribed.contains(uuid)) return
+        listener?.onFrame(uuid, value)
     }
 
     private fun hasPermission(permission: String): Boolean =
@@ -466,6 +560,63 @@ class BleTransport(private val context: Context) {
         listener?.onError(message)
         closeGatt()
         listener?.onDisconnected(message)
+    }
+
+    private fun findAutoPair(g: BluetoothGatt): Pair<BluetoothGattCharacteristic, BluetoothGattCharacteristic>? {
+        val services = try {
+            g.services
+        } catch (e: SecurityException) {
+            return null
+        }
+        val metadata = setOf(
+            "00001800-0000-1000-8000-00805f9b34fb",
+            "00001801-0000-1000-8000-00805f9b34fb",
+            "0000180a-0000-1000-8000-00805f9b34fb",
+            "0000180f-0000-1000-8000-00805f9b34fb",
+            "0000fe2c-0000-1000-8000-00805f9b34fb",
+        )
+        val ordered = services.filterNot { metadata.contains(it.uuid.toString()) } +
+            services.filter { metadata.contains(it.uuid.toString()) }
+        for (service in ordered) {
+            var write: BluetoothGattCharacteristic? = null
+            var notify: BluetoothGattCharacteristic? = null
+            for (char in service.characteristics) {
+                val props = char.properties
+                if (write == null && props and (
+                    BluetoothGattCharacteristic.PROPERTY_WRITE or
+                        BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE
+                    ) != 0
+                ) {
+                    write = char
+                }
+                if (notify == null && props and (
+                    BluetoothGattCharacteristic.PROPERTY_NOTIFY or
+                        BluetoothGattCharacteristic.PROPERTY_INDICATE
+                    ) != 0
+                ) {
+                    notify = char
+                }
+            }
+            if (write != null && notify != null) return write to notify
+        }
+        return null
+    }
+
+    private fun findCharacteristic(g: BluetoothGatt, uuid: UUID): BluetoothGattCharacteristic? {
+        val services = try {
+            g.services
+        } catch (e: SecurityException) {
+            return null
+        }
+        for (service in services) {
+            val char = try {
+                service.getCharacteristic(uuid)
+            } catch (e: SecurityException) {
+                null
+            }
+            if (char != null) return char
+        }
+        return null
     }
 
     @SuppressLint("MissingPermission")
@@ -625,8 +776,29 @@ class BleTransport(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     fun write(data: ByteArray): Boolean {
-        if (gatt == null || writeChar == null || !connected || !servicesReady) return false
+        val ch = writeChar ?: return false
         if (data.isEmpty()) return true
+        return enqueue(ch, data, writeWithoutResponse)
+    }
+
+    @SuppressLint("MissingPermission")
+    fun writeTo(uuid: UUID, data: ByteArray, withoutResponse: Boolean? = null): Boolean {
+        val g = gatt ?: return false
+        if (!connected || !servicesReady) return false
+        val ch = findCharacteristic(g, uuid) ?: return false
+        val props = ch.properties
+        val writable = props and (
+            BluetoothGattCharacteristic.PROPERTY_WRITE or
+                BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE
+            ) != 0
+        if (!writable) return false
+        if (data.isEmpty()) return true
+        val noResponse = withoutResponse ?: ((props and BluetoothGattCharacteristic.PROPERTY_WRITE) == 0)
+        return enqueue(ch, data, noResponse)
+    }
+
+    private fun enqueue(ch: BluetoothGattCharacteristic, data: ByteArray, withoutResponse: Boolean): Boolean {
+        if (gatt == null || !connected || !servicesReady) return false
         val chunkSize = (mtu - 3).coerceIn(MIN_CHUNK, 512)
         val chunks = (data.size + chunkSize - 1) / chunkSize
         if (chunks > MAX_WRITE_QUEUE || writeQueue.size + chunks > MAX_WRITE_QUEUE) {
@@ -636,7 +808,7 @@ class BleTransport(private val context: Context) {
         var offset = 0
         while (offset < data.size) {
             val end = (offset + chunkSize).coerceAtMost(data.size)
-            writeQueue.addLast(data.copyOfRange(offset, end))
+            writeQueue.addLast(PendingWrite(ch, data.copyOfRange(offset, end), withoutResponse))
             offset = end
         }
         if (!writeBusy) processWriteQueue()
@@ -646,33 +818,34 @@ class BleTransport(private val context: Context) {
     @SuppressLint("MissingPermission")
     private fun processWriteQueue() {
         val g = gatt
-        val ch = writeChar
-        if (g == null || ch == null) {
+        if (g == null) {
             writeQueue.clear()
             writeBusy = false
             return
         }
-        val chunk = writeQueue.removeFirstOrNull()
-        if (chunk == null) {
+        val op = writeQueue.removeFirstOrNull()
+        if (op == null) {
             writeBusy = false
+            currentWriteWithoutResponse = false
             return
         }
         writeBusy = true
-        val type = if (writeWithoutResponse) {
+        currentWriteWithoutResponse = op.withoutResponse
+        val type = if (op.withoutResponse) {
             BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
         } else {
             BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
         }
         val started = try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                g.writeCharacteristic(ch, chunk, type) == BluetoothStatusCodes.SUCCESS
+                g.writeCharacteristic(op.characteristic, op.data, type) == BluetoothStatusCodes.SUCCESS
             } else {
                 @Suppress("DEPRECATION")
-                ch.value = chunk
+                op.characteristic.value = op.data
                 @Suppress("DEPRECATION")
-                ch.writeType = type
+                op.characteristic.writeType = type
                 @Suppress("DEPRECATION")
-                g.writeCharacteristic(ch)
+                g.writeCharacteristic(op.characteristic)
             }
         } catch (e: SecurityException) {
             false
@@ -681,7 +854,7 @@ class BleTransport(private val context: Context) {
             writeQueue.clear()
             writeBusy = false
             listener?.onError("BLE write failed")
-        } else if (writeWithoutResponse) {
+        } else if (op.withoutResponse) {
             handler.post { processWriteQueue() }
         } else {
             handler.removeCallbacks(writeTimeout)
@@ -693,17 +866,81 @@ class BleTransport(private val context: Context) {
     fun read(uuid: UUID): Boolean {
         val g = gatt ?: return false
         if (!connected || !servicesReady) return false
-        val ch = try {
-            g.getService(profile.service)?.getCharacteristic(uuid)
-        } catch (e: SecurityException) {
-            null
-        } ?: return false
+        val ch = findCharacteristic(g, uuid) ?: return false
+        if (ch.properties and BluetoothGattCharacteristic.PROPERTY_READ == 0) return false
         return try {
             @Suppress("DEPRECATION")
             g.readCharacteristic(ch)
         } catch (e: SecurityException) {
             false
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun setNotify(uuid: UUID, enable: Boolean): Boolean {
+        val g = gatt ?: return false
+        if (!connected || !servicesReady) return false
+        val ch = findCharacteristic(g, uuid) ?: return false
+        val props = ch.properties
+        val notifiable = props and (
+            BluetoothGattCharacteristic.PROPERTY_NOTIFY or
+                BluetoothGattCharacteristic.PROPERTY_INDICATE
+            ) != 0
+        if (!notifiable) return false
+        val ok = try {
+            g.setCharacteristicNotification(ch, enable)
+        } catch (e: SecurityException) {
+            false
+        }
+        if (!ok) return false
+        if (enable) subscribed.add(uuid) else subscribed.remove(uuid)
+        val descriptor = ch.getDescriptor(profile.cccd) ?: return true
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val value = if (enable) {
+                BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+            } else {
+                BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+            }
+            val result = try {
+                g.writeDescriptor(descriptor, value)
+            } catch (e: SecurityException) {
+                BluetoothStatusCodes.ERROR_MISSING_BLUETOOTH_CONNECT_PERMISSION
+            }
+            if (result != BluetoothStatusCodes.SUCCESS) {
+                if (enable) {
+                    subscribed.remove(uuid)
+                    try {
+                        g.setCharacteristicNotification(ch, false)
+                    } catch (e: SecurityException) {
+                    }
+                }
+                listener?.onError("Descriptor write failed: $result")
+                return false
+            }
+        } else {
+            descriptor.value = if (enable) {
+                BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+            } else {
+                BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+            }
+            val result = try {
+                g.writeDescriptor(descriptor)
+            } catch (e: SecurityException) {
+                false
+            }
+            if (!result) {
+                if (enable) {
+                    subscribed.remove(uuid)
+                    try {
+                        g.setCharacteristicNotification(ch, false)
+                    } catch (e: SecurityException) {
+                    }
+                }
+                listener?.onError("Descriptor write failed")
+                return false
+            }
+        }
+        return true
     }
 
     @SuppressLint("MissingPermission")
@@ -724,12 +961,16 @@ class BleTransport(private val context: Context) {
             notifyChar = null
             writeQueue.clear()
             writeBusy = false
+            currentWriteWithoutResponse = false
             connected = false
             servicesReady = false
             descriptorPending = false
             closing = false
             mtu = 23
             writeWithoutResponse = false
+            subscribed.clear()
+            cccdQueue.clear()
+            cccdActive = null
             handler.removeCallbacks(writeTimeout)
             handler.removeCallbacks(discoverFallback)
             handler.removeCallbacks(rediscover)

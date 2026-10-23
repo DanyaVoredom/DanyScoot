@@ -19,6 +19,7 @@
             <LinearLayout style="@style/CardBody">
 
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/keyField"
                     style="@style/InputField"
                     android:hint="@string/control_key_hint">
 
@@ -59,9 +60,92 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <TextView style="@style/SectionHeader" android:text="@string/control_bypass_section" />
+        <TextView
+            android:id="@+id/headsetHeader"
+            style="@style/SectionHeader"
+            android:text="@string/headset_section"
+            android:visibility="gone" />
 
-        <com.google.android.material.card.MaterialCardView style="@style/CardBlock">
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/headsetCard"
+            style="@style/CardBlock"
+            android:visibility="gone">
+
+            <LinearLayout style="@style/CardBody">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView style="@style/RowLabel" android:text="@string/headset_battery" />
+
+                    <TextView
+                        android:id="@+id/headsetBattery"
+                        style="@style/ValueText"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/live_unknown" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView style="@style/RowLabel" android:text="@string/headset_firmware" />
+
+                    <TextView
+                        android:id="@+id/headsetFirmware"
+                        style="@style/ValueText"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/live_unknown" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView style="@style/RowLabel" android:text="@string/headset_model" />
+
+                    <TextView
+                        android:id="@+id/headsetModel"
+                        style="@style/ValueText"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/live_unknown" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView style="@style/RowLabel" android:text="@string/headset_manufacturer" />
+
+                    <TextView
+                        android:id="@+id/headsetManufacturer"
+                        style="@style/ValueText"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/live_unknown" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/headsetRefresh"
+                    style="@style/ActionButton"
+                    android:layout_width="match_parent"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/headset_read" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/bypassHeader"
+            style="@style/SectionHeader"
+            android:text="@string/control_bypass_section" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/bypassCard"
+            style="@style/CardBlock">
 
             <LinearLayout style="@style/CardBody">
 
@@ -91,15 +175,19 @@
                     android:id="@+id/bruteStopButton"
                     style="@style/ActionButton"
                     android:layout_width="match_parent"
-                    android:layout_weight="0"
                     android:layout_marginTop="8dp"
                     android:text="@string/control_brute_stop" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <TextView style="@style/SectionHeader" android:text="@string/control_lock_section" />
+        <TextView
+            android:id="@+id/lockHeader"
+            style="@style/SectionHeader"
+            android:text="@string/control_lock_section" />
 
-        <com.google.android.material.card.MaterialCardView style="@style/CardBlock">
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/lockCard"
+            style="@style/CardBlock">
 
             <LinearLayout style="@style/CardBody">
 
@@ -171,9 +259,14 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <TextView style="@style/SectionHeader" android:text="@string/control_scooter_section" />
+        <TextView
+            android:id="@+id/scooterHeader"
+            style="@style/SectionHeader"
+            android:text="@string/control_scooter_section" />
 
-        <com.google.android.material.card.MaterialCardView style="@style/CardBlock">
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/scooterCard"
+            style="@style/CardBlock">
 
             <LinearLayout style="@style/CardBody">
 
@@ -226,7 +319,6 @@
                     android:id="@+id/applyScooterButton"
                     style="@style/ActionButton"
                     android:layout_width="match_parent"
-                    android:layout_weight="0"
                     android:layout_marginTop="8dp"
                     android:text="@string/control_apply" />
 
@@ -250,9 +342,14 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <TextView style="@style/SectionHeader" android:text="@string/control_service_section" />
+        <TextView
+            android:id="@+id/serviceHeader"
+            style="@style/SectionHeader"
+            android:text="@string/control_service_section" />
 
-        <com.google.android.material.card.MaterialCardView style="@style/CardBlock">
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/serviceCard"
+            style="@style/CardBlock">
 
             <LinearLayout style="@style/CardBody">
 
@@ -311,9 +408,14 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <TextView style="@style/SectionHeader" android:text="@string/live_section" />
+        <TextView
+            android:id="@+id/liveHeader"
+            style="@style/SectionHeader"
+            android:text="@string/live_section" />
 
-        <com.google.android.material.card.MaterialCardView style="@style/CardBlock">
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/liveCard"
+            style="@style/CardBlock">
 
             <LinearLayout style="@style/CardBody">
 
@@ -405,55 +507,8 @@
                     android:id="@+id/telemetryRefresh"
                     style="@style/ActionButton"
                     android:layout_width="match_parent"
-                    android:layout_weight="0"
                     android:layout_marginTop="8dp"
                     android:text="@string/live_refresh" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <TextView style="@style/SectionHeader" android:text="@string/console_section" />
-
-        <com.google.android.material.card.MaterialCardView style="@style/CardBlock">
-
-            <LinearLayout style="@style/CardBody">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/opcodeButton"
-                    style="@style/ActionButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="0"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:text="@string/console_opcode" />
-
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/InputField"
-                    android:layout_marginTop="8dp"
-                    android:hint="@string/console_command">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/consoleCmd"
-                        style="@style/InputText" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/InputField"
-                    android:layout_marginTop="8dp"
-                    android:hint="@string/console_payload_hex">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/consolePayload"
-                        style="@style/InputText" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/consoleSend"
-                    style="@style/ActionButton"
-                    android:layout_width="match_parent"
-                    android:layout_weight="0"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/console_send" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>

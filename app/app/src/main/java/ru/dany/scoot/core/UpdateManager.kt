@@ -61,7 +61,7 @@ object UpdateManager {
     fun check(context: Context) {
         val app = context.applicationContext
         val current = _status.value
-        if (current is Status.Checking || current is Status.Downloading) return
+        if (current is Status.Checking || current is Status.Downloading || current is Status.Available) return
         scope.launch {
             _status.value = Status.Checking
             try {

@@ -33,6 +33,20 @@
             android:maxLines="2"
             android:ellipsize="end" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/aiButton"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:layout_marginStart="8dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minWidth="0dp"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:text="@string/tab_ai"
+            android:textSize="12sp" />
+
         <com.google.android.material.chip.Chip
             android:id="@+id/spamBadge"
             style="@style/Widget.Material3.Chip.Assist"

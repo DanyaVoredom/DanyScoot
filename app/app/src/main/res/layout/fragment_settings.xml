@@ -169,25 +169,81 @@
                     android:textColor="?attr/colorOnSurface" />
 
                 <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/settingsHideUnknown"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_hide_unknown"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/settingsShowScanLog"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/settings_show_scan_log"
                     android:textColor="?attr/colorOnSurface" />
 
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/settingsShowAllOpcodes"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/settingsSort"
+                    style="@style/ActionButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/settings_show_all_opcodes"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:layout_marginTop="8dp"
+                    android:text="@string/scan_sort" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/settingsDemoMode"
+        <TextView style="@style/SectionHeader" android:text="@string/settings_ai" />
+
+        <com.google.android.material.card.MaterialCardView style="@style/CardBlock">
+
+            <LinearLayout style="@style/CardBody">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/InputField"
+                    android:hint="@string/settings_ai_base_url">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/settingsAiBaseUrl"
+                        style="@style/InputText"
+                        android:inputType="textUri" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/InputField"
+                    android:layout_marginTop="8dp"
+                    android:hint="@string/settings_ai_api_key">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/settingsAiApiKey"
+                        style="@style/InputText"
+                        android:inputType="textPassword" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/InputField"
+                    android:layout_marginTop="8dp"
+                    android:hint="@string/settings_ai_model">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/settingsAiModel"
+                        style="@style/InputText" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/settingsAiFormat"
+                    style="@style/ActionButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/settings_demo_mode"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:layout_marginTop="8dp"
+                    android:text="@string/settings_ai_format" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/settingsAiOpen"
+                    style="@style/ActionButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/settings_ai_open" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

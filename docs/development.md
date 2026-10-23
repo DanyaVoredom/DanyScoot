@@ -21,22 +21,31 @@ cd app
 | --- | --- |
 | app/app/src/main/java/ru/dany/scoot/App.kt | инициализация ScooterClient и проверки обновлений |
 | AppTheme.kt | перечисление тем и выбор по prefs |
-| MainActivity.kt | вкладки, разрешения, статус, badge |
+| MainActivity.kt | вкладки, разрешения, статус, badge, запуск AI |
+| AiActivity.kt | экран чата и отправка сообщений |
+| ai/AiFormat.kt | формат API и автоопределение по URL |
+| ai/AiModels.kt | сообщения, инструменты, ответы провайдеров |
+| ai/AiClient.kt | HTTP-клиент Chat, Responses и Anthropic |
+| ai/AiTools.kt | схемы инструментов и вызовы ScooterClient |
+| ai/AiChat.kt | история и цикл вызова инструментов |
 | ble/Frame.kt | CRC8, CRC16, FrameCodec, hex, parseHex |
 | ble/ScooterCodec.kt | команды и декодеры |
-| ble/BleTransport.kt | сканер, GATT, MTU, очередь записи, диагностика |
+| ble/BleTransport.kt | сканер, GATT, MTU, очередь записи, профили, диагностика |
+| ble/BleProfiles.kt | Nordic UART, Edifier, авто-профиль |
+| ble/DeviceKind.kt | классификация, сортировка, расстояние по RSSI |
 | ble/GattInfo.kt | дамп сервисов, имена UUID, коды GATT |
 | ble/OpcodeCatalog.kt | каталог 54 опкодов |
-| core/ScooterClient.kt | состояния, auth, спам, ответы, демо, GATT |
+| core/ScooterClient.kt | состояния, auth, спам, ответы, GATT, внешние устройства |
 | core/Prefs.kt | SharedPreferences и значения по умолчанию |
 | core/LogBus.kt | журнал и уровни |
 | core/UpdateManager.kt | релизы Codeberg, загрузка и установка APK |
 | spam/SpamService.kt | foreground-сервис |
-| ui/DevicesFragment.kt | скан и выбор устройства |
-| ui/ControlFragment.kt | основные команды и телеметрия |
+| ui/DevicesFragment.kt | скан, сортировка и выбор устройства |
+| ui/ControlFragment.kt | основные команды, телеметрия, данные гарнитуры |
 | ui/GattFragment.kt | дамп сервисов и характеристик |
 | ui/LogFragment.kt | журнал и копирование |
-| ui/SettingsFragment.kt | настройки, темы, обновления |
+| ui/SettingsFragment.kt | настройки, темы, AI, обновления |
+| ui/AiAdapter.kt | элементы истории чата |
 | res/layout | разметка экранов |
 | res/values/strings.xml | все пользовательские строки |
 | res/values/themes.xml | пять тем |
@@ -69,7 +78,7 @@ cd app
 9. Добавить тест-вектор в references/frames.json, если кадр детерминирован.
 10. Запустить testDebugUnitTest и lintDebug.
 
-Не добавлять команду, если неизвестен payload и направление. Для неизвестных данных использовать консоль ручных команд, а не кнопку с догадкой.
+Не добавлять команду, если неизвестен payload и направление. Для неизвестных данных использовать инструмент AI send_raw_command или запись GATT, а не кнопку с догадкой.
 
 ## 5. Добавление команды в UI
 
@@ -78,7 +87,7 @@ cd app
 3. Подключить обработчик в ControlFragment.onViewCreated.
 4. Вызывать метод ScooterClient, а не BleTransport напрямую.
 5. Включить кнопку в updateStatus по isReady.
-6. Проверить поведение в демо-режиме.
+6. Проверить поведение на подключённом устройстве или через AI-инструменты.
 7. Обновить docs/ui.md и docs/protocol-implementation.md.
 
 ## 6. Добавление настройки
@@ -102,7 +111,7 @@ LogBus хранит кольцевой буфер в памяти. Уровни:
 - WARN: отклонённые команды и восстановимые ошибки.
 - ERR: ошибки, требующие внимания.
 
-Не логировать полный ключ в релизной сборке. Сейчас ключ печатается при авторизации и в настройках. Это осознанное решение для отладки, но оно повышает риск утечки через скриншот или logcat. Перед публичной сборкой следует убрать или маскировать ключ.
+Статический BLE-ключ в журнал не пишется: при авторизации выводится маска. Session key и hex-кадры могут попадать в журнал для диагностики, поэтому не публиковать лог без очистки. API-ключ AI не логируется.
 
 ## 8. Тесты
 

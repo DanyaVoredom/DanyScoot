@@ -9,27 +9,22 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import ru.dany.scoot.R
-import ru.dany.scoot.ble.OpcodeCatalog
-import ru.dany.scoot.ble.OpcodeDirection
-import ru.dany.scoot.ble.OpcodeInfo
+import ru.dany.scoot.ble.DeviceKind
 import ru.dany.scoot.ble.ScooterCodec
-import ru.dany.scoot.ble.hexByte
-import ru.dany.scoot.ble.parseHex
 import ru.dany.scoot.core.ClientState
 import ru.dany.scoot.core.LogBus
 import ru.dany.scoot.core.Prefs
+import ru.dany.scoot.core.RemoteInfo
 import ru.dany.scoot.core.ScooterClient
 import ru.dany.scoot.databinding.FragmentControlBinding
 import ru.dany.scoot.spam.SpamService
+import java.util.Locale
 import kotlinx.coroutines.launch
 
 class ControlFragment : Fragment() {
 
     private var binding: FragmentControlBinding? = null
-    private var opcodes: List<OpcodeInfo> = emptyList()
-    private var opcodesShownForAll = true
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val b = FragmentControlBinding.inflate(inflater, container, false)
@@ -41,7 +36,7 @@ class ControlFragment : Fragment() {
         val b = binding ?: return
         val prefs = Prefs.get(requireContext())
         b.keyInput.setText(prefs.bleKey)
-        b.spamInterval.setText(prefs.spamIntervalMs.toString())
+        b.spamInterval.setText(String.format(Locale.ROOT, "%d", prefs.spamIntervalMs))
 
         b.authButton.setOnClickListener { sendKey() }
         b.connectButton.setOnClickListener { connect() }
@@ -65,7 +60,6 @@ class ControlFragment : Fragment() {
             saveKey()
             ScooterClient.findCar()
         }
-        b.consoleSend.setOnClickListener { sendConsole() }
         b.bypassButton.setOnClickListener { ScooterClient.bypassUnlock() }
         b.bruteButton.setOnClickListener { ScooterClient.startKeyBrute() }
         b.bruteStopButton.setOnClickListener { ScooterClient.stopKeyBrute() }
@@ -91,8 +85,7 @@ class ControlFragment : Fragment() {
             ScooterClient.sendService(ScooterCodec.CMD_FW_INFO, ByteArray(0))
         }
         b.telemetryRefresh.setOnClickListener { ScooterClient.requestTelemetry() }
-
-        setupOpcodePicker()
+        b.headsetRefresh.setOnClickListener { ScooterClient.refreshRemoteInfo() }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -101,46 +94,10 @@ class ControlFragment : Fragment() {
                 launch { ScooterClient.spamSent.collect { updateSpamState(ScooterClient.spamActive.value) } }
                 launch { ScooterClient.vehicle.collect { updateVehicle() } }
                 launch { ScooterClient.iot.collect { updateIot() } }
+                launch { ScooterClient.remote.collect { updateRemote(it) } }
             }
         }
-    }
-
-    private fun setupOpcodePicker() {
-        val b = binding ?: return
-        val all = Prefs.get(requireContext()).showAllOpcodes
-        opcodesShownForAll = all
-        val list = OpcodeCatalog.all
-        opcodes = if (all) list else list.filter { it.direction != OpcodeDirection.SET_ONLY }
-        val currentCode = parseCode(b.consoleCmd.text?.toString().orEmpty())
-        val selected = opcodes.firstOrNull { it.code == currentCode } ?: opcodes.firstOrNull()
-        if (selected != null) {
-            updateOpcodeButton(selected)
-            if (b.consoleCmd.text.isNullOrEmpty()) b.consoleCmd.setText(hexByte(selected.code))
-        }
-        b.opcodeButton.setOnClickListener { showOpcodeDialog() }
-    }
-
-    private fun updateOpcodeButton(info: OpcodeInfo) {
-        binding?.opcodeButton?.text = getString(
-            R.string.console_opcode_value,
-            "${hexByte(info.code)} ${info.name}",
-        )
-    }
-
-    private fun showOpcodeDialog() {
-        val labels = opcodes.map { "${hexByte(it.code)} ${it.name}" }.toTypedArray()
-        val currentCode = parseCode(binding?.consoleCmd?.text?.toString().orEmpty())
-        val current = opcodes.indexOfFirst { it.code == currentCode }
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.console_opcode)
-            .setSingleChoiceItems(labels, current) { dialog, which ->
-                dialog.dismiss()
-                val info = opcodes.getOrNull(which) ?: return@setSingleChoiceItems
-                binding?.consoleCmd?.setText(hexByte(info.code))
-                updateOpcodeButton(info)
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
+        updateStatus(ScooterClient.state.value)
     }
 
     private fun saveKey() {
@@ -159,7 +116,7 @@ class ControlFragment : Fragment() {
             return
         }
         saveKey()
-        if (!Prefs.get(requireContext()).demoMode && !ScooterClient.bluetoothEnabled()) {
+        if (!ScooterClient.bluetoothEnabled()) {
             Toast.makeText(requireContext(), R.string.bt_disabled, Toast.LENGTH_SHORT).show()
             return
         }
@@ -174,7 +131,7 @@ class ControlFragment : Fragment() {
         val text = binding?.spamInterval?.text?.toString().orEmpty().trim()
         val interval = text.toIntOrNull() ?: Prefs.DEFAULT_SPAM_INTERVAL
         Prefs.get(requireContext()).spamIntervalMs = interval
-        binding?.spamInterval?.setText(Prefs.get(requireContext()).spamIntervalMs.toString())
+        binding?.spamInterval?.setText(String.format(Locale.ROOT, "%d", Prefs.get(requireContext()).spamIntervalMs))
         saveKey()
         if (!ScooterClient.isReady) {
             LogBus.warn("SPAM", "Сначала авторизуйтесь")
@@ -203,39 +160,6 @@ class ControlFragment : Fragment() {
         )
     }
 
-    private fun sendConsole() {
-        val cmdText = binding?.consoleCmd?.text?.toString().orEmpty().trim()
-        val payloadText = binding?.consolePayload?.text?.toString().orEmpty()
-        val cmd = parseCode(cmdText)
-        if (cmd == null || cmd !in 0..0xFF) {
-            LogBus.err("TX", "Некорректная команда: $cmdText")
-            return
-        }
-        val payload = parseHex(payloadText)
-        if (payload == null) {
-            LogBus.err("TX", "Некорректные данные: $payloadText")
-            return
-        }
-        saveKey()
-        ScooterClient.sendRaw(cmd, payload)
-    }
-
-    private fun parseCode(text: String): Int? {
-        val lower = text.trim().lowercase()
-        if (lower.isEmpty()) return null
-        return try {
-            when {
-                lower.startsWith("0x") -> lower.substring(2).toInt(16)
-                lower.startsWith("d") && lower.substring(1).isNotEmpty() &&
-                    lower.substring(1).all { it.isDigit() } -> lower.substring(1).toInt()
-                lower.all { it.isDigit() || it in 'a'..'f' } -> lower.toInt(16)
-                else -> lower.toInt()
-            }
-        } catch (e: NumberFormatException) {
-            null
-        }
-    }
-
     private fun updateStatus(state: ClientState) {
         val b = binding ?: return
         val name = ScooterClient.deviceName
@@ -246,7 +170,6 @@ class ControlFragment : Fragment() {
             ClientState.DISCOVERING -> getString(R.string.status_discovering)
             ClientState.AUTHENTICATING -> getString(R.string.status_authenticating)
             ClientState.READY -> getString(R.string.status_ready)
-            ClientState.DEMO -> getString(R.string.status_demo)
             ClientState.ERROR -> getString(R.string.status_error)
         }
         b.authStatus.text = if (name.isEmpty()) text else "$name: $text"
@@ -263,17 +186,38 @@ class ControlFragment : Fragment() {
         b.svcPowerOff.isEnabled = ready
         b.svcReadConfig.isEnabled = ready
         b.telemetryRefresh.isEnabled = ready
-        b.consoleSend.isEnabled = ready
+        b.spamStartButton.isEnabled = ready
+        b.spamStopButton.isEnabled = ScooterClient.spamActive.value
+        b.headsetRefresh.isEnabled = ScooterClient.hasLink
         val linked = ScooterClient.hasLink
         b.bypassButton.isEnabled = linked
         b.bruteButton.isEnabled = linked
         b.bruteStopButton.isEnabled = linked
+        val external = ScooterClient.deviceAddress.isNotEmpty() && ScooterClient.activeKind != DeviceKind.SCOOTER
+        val headset = ScooterClient.activeKind == DeviceKind.HEADSET
+        b.keyField.visibility = if (external) View.GONE else View.VISIBLE
+        b.authButton.visibility = if (external) View.GONE else View.VISIBLE
+        b.headsetHeader.setText(if (headset) R.string.headset_section else R.string.device_section)
+        b.headsetHeader.visibility = if (external) View.VISIBLE else View.GONE
+        b.headsetCard.visibility = if (external) View.VISIBLE else View.GONE
+        val scooterVisibility = if (external) View.GONE else View.VISIBLE
+        b.bypassHeader.visibility = scooterVisibility
+        b.bypassCard.visibility = scooterVisibility
+        b.lockHeader.visibility = scooterVisibility
+        b.lockCard.visibility = scooterVisibility
+        b.scooterHeader.visibility = scooterVisibility
+        b.scooterCard.visibility = scooterVisibility
+        b.serviceHeader.visibility = scooterVisibility
+        b.serviceCard.visibility = scooterVisibility
+        b.liveHeader.visibility = scooterVisibility
+        b.liveCard.visibility = scooterVisibility
     }
 
     private fun updateSpamState(active: Boolean) {
         val b = binding ?: return
         val label = getString(if (active) R.string.control_spam_active else R.string.control_spam_sent)
         b.spamStatus.text = getString(R.string.control_spam_counter, label, ScooterClient.spamSent.value)
+        b.spamStopButton.isEnabled = active
     }
 
     private fun updateVehicle() {
@@ -315,6 +259,19 @@ class ControlFragment : Fragment() {
         }
     }
 
+    private fun updateRemote(info: RemoteInfo?) {
+        val b = binding ?: return
+        val battery = info?.batteryPercent
+        b.headsetBattery.text = if (battery == null) {
+            getString(R.string.live_unknown)
+        } else {
+            getString(R.string.headset_battery_value, battery)
+        }
+        b.headsetFirmware.text = info?.firmware?.ifEmpty { null } ?: getString(R.string.live_unknown)
+        b.headsetModel.text = info?.model?.ifEmpty { null } ?: getString(R.string.live_unknown)
+        b.headsetManufacturer.text = info?.manufacturer?.ifEmpty { null } ?: getString(R.string.live_unknown)
+    }
+
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
         if (!hidden) refreshFromPrefs()
@@ -324,8 +281,7 @@ class ControlFragment : Fragment() {
         val b = binding ?: return
         val prefs = Prefs.get(requireContext())
         if (!b.keyInput.hasFocus()) b.keyInput.setText(prefs.bleKey)
-        if (!b.spamInterval.hasFocus()) b.spamInterval.setText(prefs.spamIntervalMs.toString())
-        if (prefs.showAllOpcodes != opcodesShownForAll) setupOpcodePicker()
+        if (!b.spamInterval.hasFocus()) b.spamInterval.setText(String.format(Locale.ROOT, "%d", prefs.spamIntervalMs))
         updateStatus(ScooterClient.state.value)
     }
 

@@ -1,6 +1,7 @@
 package ru.dany.scoot
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.os.Build
@@ -19,7 +20,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import ru.dany.scoot.core.ClientState
 import ru.dany.scoot.core.LogBus
-import ru.dany.scoot.core.Prefs
 import ru.dany.scoot.core.ScooterClient
 import ru.dany.scoot.databinding.ActivityMainBinding
 import ru.dany.scoot.ui.ControlFragment
@@ -60,6 +60,10 @@ class MainActivity : AppCompatActivity() {
         }
         requestPermissionsIfNeeded()
         setupFragments(savedInstanceState)
+        handleIntent(intent)
+        binding.aiButton.setOnClickListener {
+            startActivity(Intent(this, AiActivity::class.java))
+        }
         binding.bottomNav.setOnItemSelectedListener { item ->
             val index = when (item.itemId) {
                 R.id.tabDevices -> 0
@@ -180,7 +184,6 @@ class MainActivity : AppCompatActivity() {
             ClientState.DISCOVERING -> getString(R.string.status_discovering)
             ClientState.AUTHENTICATING -> getString(R.string.status_authenticating)
             ClientState.READY -> getString(R.string.status_ready)
-            ClientState.DEMO -> getString(R.string.status_demo)
             ClientState.ERROR -> getString(R.string.status_error)
         }
         binding.statusText.text = if (name.isEmpty()) stateText else "$name: $stateText"
@@ -192,7 +195,6 @@ class MainActivity : AppCompatActivity() {
             ClientState.AUTHENTICATING,
             -> R.color.status_busy
             ClientState.READY -> R.color.status_ok
-            ClientState.DEMO -> R.color.status_demo
             ClientState.ERROR -> R.color.status_error
         }
         binding.statusDot.backgroundTintList = ColorStateList.valueOf(
@@ -205,6 +207,26 @@ class MainActivity : AppCompatActivity() {
         outState.putInt(KEY_TAB, currentTab)
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        val screen = intent?.getStringExtra(EXTRA_TAB) ?: return
+        val index = when (screen) {
+            "devices" -> 0
+            "control" -> 1
+            "gatt" -> 2
+            "log" -> 3
+            "settings" -> 4
+            else -> return
+        }
+        showTab(index)
+        intent.removeExtra(EXTRA_TAB)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         if (isFinishing) {
@@ -213,6 +235,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
+        const val EXTRA_TAB = "tab"
         private const val KEY_TAB = "tab"
         private val TAB_MENU_IDS = intArrayOf(
             R.id.tabDevices,

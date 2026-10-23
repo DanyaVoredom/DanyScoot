@@ -3,6 +3,8 @@ package ru.dany.scoot.core
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import ru.dany.scoot.ble.DeviceKind
+import ru.dany.scoot.ble.DeviceSort
 
 class Prefs private constructor(context: Context) {
 
@@ -76,22 +78,22 @@ class Prefs private constructor(context: Context) {
             sp.edit { putBoolean(KEY_SHOW_ALL_DEVICES, value) }
         }
 
+    var hideUnknownDevices: Boolean
+        get() = sp.getBoolean(KEY_HIDE_UNKNOWN, true)
+        set(value) {
+            sp.edit { putBoolean(KEY_HIDE_UNKNOWN, value) }
+        }
+
+    var deviceSort: DeviceSort
+        get() = DeviceSort.fromId(sp.getString(KEY_DEVICE_SORT, DeviceSort.DISTANCE.id))
+        set(value) {
+            sp.edit { putString(KEY_DEVICE_SORT, value.id) }
+        }
+
     var showScanLog: Boolean
         get() = sp.getBoolean(KEY_SHOW_SCAN_LOG, false)
         set(value) {
             sp.edit { putBoolean(KEY_SHOW_SCAN_LOG, value) }
-        }
-
-    var demoMode: Boolean
-        get() = sp.getBoolean(KEY_DEMO_MODE, false)
-        set(value) {
-            sp.edit { putBoolean(KEY_DEMO_MODE, value) }
-        }
-
-    var showAllOpcodes: Boolean
-        get() = sp.getBoolean(KEY_SHOW_ALL_OPCODES, true)
-        set(value) {
-            sp.edit { putBoolean(KEY_SHOW_ALL_OPCODES, value) }
         }
 
     var theme: String
@@ -112,6 +114,12 @@ class Prefs private constructor(context: Context) {
             sp.edit { putString(KEY_LAST_NAME, value) }
         }
 
+    var lastDeviceKind: DeviceKind
+        get() = DeviceKind.fromId(sp.getString(KEY_LAST_KIND, DeviceKind.SCOOTER.name))
+        set(value) {
+            sp.edit { putString(KEY_LAST_KIND, value.name) }
+        }
+
     var autoUpdate: Boolean
         get() = sp.getBoolean(KEY_AUTO_UPDATE, true)
         set(value) {
@@ -124,6 +132,32 @@ class Prefs private constructor(context: Context) {
             sp.edit { putLong(KEY_LAST_UPDATE_CHECK, value) }
         }
 
+    var aiBaseUrl: String
+        get() = sp.getString(KEY_AI_BASE_URL, DEFAULT_AI_BASE_URL)?.ifEmpty { DEFAULT_AI_BASE_URL }
+            ?: DEFAULT_AI_BASE_URL
+        set(value) {
+            sp.edit { putString(KEY_AI_BASE_URL, value.trim().ifEmpty { DEFAULT_AI_BASE_URL }) }
+        }
+
+    var aiApiKey: String
+        get() = sp.getString(KEY_AI_API_KEY, "").orEmpty()
+        set(value) {
+            sp.edit { putString(KEY_AI_API_KEY, value.trim()) }
+        }
+
+    var aiModel: String
+        get() = sp.getString(KEY_AI_MODEL, DEFAULT_AI_MODEL)?.ifEmpty { DEFAULT_AI_MODEL }
+            ?: DEFAULT_AI_MODEL
+        set(value) {
+            sp.edit { putString(KEY_AI_MODEL, value.trim().ifEmpty { DEFAULT_AI_MODEL }) }
+        }
+
+    var aiFormat: String
+        get() = sp.getString(KEY_AI_FORMAT, "auto") ?: "auto"
+        set(value) {
+            sp.edit { putString(KEY_AI_FORMAT, value) }
+        }
+
     companion object {
         const val DEFAULT_BLE_KEY = "4BKNwi77"
         const val DEFAULT_SPAM_INTERVAL = 100
@@ -132,6 +166,8 @@ class Prefs private constructor(context: Context) {
         const val DEFAULT_RECONNECT_ATTEMPTS = 3
         const val DEFAULT_RECONNECT_DELAY = 5000
         const val DEFAULT_THEME = "dark"
+        const val DEFAULT_AI_BASE_URL = "https://api.openai.com/v1"
+        const val DEFAULT_AI_MODEL = "gpt-4o-mini"
 
         private const val PREFS_NAME = "danyscoot_prefs"
         private const val LEGACY_PREFS_NAME = "danyurent_prefs"
@@ -142,14 +178,19 @@ class Prefs private constructor(context: Context) {
         private const val KEY_AUTO_RECONNECT_DELAY = "auto_reconnect_delay_ms"
         private const val KEY_AUTO_RESUME_SPAM = "auto_resume_spam"
         private const val KEY_SHOW_ALL_DEVICES = "show_all_scan_devices"
+        private const val KEY_HIDE_UNKNOWN = "hide_unknown_devices"
+        private const val KEY_DEVICE_SORT = "device_sort"
         private const val KEY_SHOW_SCAN_LOG = "show_scan_debug_log"
-        private const val KEY_DEMO_MODE = "use_demo"
-        private const val KEY_SHOW_ALL_OPCODES = "show_all_opcodes"
         private const val KEY_THEME = "theme"
         private const val KEY_LAST_ADDRESS = "last_device_address"
         private const val KEY_LAST_NAME = "last_device_name"
+        private const val KEY_LAST_KIND = "last_device_kind"
         private const val KEY_AUTO_UPDATE = "auto_update_enabled"
         private const val KEY_LAST_UPDATE_CHECK = "last_update_check"
+        private const val KEY_AI_BASE_URL = "ai_base_url"
+        private const val KEY_AI_API_KEY = "ai_api_key"
+        private const val KEY_AI_MODEL = "ai_model"
+        private const val KEY_AI_FORMAT = "ai_format"
 
         @Volatile
         private var instance: Prefs? = null

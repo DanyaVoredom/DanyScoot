@@ -1,5 +1,6 @@
 package ru.dany.scoot.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,15 +12,19 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import ru.dany.scoot.AiActivity
 import ru.dany.scoot.AppTheme
 import ru.dany.scoot.BuildConfig
 import ru.dany.scoot.R
+import ru.dany.scoot.ai.AiFormat
+import ru.dany.scoot.ble.DeviceSort
 import ru.dany.scoot.ble.ScooterCodec
 import ru.dany.scoot.core.LogBus
 import ru.dany.scoot.core.Prefs
 import ru.dany.scoot.core.ScooterClient
 import ru.dany.scoot.core.UpdateManager
 import ru.dany.scoot.databinding.FragmentSettingsBinding
+import java.util.Locale
 import kotlinx.coroutines.launch
 
 class SettingsFragment : Fragment() {
@@ -48,13 +53,18 @@ class SettingsFragment : Fragment() {
         )
         b.settingsKeyNineHack.setOnClickListener {
             b.settingsKey.setText(ScooterCodec.KEY_PRESETS[0])
-            LogBus.info("SETTINGS", "Ключ NineHack: ${ScooterCodec.KEY_PRESETS[0]}")
+            LogBus.info("SETTINGS", "Выбран ключ NineHack")
         }
         b.settingsKeyLostBot.setOnClickListener {
             b.settingsKey.setText(ScooterCodec.KEY_PRESETS[1])
-            LogBus.info("SETTINGS", "Ключ LostBot: ${ScooterCodec.KEY_PRESETS[1]}")
+            LogBus.info("SETTINGS", "Выбран ключ LostBot")
         }
         b.updateCheck.setOnClickListener { checkOrInstall() }
+        b.settingsSort.setOnClickListener { showSortDialog() }
+        b.settingsAiFormat.setOnClickListener { showAiFormatDialog() }
+        b.settingsAiOpen.setOnClickListener {
+            startActivity(Intent(requireContext(), AiActivity::class.java))
+        }
         setupTheme()
         setupAutosave()
         viewLifecycleOwner.lifecycleScope.launch {
@@ -88,6 +98,38 @@ class SettingsFragment : Fragment() {
             .show()
     }
 
+    private fun showSortDialog() {
+        val modes = DeviceSort.entries
+        val labels = modes.map { getString(sortLabel(it)) }.toTypedArray()
+        val prefs = Prefs.get(requireContext())
+        val current = modes.indexOf(prefs.deviceSort).coerceAtLeast(0)
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.scan_sort)
+            .setSingleChoiceItems(labels, current) { dialog, which ->
+                dialog.dismiss()
+                prefs.deviceSort = modes[which]
+                renderSort(prefs)
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun showAiFormatDialog() {
+        val formats = AiFormat.entries
+        val labels = formats.map { getString(it.labelRes) }.toTypedArray()
+        val prefs = Prefs.get(requireContext())
+        val current = formats.indexOf(AiFormat.fromId(prefs.aiFormat)).coerceAtLeast(0)
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.settings_ai_format)
+            .setSingleChoiceItems(labels, current) { dialog, which ->
+                dialog.dismiss()
+                prefs.aiFormat = formats[which].id
+                renderAiFormat(prefs)
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
     private fun setupAutosave() {
         val b = binding ?: return
         val prefs = Prefs.get(requireContext())
@@ -103,18 +145,33 @@ class SettingsFragment : Fragment() {
         b.settingsAutoReconnectDelay.doAfterTextChanged { text ->
             if (!loading) text?.toString()?.trim()?.toIntOrNull()?.let { prefs.autoReconnectDelayMs = it }
         }
+        b.settingsAiBaseUrl.doAfterTextChanged { text ->
+            if (!loading) prefs.aiBaseUrl = text?.toString().orEmpty()
+        }
+        b.settingsAiApiKey.doAfterTextChanged { text ->
+            if (!loading) prefs.aiApiKey = text?.toString().orEmpty()
+        }
+        b.settingsAiModel.doAfterTextChanged { text ->
+            if (!loading) prefs.aiModel = text?.toString().orEmpty()
+        }
         b.settingsSpamInterval.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus && !loading) b.settingsSpamInterval.setText(prefs.spamIntervalMs.toString())
+            if (!hasFocus && !loading) b.settingsSpamInterval.setText(String.format(Locale.ROOT, "%d", prefs.spamIntervalMs))
         }
         b.settingsAutoReconnectAttempts.setOnFocusChangeListener { _, hasFocus ->
             if (!hasFocus && !loading) {
-                b.settingsAutoReconnectAttempts.setText(prefs.autoReconnectAttempts.toString())
+                b.settingsAutoReconnectAttempts.setText(String.format(Locale.ROOT, "%d", prefs.autoReconnectAttempts))
             }
         }
         b.settingsAutoReconnectDelay.setOnFocusChangeListener { _, hasFocus ->
             if (!hasFocus && !loading) {
-                b.settingsAutoReconnectDelay.setText(prefs.autoReconnectDelayMs.toString())
+                b.settingsAutoReconnectDelay.setText(String.format(Locale.ROOT, "%d", prefs.autoReconnectDelayMs))
             }
+        }
+        b.settingsAiBaseUrl.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus && !loading) b.settingsAiBaseUrl.setText(prefs.aiBaseUrl)
+        }
+        b.settingsAiModel.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus && !loading) b.settingsAiModel.setText(prefs.aiModel)
         }
         b.settingsAutoReconnect.setOnCheckedChangeListener { _, checked ->
             if (!loading) prefs.autoReconnect = checked
@@ -125,17 +182,11 @@ class SettingsFragment : Fragment() {
         b.settingsShowAllDevices.setOnCheckedChangeListener { _, checked ->
             if (!loading) prefs.showAllDevices = checked
         }
+        b.settingsHideUnknown.setOnCheckedChangeListener { _, checked ->
+            if (!loading) prefs.hideUnknownDevices = checked
+        }
         b.settingsShowScanLog.setOnCheckedChangeListener { _, checked ->
             if (!loading) prefs.showScanLog = checked
-        }
-        b.settingsShowAllOpcodes.setOnCheckedChangeListener { _, checked ->
-            if (!loading) prefs.showAllOpcodes = checked
-        }
-        b.settingsDemoMode.setOnCheckedChangeListener { _, checked ->
-            if (loading) return@setOnCheckedChangeListener
-            val changed = prefs.demoMode != checked
-            prefs.demoMode = checked
-            if (changed) ScooterClient.disconnect()
         }
         b.settingsAutoUpdate.setOnCheckedChangeListener { _, checked ->
             if (!loading) prefs.autoUpdate = checked
@@ -174,6 +225,23 @@ class SettingsFragment : Fragment() {
             status !is UpdateManager.Status.Downloading
     }
 
+    private fun renderSort(prefs: Prefs) {
+        val label = getString(sortLabel(prefs.deviceSort))
+        binding?.settingsSort?.text = getString(R.string.scan_sort_value, label)
+    }
+
+    private fun renderAiFormat(prefs: Prefs) {
+        val label = getString(AiFormat.fromId(prefs.aiFormat).labelRes)
+        binding?.settingsAiFormat?.text = getString(R.string.settings_ai_format_value, label)
+    }
+
+    private fun sortLabel(mode: DeviceSort): Int = when (mode) {
+        DeviceSort.DISTANCE -> R.string.sort_distance
+        DeviceSort.NAME -> R.string.sort_name
+        DeviceSort.ADDRESS -> R.string.sort_address
+        DeviceSort.KIND -> R.string.sort_kind
+    }
+
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
         if (!hidden) loadPrefs()
@@ -188,16 +256,20 @@ class SettingsFragment : Fragment() {
             getString(AppTheme.fromId(prefs.theme).labelRes),
         )
         b.settingsKey.setText(prefs.bleKey)
-        b.settingsSpamInterval.setText(prefs.spamIntervalMs.toString())
+        b.settingsSpamInterval.setText(String.format(Locale.ROOT, "%d", prefs.spamIntervalMs))
         b.settingsAutoResumeSpam.isChecked = prefs.autoResumeSpam
         b.settingsAutoReconnect.isChecked = prefs.autoReconnect
-        b.settingsAutoReconnectAttempts.setText(prefs.autoReconnectAttempts.toString())
-        b.settingsAutoReconnectDelay.setText(prefs.autoReconnectDelayMs.toString())
+        b.settingsAutoReconnectAttempts.setText(String.format(Locale.ROOT, "%d", prefs.autoReconnectAttempts))
+        b.settingsAutoReconnectDelay.setText(String.format(Locale.ROOT, "%d", prefs.autoReconnectDelayMs))
         b.settingsShowAllDevices.isChecked = prefs.showAllDevices
+        b.settingsHideUnknown.isChecked = prefs.hideUnknownDevices
         b.settingsShowScanLog.isChecked = prefs.showScanLog
-        b.settingsShowAllOpcodes.isChecked = prefs.showAllOpcodes
-        b.settingsDemoMode.isChecked = prefs.demoMode
+        b.settingsAiBaseUrl.setText(prefs.aiBaseUrl)
+        b.settingsAiApiKey.setText(prefs.aiApiKey)
+        b.settingsAiModel.setText(prefs.aiModel)
         b.settingsAutoUpdate.isChecked = prefs.autoUpdate
+        renderSort(prefs)
+        renderAiFormat(prefs)
         loading = false
         renderUpdate(UpdateManager.status.value)
     }

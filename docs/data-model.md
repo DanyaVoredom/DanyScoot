@@ -26,13 +26,18 @@
 | autoResumeSpam | auto_resume_spam | Boolean | false | - |
 | showAllDevices | show_all_scan_devices | Boolean | true | - |
 | showScanLog | show_scan_debug_log | Boolean | false | - |
-| demoMode | use_demo | Boolean | false | - |
-| showAllOpcodes | show_all_opcodes | Boolean | true | - |
+| hideUnknownDevices | hide_unknown_devices | Boolean | true | - |
+| deviceSort | device_sort | String | distance | distance, name, address, kind |
 | theme | theme | String | dark | black, white, light, dark, amoled |
-| lastDeviceAddress | last_device_address | String | пусто | MAC или DEMO |
+| lastDeviceAddress | last_device_address | String | пусто | MAC |
 | lastDeviceName | last_device_name | String | пусто | произвольная строка |
+| lastDeviceKind | last_device_kind | String | SCOOTER | SCOOTER, HEADSET, OTHER |
 | autoUpdate | auto_update_enabled | Boolean | true | - |
 | lastUpdateCheck | last_update_check | Long | 0 | время в мс |
+| aiBaseUrl | ai_base_url | String | https://api.openai.com/v1 | URL |
+| aiApiKey | ai_api_key | String | пусто | ключ провайдера |
+| aiModel | ai_model | String | gpt-4o-mini | имя модели |
+| aiFormat | ai_format | String | auto | auto, openai_chat, openai_responses, anthropic |
 
 Ключи названы так же, как в LostBot, где это возможно. Это упрощает сравнение поведения, но не означает совместимость хранилищ.
 
@@ -50,15 +55,20 @@ ScooterClient публикует следующие StateFlow:
 | spamSent | Int | число отправленных кадров |
 | lastError | String | последняя ошибка |
 | gatt | GattDump? | сервисы и характеристики последнего подключения |
-| incompatible | Set<String> | адреса без Nordic UART |
+| remote | RemoteInfo? | данные Device Information и батарея внешнего устройства |
+| notifications | List<BleNotification> | последние уведомления внешнего устройства |
+| incompatible | Set<String> | адреса без подходящего профиля |
 
 Дополнительные поля:
 
 - sessionKey: Int, текущий сессионный ключ;
 - deviceName: String, имя подключённого устройства;
 - deviceAddress: String, адрес;
-- isDemo: Boolean;
+- activeKind: DeviceKind, тип активного устройства;
+- isScooter: Boolean;
+- isHeadset: Boolean;
 - isReady: Boolean;
+- hasLink: Boolean;
 - spamWanted: Boolean.
 
 ## 4. Модели
@@ -69,7 +79,30 @@ ScannedDevice:
 - name;
 - rssi;
 - hasUart;
-- advert: строка с service UUID и manufacturer data из рекламы.
+- advert: строка с service UUID и manufacturer data из рекламы;
+- hasEdifier;
+- kind: SCOOTER, HEADSET или OTHER;
+- distanceMeters: примерное расстояние по RSSI;
+- reachable: найден известный профиль.
+
+RemoteInfo:
+
+- name;
+- batteryPercent;
+- manufacturer;
+- model;
+- serial;
+- firmware;
+- hardware;
+- software;
+- txPower;
+- lastUuid и lastHex последнего уведомления.
+
+BleNotification:
+
+- timeMs;
+- uuid;
+- data.
 
 GattDump:
 
@@ -148,7 +181,7 @@ LogBus хранит до 1000 строк. При переполнении уда
 - Последнее устройство сохраняется при подключении.
 - sessionKey живёт только в памяти и сбрасывается при разрыве.
 - GATT-дамп переживает отключение и заменяется при новом discovery.
-- Телеметрия живёт только в памяти и очищается при отключении или старте демо.
+- Телеметрия и данные внешнего устройства живут только в памяти и очищаются при отключении.
 - Список устройств очищается перед новым сканированием.
 - Журнал переживает смену вкладок, но не перезапуск приложения.
 - Время последней проверки обновлений хранится в prefs, скачанный APK в кэше.
@@ -158,8 +191,9 @@ LogBus хранит до 1000 строк. При переполнении уда
 В SharedPreferences хранятся:
 
 - BLE-ключ в открытом виде;
-- последний MAC-адрес самоката;
-- имя устройства.
+- последний MAC-адрес устройства;
+- имя и тип устройства;
+- base URL, модель и API-ключ AI-провайдера в открытом виде.
 
 В журнале могут оказаться:
 
@@ -168,7 +202,7 @@ LogBus хранит до 1000 строк. При переполнении уда
 - полные hex-кадры, включая зашифрованный ключ;
 - названия и адреса окружающих BLE-устройств.
 
-Приложение не отправляет эти данные в сеть. Сетевой запрос содержит только обращение к API релизов Codeberg. Риск возникает при демонстрации экрана, снятии скриншота, подключении отладчика или создании backup. Подробнее: docs/security.md.
+Приложение не отправляет журнал и телеметрию в сеть само. Данные уходят только в AI-сервер, если пользователь отправил сообщение: текст запроса, история чата и результаты вызванных инструментов, включая состояние устройства и журнал. Запрос релиза Codeberg не содержит пользовательских данных. Риск возникает при демонстрации экрана, снятии скриншота, подключении отладчика или создании backup. Подробнее: docs/security.md.
 
 ## 8. Миграции
 
@@ -179,4 +213,4 @@ LogBus хранит до 1000 строк. При переполнении уда
 3. Записать новое значение.
 4. Не удалять старые ключи без необходимости.
 
-Текущая версия хранилища 1.4.0 не имеет миграций, потому что набор ключей совместим с 1.1.0. Ключи удалённых операторов больше не читаются.
+Текущая версия хранилища 1.5.0 не имеет миграций: ключи 1.1.0 совместимы, удалённые настройки игнорируются, а прежнее хранилище danyurent_prefs переносится при первом запуске.

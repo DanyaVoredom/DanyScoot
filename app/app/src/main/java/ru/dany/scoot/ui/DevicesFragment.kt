@@ -10,11 +10,17 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import ru.dany.scoot.MainActivity
 import ru.dany.scoot.R
+import ru.dany.scoot.ble.DeviceClassifier
+import ru.dany.scoot.ble.DeviceKind
+import ru.dany.scoot.ble.DeviceSort
 import ru.dany.scoot.ble.ScannedDevice
 import ru.dany.scoot.core.ClientState
 import ru.dany.scoot.core.LogBus
@@ -23,6 +29,8 @@ import ru.dany.scoot.core.ScooterClient
 import ru.dany.scoot.databinding.FragmentDevicesBinding
 import ru.dany.scoot.databinding.ItemDeviceBinding
 import kotlinx.coroutines.launch
+
+private data class DeviceRow(val device: ScannedDevice, val blocked: Boolean)
 
 class DevicesFragment : Fragment() {
 
@@ -43,8 +51,8 @@ class DevicesFragment : Fragment() {
         binding?.deviceList?.layoutManager = LinearLayoutManager(requireContext())
         binding?.deviceList?.adapter = adapter
         binding?.scanButton?.setOnClickListener { toggleScan() }
-        binding?.demoButton?.setOnClickListener { startDemo() }
-        refreshDemoButton()
+        binding?.sortButton?.setOnClickListener { showSortDialog() }
+        refreshSortButton()
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
@@ -68,7 +76,6 @@ class DevicesFragment : Fragment() {
                             getString(R.string.scan_start)
                         }
                         render()
-                        refreshDemoButton()
                     }
                 }
             }
@@ -77,25 +84,60 @@ class DevicesFragment : Fragment() {
 
     private fun render() {
         val b = binding ?: return
-        adapter.submit(devices, incompatible)
+        val sorted = sortDevices(devices)
+        adapter.submitList(sorted.map { DeviceRow(it, it.address in incompatible) })
         b.scanStatus.text = if (scanning) {
-            getString(R.string.scan_searching, devices.size)
+            getString(R.string.scan_searching, sorted.size)
         } else {
             getString(R.string.scan_hint)
         }
-        val empty = devices.isEmpty()
+        val empty = sorted.isEmpty()
         b.emptyState.visibility = if (empty) View.VISIBLE else View.GONE
         b.emptyState.text = getString(if (scanning) R.string.scan_empty_scanning else R.string.scan_empty)
     }
 
-    private fun toggleScan() {
-        val prefs = Prefs.get(requireContext())
-        if (prefs.demoMode) {
-            prefs.demoMode = false
-            ScooterClient.disconnect()
-            refreshDemoButton()
-            LogBus.info("DEMO", "Демо-режим выключен")
+    private fun sortDevices(list: List<ScannedDevice>): List<ScannedDevice> {
+        val mode = Prefs.get(requireContext()).deviceSort
+        val comparator = when (mode) {
+            DeviceSort.DISTANCE -> compareByDescending<ScannedDevice> { it.rssi }
+            DeviceSort.NAME -> compareBy { it.name.lowercase() }
+            DeviceSort.ADDRESS -> compareBy { it.address }
+            DeviceSort.KIND -> compareBy<ScannedDevice> { it.kind.ordinal }.thenByDescending { it.rssi }
         }
+        return list.sortedWith(comparator)
+    }
+
+    private fun showSortDialog() {
+        val modes = DeviceSort.entries
+        val labels = modes.map { getString(sortLabel(it)) }.toTypedArray()
+        val prefs = Prefs.get(requireContext())
+        val current = modes.indexOf(prefs.deviceSort).coerceAtLeast(0)
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.scan_sort)
+            .setSingleChoiceItems(labels, current) { dialog, which ->
+                dialog.dismiss()
+                prefs.deviceSort = modes[which]
+                refreshSortButton()
+                render()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun refreshSortButton() {
+        val b = binding ?: return
+        val mode = Prefs.get(requireContext()).deviceSort
+        b.sortButton.text = getString(R.string.scan_sort_value, getString(sortLabel(mode)))
+    }
+
+    private fun sortLabel(mode: DeviceSort): Int = when (mode) {
+        DeviceSort.DISTANCE -> R.string.sort_distance
+        DeviceSort.NAME -> R.string.sort_name
+        DeviceSort.ADDRESS -> R.string.sort_address
+        DeviceSort.KIND -> R.string.sort_kind
+    }
+
+    private fun toggleScan() {
         val client = ScooterClient
         if (!client.bluetoothSupported()) {
             LogBus.err("BLE", getString(R.string.bt_not_supported))
@@ -114,34 +156,17 @@ class DevicesFragment : Fragment() {
         }
     }
 
-    private fun startDemo() {
-        val prefs = Prefs.get(requireContext())
-        if (ScooterClient.isDemo) {
-            ScooterClient.disconnect()
-            prefs.demoMode = false
-            refreshDemoButton()
-            return
-        }
-        prefs.demoMode = true
-        refreshDemoButton()
-        ScooterClient.connect(ScooterClient.DEMO_ADDRESS, ScooterClient.DEMO_NAME)
-        (activity as? MainActivity)?.showControlTab()
-    }
-
     private fun connect(device: ScannedDevice) {
-        ScooterClient.connect(device.address, device.name)
+        ScooterClient.connect(device.address, device.name, device.kind)
         (activity as? MainActivity)?.showControlTab()
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
-        if (!hidden) refreshDemoButton()
-    }
-
-    private fun refreshDemoButton() {
-        val b = binding ?: return
-        val demo = ScooterClient.isDemo
-        b.demoButton.text = if (demo) getString(R.string.device_disconnect) else getString(R.string.settings_demo_mode)
+        if (!hidden) {
+            refreshSortButton()
+            render()
+        }
     }
 
     override fun onDestroyView() {
@@ -151,17 +176,7 @@ class DevicesFragment : Fragment() {
 
     private class DeviceAdapter(
         private val onClick: (ScannedDevice) -> Unit,
-    ) : RecyclerView.Adapter<DeviceAdapter.Holder>() {
-
-        private val items = ArrayList<ScannedDevice>()
-        private var incompatible: Set<String> = emptySet()
-
-        fun submit(list: List<ScannedDevice>, blocked: Set<String>) {
-            items.clear()
-            items.addAll(list)
-            incompatible = blocked
-            notifyDataSetChanged()
-        }
+    ) : ListAdapter<DeviceRow, DeviceAdapter.Holder>(DIFF) {
 
         class Holder(val binding: ItemDeviceBinding) : RecyclerView.ViewHolder(binding.root)
 
@@ -170,34 +185,40 @@ class DevicesFragment : Fragment() {
             return Holder(b)
         }
 
-        override fun getItemCount(): Int = items.size
-
         override fun onBindViewHolder(holder: Holder, position: Int) {
-            val device = items[position]
+            val row = getItem(position)
+            val device = row.device
             val context = holder.binding.root.context
-            val blocked = device.address in incompatible || !device.hasUart
             holder.binding.deviceName.text = device.name
             holder.binding.deviceAddress.text = device.address
             holder.binding.deviceAdvert.text = device.advert
             holder.binding.deviceAdvert.visibility = if (device.advert.isEmpty()) View.GONE else View.VISIBLE
-            holder.binding.deviceRssi.text = if (device.hasUart && !blocked) {
-                context.getString(R.string.device_rssi_uart, device.rssi)
-            } else {
-                context.getString(R.string.device_rssi, device.rssi)
-            }
-            holder.binding.deviceBadge.text = context.getString(
-                if (blocked) R.string.device_badge_no_uart else R.string.device_badge_uart,
+            holder.binding.deviceRssi.text = context.getString(
+                R.string.device_rssi_distance,
+                device.rssi,
+                DeviceClassifier.formatDistance(device.rssi),
             )
+            holder.binding.deviceBadge.text = context.getString(DeviceClassifier.labelRes(device.kind))
             holder.binding.deviceBadge.setTextColor(
-                ContextCompat.getColor(context, if (blocked) R.color.status_error else R.color.status_ok),
+                ContextCompat.getColor(context, if (row.blocked) R.color.status_error else R.color.status_ok),
             )
             val card = holder.binding.root as MaterialCardView
-            card.strokeWidth = if (blocked) dp(context, 1) else 0
+            card.strokeWidth = if (row.blocked) dp(context, 1) else 0
             card.strokeColor = ContextCompat.getColor(context, R.color.status_error)
             holder.binding.root.setOnClickListener { onClick(device) }
         }
 
         private fun dp(context: android.content.Context, value: Int): Int =
             (value * context.resources.displayMetrics.density).toInt()
+
+        companion object {
+            val DIFF = object : DiffUtil.ItemCallback<DeviceRow>() {
+                override fun areItemsTheSame(oldItem: DeviceRow, newItem: DeviceRow): Boolean =
+                    oldItem.device.address == newItem.device.address
+
+                override fun areContentsTheSame(oldItem: DeviceRow, newItem: DeviceRow): Boolean =
+                    oldItem == newItem
+            }
+        }
     }
 }

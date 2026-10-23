@@ -7,19 +7,26 @@
     <string name="tab_gatt">GATT</string>
     <string name="tab_log">Лог</string>
     <string name="tab_settings">Настройки</string>
+    <string name="tab_ai">AI</string>
 
     <string name="scan_start">Сканировать</string>
     <string name="scan_stop">Остановить</string>
-    <string name="scan_searching">Поиск самокатов: %1$d</string>
-    <string name="scan_hint">Нажмите на самокат для подключения</string>
-    <string name="scan_empty">Устройства не найдены. Включите самокат и Bluetooth, затем запустите сканирование.</string>
-    <string name="scan_empty_scanning">Идёт поиск. Включите самокат и держите его рядом.</string>
+    <string name="scan_searching">Найдено устройств: %1$d</string>
+    <string name="scan_hint">Нажмите на устройство для подключения</string>
+    <string name="scan_empty">Устройства не найдены. Включите Bluetooth и запустите сканирование.</string>
+    <string name="scan_empty_scanning">Идёт поиск устройств.</string>
+    <string name="scan_sort">Сортировка</string>
+    <string name="scan_sort_value">Сортировка: %1$s</string>
+    <string name="sort_distance">Ближайшие</string>
+    <string name="sort_name">По имени</string>
+    <string name="sort_address">По адресу</string>
+    <string name="sort_kind">По типу</string>
     <string name="device_connect">Подключить</string>
     <string name="device_disconnect">Отключить</string>
-    <string name="device_rssi">RSSI %1$d дБм</string>
-    <string name="device_rssi_uart">RSSI %1$d дБм · UART</string>
-    <string name="device_badge_uart">UART</string>
-    <string name="device_badge_no_uart">без UART</string>
+    <string name="device_rssi_distance">RSSI %1$d дБм · ≈ %2$s м</string>
+    <string name="device_kind_scooter">самокат</string>
+    <string name="device_kind_headset">гарнитура</string>
+    <string name="device_kind_ble">BLE</string>
     <string name="status_disconnected">Не подключено</string>
     <string name="status_connecting">Подключение…</string>
     <string name="status_authenticating">Авторизация…</string>
@@ -27,11 +34,10 @@
     <string name="status_error">Ошибка</string>
     <string name="status_scanning">Сканирование</string>
     <string name="status_discovering">Поиск сервисов</string>
-    <string name="status_demo">Демо-режим</string>
     <string name="spam_badge">Спам: %1$d</string>
 
-    <string name="gatt_hint">Полный список сервисов, которые отдал самокат. Для команд нужен Nordic UART.</string>
-    <string name="gatt_wait">Данных нет. Подключитесь к самокату.</string>
+    <string name="gatt_hint">Полный список сервисов и характеристик устройства.</string>
+    <string name="gatt_wait">Данных нет. Подключитесь к устройству.</string>
     <string name="gatt_empty">Сервисы не обнаружены.</string>
     <string name="gatt_device">%1$s (%2$s)\nСервисов: %3$d · характеристик: %4$d</string>
     <string name="gatt_copy">Копировать</string>
@@ -39,12 +45,12 @@
     <string name="gatt_reconnect">Переподключить</string>
     <string name="gatt_no_device">Нет последнего устройства</string>
 
-    <string name="control_auth_section">Авторизация</string>
-    <string name="control_select_scooter">Сначала выберите самокат</string>
+    <string name="control_auth_section">Подключение</string>
+    <string name="control_select_scooter">Сначала выберите устройство</string>
     <string name="control_key_hint">Ключ устройства</string>
     <string name="control_auth">Отправить ключ</string>
     <string name="control_bypass_section">Экспериментально</string>
-    <string name="control_bypass_hint">Проверка без авторизации. Только для своего самоката.</string>
+    <string name="control_bypass_hint">Проверка без авторизации.</string>
     <string name="control_bypass_unlock">Unlock key 0</string>
     <string name="control_brute_start">Перебор 0..255</string>
     <string name="control_brute_stop">Стоп перебор</string>
@@ -78,6 +84,15 @@
     <string name="control_svc_power_off">Питание off</string>
     <string name="control_svc_read_config">Читать конфиг</string>
 
+    <string name="headset_section">Гарнитура</string>
+    <string name="device_section">Устройство</string>
+    <string name="headset_battery">Батарея</string>
+    <string name="headset_firmware">Прошивка</string>
+    <string name="headset_model">Модель</string>
+    <string name="headset_manufacturer">Производитель</string>
+    <string name="headset_read">Прочитать данные</string>
+    <string name="headset_battery_value">%1$d%%</string>
+
     <string name="live_section">Телеметрия</string>
     <string name="live_battery">Батарея</string>
     <string name="live_speed">Скорость</string>
@@ -93,13 +108,6 @@
     <string name="live_distance_value">%1$.2f км</string>
     <string name="live_voltage_value">%1$.2f В</string>
     <string name="live_refresh">Обновить</string>
-
-    <string name="console_section">Консоль команд</string>
-    <string name="console_opcode">Опкод</string>
-    <string name="console_opcode_value">Опкод: %1$s</string>
-    <string name="console_command">Команда</string>
-    <string name="console_payload_hex">Данные, hex</string>
-    <string name="console_send">Отправить</string>
 
     <string name="log_clear">Очистить</string>
     <string name="log_autoscroll">Автопрокрутка</string>
@@ -125,15 +133,26 @@
     <string name="settings_spam_interval">Интервал спама, мс</string>
     <string name="settings_auto_resume_spam">Возобновлять спам после переподключения</string>
     <string name="settings_scan">Сканирование</string>
-    <string name="settings_show_all_devices">Показывать все устройства</string>
+    <string name="settings_show_all_devices">Показывать устройства без UART и Edifier</string>
+    <string name="settings_hide_unknown">Скрывать Unknown</string>
     <string name="settings_show_scan_log">Журнал сканирования</string>
-    <string name="settings_show_all_opcodes">Все опкоды в консоли</string>
 
-    <string name="settings_demo_mode">Демо-режим (без самоката)</string>
     <string name="settings_key">Ключ BLE</string>
     <string name="settings_key_ninehack">Ключ NineHack</string>
     <string name="settings_key_lostbot">Ключ LostBot</string>
     <string name="settings_autosave">Изменения сохраняются сразу</string>
+
+    <string name="settings_ai">AI</string>
+    <string name="settings_ai_base_url">Базовый URL API</string>
+    <string name="settings_ai_api_key">API ключ</string>
+    <string name="settings_ai_model">Модель</string>
+    <string name="settings_ai_format">Формат API</string>
+    <string name="settings_ai_format_value">Формат: %1$s</string>
+    <string name="settings_ai_open">Открыть AI-чат</string>
+    <string name="ai_format_auto">Авто</string>
+    <string name="ai_format_chat">OpenAI Chat</string>
+    <string name="ai_format_responses">OpenAI Responses</string>
+    <string name="ai_format_anthropic">Anthropic</string>
 
     <string name="settings_updates">Обновления</string>
     <string name="settings_auto_update">Проверять обновления при запуске</string>
@@ -149,8 +168,26 @@
     <string name="settings_update_permission">Разрешите установку из этого источника и нажмите ещё раз</string>
     <string name="settings_update_failed">Ошибка: %1$s</string>
 
-    <string name="settings_about">DanyScoot: кадры A3 A4, CRC-8/MAXIM, авторизация ключом, разблокировка, телеметрия, Nordic UART. Работает только с собственным самокатом.</string>
+    <string name="settings_about">DanyScoot: кадры A3 A4, CRC-8/MAXIM, авторизация ключом, разблокировка, телеметрия, Nordic UART, Edifier, AI-ассистент с инструментами BLE.</string>
     <string name="settings_about_version">%1$s\n\nDanyScoot %2$s (%3$d)</string>
+
+    <string name="ai_title">AI-ассистент</string>
+    <string name="ai_clear">Очистить</string>
+    <string name="ai_clear_confirm">Удалить историю сообщений?</string>
+    <string name="ai_send">Отправить</string>
+    <string name="ai_stop">Стоп</string>
+    <string name="ai_placeholder">Сообщение</string>
+    <string name="ai_empty">Задайте вопрос или попросите выполнить действие с BLE</string>
+    <string name="ai_busy">Думаю…</string>
+    <string name="ai_status_request">Запрос к модели</string>
+    <string name="ai_status_tool">Инструмент %1$s</string>
+    <string name="ai_limit_steps">Достигнут лимит шагов инструментов</string>
+    <string name="ai_role_user">Вы</string>
+    <string name="ai_role_assistant">AI</string>
+    <string name="ai_role_tool">Инструмент</string>
+    <string name="ai_role_error">Ошибка</string>
+    <string name="ai_not_configured">Укажите API ключ и модель в настройках</string>
+    <string name="ai_request_failed">Ошибка запроса: %1$s</string>
 
     <string name="notification_channel_name">Спам разблокировки</string>
     <string name="notification_channel_desc">Уведомление о работе спама разблокировки</string>

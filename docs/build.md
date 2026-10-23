@@ -6,8 +6,8 @@
 | --- | --- |
 | applicationId | ru.dany.scoot |
 | namespace | ru.dany.scoot |
-| versionCode | 6 |
-| versionName | 1.3.1 |
+| versionCode | 8 |
+| versionName | 1.5.0 |
 | compileSdk | 36 |
 | minSdk | 23 |
 | targetSdk | 35 |
@@ -117,7 +117,7 @@ aapt dump badging app\app\build\outputs\apk\debug\app-debug.apk
 apksigner verify --print-certs app\app\build\outputs\apk\debug\app-debug.apk
 ```
 
-Ожидаемые признаки: package ru.dany.scoot, versionName 1.3.1, minSdk 23, targetSdk 35, label DanyScoot.
+Ожидаемые признаки: package ru.dany.scoot, versionName 1.5.0, minSdk 23, targetSdk 35, label DanyScoot.
 
 ## 10. Типовые проблемы
 
