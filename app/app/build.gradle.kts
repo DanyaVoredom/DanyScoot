@@ -15,10 +15,19 @@ android {
         versionName = "1.5.0"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(System.getenv("DANYSCOOT_KEYSTORE") ?: "${System.getProperty("user.home")}/.android/debug.keystore")
+            storePassword = System.getenv("DANYSCOOT_KEYSTORE_PASSWORD") ?: "android"
+            keyAlias = System.getenv("DANYSCOOT_KEY_ALIAS") ?: "androiddebugkey"
+            keyPassword = System.getenv("DANYSCOOT_KEY_PASSWORD") ?: "android"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 

@@ -49,9 +49,11 @@ jobs:
             exit 1
           fi
           echo "VERSION=$version" >> "$GITHUB_ENV"
-          mkdir -p "$HOME/.android"
-          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$HOME/.android/debug.keystore"
-          chmod 600 "$HOME/.android/debug.keystore"
+          keystore="$RUNNER_TEMP/release.keystore"
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$keystore"
+          chmod 600 "$keystore"
+          keytool -list -keystore "$keystore" -storepass android -alias androiddebugkey
+          echo "DANYSCOOT_KEYSTORE=$keystore" >> "$GITHUB_ENV"
 
       - name: Build
         run: |
@@ -68,6 +70,12 @@ jobs:
           cp "$apk" "DanyScoot-$VERSION.apk"
           signer="$(find "$ANDROID_SDK_ROOT/build-tools" -name apksigner | sort | tail -n1)"
           "$signer" verify --print-certs "DanyScoot-$VERSION.apk"
+          expected="a52c629f6bf570936fecdf522b468b35646523d90bf72665257c92d5943e648e"
+          actual="$("$signer" verify --print-certs "DanyScoot-$VERSION.apk" | sed -n 's/.*certificate SHA-256 digest: //p' | head -n1)"
+          if [ "$actual" != "$expected" ]; then
+            echo "unexpected signer $actual"
+            exit 1
+          fi
           sha256sum "DanyScoot-$VERSION.apk" > "DanyScoot-$VERSION.apk.sha256"
 
       - name: Publish
