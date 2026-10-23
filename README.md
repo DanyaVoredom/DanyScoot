@@ -35,6 +35,15 @@ cd app
 .\gradlew.bat --no-daemon testDebugUnitTest assembleDebug lintDebug assembleRelease
 ```
 
+Релиз по тегу:
+
+```
+git tag v1.4.1
+git push origin v1.4.1
+```
+
+Forgejo Actions соберет APK по .forgejo/workflows/release.yml и приложит его к релизу Codeberg. Перед тегом обновить versionCode и versionName.
+
 ## Документация
 
 Корневые документы: CHANGELOG.md, CONTRIBUTING.md, SECURITY.md, LICENSE.

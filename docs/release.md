@@ -109,10 +109,26 @@ git push origin dev:prod
 
 Перед push в prod убедиться, что dev содержит только проверенные изменения. Не переписывать историю prod без необходимости.
 
+### CI релиза
+
+Релиз собирается по тегу vX.Y.Z через Forgejo Actions:
+
+```
+git tag v1.4.1
+git push origin v1.4.1
+```
+
+Workflow .forgejo/workflows/release.yml проверяет совпадение тега и versionName, собирает release APK, проверяет подпись и создает релиз Codeberg с файлами DanyScoot-X.Y.Z.apk и DanyScoot-X.Y.Z.apk.sha256. Для запуска нужны включенные Actions и секреты репозитория:
+
+- DEBUG_KEYSTORE_BASE64: base64 debug.keystore, которым подписан установленный APK;
+- RELEASE_TOKEN: токен Codeberg с правом записи в репозиторий.
+
+Перед тегом изменить versionCode и versionName в app/app/build.gradle.kts. Тег без префикса v не запускает workflow, несовпадение тега и versionName останавливает сборку.
+
 Автообновление использует последний релиз Codeberg:
 
 - тег релиза должен содержать versionName, например 1.4.0 или v1.4.0;
-- к релизу прикладывается APK-ассет;
+- к релизу прикладывается APK-ассет с именем DanyScoot-X.Y.Z.apk;
 - APK подписан тем же ключом, что и установленная версия;
 - versionCode в APK больше установленного.
 

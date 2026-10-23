@@ -1,0 +1,94 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: codeberg-medium
+    timeout-minutes: 10
+    container:
+      image: ghcr.io/cirruslabs/android-sdk:36
+
+    steps:
+      - name: Checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+          git clone --depth 1 --branch "${{ forgejo.ref_name }}" "https://${{ forgejo.repository }}.git" .
+
+      - name: Prepare
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          tag="${{ forgejo.ref_name }}"
+          case "$tag" in
+            v*) ;;
+            *) echo "release tag must start with v"; exit 1 ;;
+          esac
+          version="${tag#v}"
+          gradle_version="$(sed -n 's/.*versionName = "\(.*\)"/\1/p' app/app/build.gradle.kts | head -n1)"
+          if [ "$version" != "$gradle_version" ]; then
+            echo "tag $tag does not match versionName $gradle_version"
+            exit 1
+          fi
+          echo "TAG=$tag" >> "$FORGEJO_ENV"
+          echo "VERSION=$version" >> "$FORGEJO_ENV"
+          mkdir -p "$HOME/.android"
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$HOME/.android/debug.keystore"
+          chmod 600 "$HOME/.android/debug.keystore"
+
+      - name: Build
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x app/gradlew
+          cd app
+          ./gradlew --no-daemon assembleRelease
+
+      - name: Verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="app/app/build/outputs/apk/release/app-release.apk"
+          test -f "$apk"
+          cp "$apk" "DanyScoot-$VERSION.apk"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "DanyScoot-$VERSION.apk"
+          sha256sum "DanyScoot-$VERSION.apk" > "DanyScoot-$VERSION.apk.sha256"
+
+      - name: Publish
+        shell: bash
+        env:
+          TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          set -euo pipefail
+          api="https://codeberg.org/api/v1/repos/${{ forgejo.repository }}"
+          auth="Authorization: token $TOKEN"
+          release_id="$(curl -fsS -H "$auth" "$api/releases/tags/$TAG" | jq -r '.id')" || release_id=""
+          if [ -z "$release_id" ] || [ "$release_id" = "null" ]; then
+            body="$(awk -v v="$VERSION" '$0 ~ "^## " v { found=1; next } /^## / { found=0 } found' CHANGELOG.md)"
+            if [ -z "$body" ]; then
+              body="DanyScoot $VERSION"
+            fi
+            payload="$(jq -n --arg tag "$TAG" --arg name "DanyScoot $VERSION" --arg body "$body" '{tag_name:$tag,name:$name,body:$body,draft:false,prerelease:false}')"
+            release_id="$(curl -fsS -X POST -H "$auth" -H "Content-Type: application/json" -d "$payload" "$api/releases" | jq -r '.id')"
+          fi
+          asset="DanyScoot-$VERSION.apk"
+          sha="DanyScoot-$VERSION.apk.sha256"
+          for name in "$asset" "$sha"; do
+            old_id="$(curl -fsS -H "$auth" "$api/releases/$release_id/assets" | jq -r --arg name "$name" '.[] | select(.name == $name) | .id' | head -n1)"
+            if [ -n "$old_id" ] && [ "$old_id" != "null" ]; then
+              curl -fsS -X DELETE -H "$auth" "$api/releases/$release_id/assets/$old_id"
+            fi
+          done
+          curl -fsS -X POST -H "$auth" -F "attachment=@$asset" "$api/releases/$release_id/assets?name=$asset"
+          curl -fsS -X POST -H "$auth" -F "attachment=@$sha" "$api/releases/$release_id/assets?name=$sha"
