@@ -9,9 +9,9 @@
         android:icon="@drawable/ic_control"
         android:title="@string/tab_control" />
     <item
-        android:id="@+id/tabProviders"
-        android:icon="@drawable/ic_control"
-        android:title="@string/tab_providers" />
+        android:id="@+id/tabGatt"
+        android:icon="@drawable/ic_gatt"
+        android:title="@string/tab_gatt" />
     <item
         android:id="@+id/tabLog"
         android:icon="@drawable/ic_log"

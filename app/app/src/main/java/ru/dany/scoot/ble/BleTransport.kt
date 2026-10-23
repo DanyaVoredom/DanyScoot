@@ -25,6 +25,7 @@ import android.os.Looper
 import android.os.ParcelUuid
 import android.provider.Settings
 import androidx.core.content.ContextCompat
+import java.util.Locale
 import java.util.UUID
 
 data class ScannedDevice(
@@ -32,7 +33,7 @@ data class ScannedDevice(
     val name: String,
     val rssi: Int,
     val hasUart: Boolean,
-    val hasProfile: Boolean = hasUart,
+    val advert: String = "",
 )
 
 data class BleProfile(
@@ -41,7 +42,6 @@ data class BleProfile(
     val notify: UUID,
     val cccd: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"),
     val mtu: Int = 247,
-    val scanService: UUID? = null,
     val writeWithoutResponse: Boolean? = null,
 )
 
@@ -52,6 +52,7 @@ class BleTransport(private val context: Context) {
         fun onScanFinished()
         fun onConnected()
         fun onServicesReady(write: BluetoothGattCharacteristic, notify: BluetoothGattCharacteristic)
+        fun onGattDump(dump: GattDump)
         fun onCharacteristicRead(uuid: UUID, value: ByteArray)
         fun onFrame(data: ByteArray)
         fun onDisconnected(reason: String)
@@ -73,6 +74,8 @@ class BleTransport(private val context: Context) {
         private const val GATT_ERROR = 133
         private const val GATT_CLOSE_DELAY_MS = 150L
         private const val DISCOVER_FALLBACK_MS = 3000L
+        private const val REDISCOVER_DELAY_MS = 800L
+        private const val DISCOVERY_TIMEOUT_MS = 12000L
     }
 
     private val handler = Handler(Looper.getMainLooper())
@@ -84,7 +87,6 @@ class BleTransport(private val context: Context) {
     private var writeChar: BluetoothGattCharacteristic? = null
     private var notifyChar: BluetoothGattCharacteristic? = null
     private var scanning = false
-    private var scanFilterUuid: UUID? = null
     private var mtu = 23
     private var writeWithoutResponse = false
     private val writeQueue = ArrayDeque<ByteArray>()
@@ -93,6 +95,9 @@ class BleTransport(private val context: Context) {
     private var servicesReady = false
     private var descriptorPending = false
     private var closing = false
+    private var rediscoveryTried = false
+    private var failureFatal = false
+    private var gattAddress = ""
     private val writeTimeout = Runnable {
         if (writeBusy) {
             writeBusy = false
@@ -103,6 +108,14 @@ class BleTransport(private val context: Context) {
     private val discoverFallback = Runnable {
         val g = gatt ?: return@Runnable
         if (servicesReady || descriptorPending) return@Runnable
+        try {
+            g.discoverServices()
+        } catch (e: SecurityException) {
+        }
+    }
+    private val rediscover = Runnable {
+        val g = gatt ?: return@Runnable
+        if (servicesReady || descriptorPending || closing) return@Runnable
         try {
             g.discoverServices()
         } catch (e: SecurityException) {
@@ -126,6 +139,11 @@ class BleTransport(private val context: Context) {
             failAndClose("Notification setup timeout")
         }
     }
+    private val discoveryTimeout = Runnable {
+        if (!servicesReady && !descriptorPending) {
+            failAndClose("Service discovery timeout")
+        }
+    }
 
     var listener: Listener? = null
     var profile: BleProfile = BleProfiles.URENT
@@ -135,6 +153,8 @@ class BleTransport(private val context: Context) {
     val isSupported: Boolean get() = adapter != null
 
     val negotiatedMtu: Int get() = mtu
+
+    val lastFailureIsFatal: Boolean get() = failureFatal
 
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
@@ -154,10 +174,15 @@ class BleTransport(private val context: Context) {
             val name = deviceName(device)
             val services = result.scanRecord?.serviceUuids
             val hasUart = services?.contains(ParcelUuid(UART_SERVICE)) == true
-            val profileUuid = profile.scanService
-            val hasProfile = scanFilterUuid != null ||
-                (profileUuid != null && services?.contains(ParcelUuid(profileUuid)) == true)
-            listener?.onDevice(ScannedDevice(address, name, result.rssi, hasUart, hasProfile))
+            listener?.onDevice(
+                ScannedDevice(
+                    address = address,
+                    name = name,
+                    rssi = result.rssi,
+                    hasUart = hasUart,
+                    advert = advertisement(result),
+                ),
+            )
         }
 
         override fun onScanFailed(errorCode: Int) {
@@ -242,6 +267,8 @@ class BleTransport(private val context: Context) {
         when {
             status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED -> {
                 connected = true
+                failureFatal = false
+                rediscoveryTried = false
                 handler.removeCallbacks(connectTimeout)
                 listener?.onConnected()
                 try {
@@ -250,20 +277,24 @@ class BleTransport(private val context: Context) {
                 }
                 handler.removeCallbacks(discoverFallback)
                 handler.postDelayed(discoverFallback, DISCOVER_FALLBACK_MS)
+                handler.removeCallbacks(discoveryTimeout)
+                handler.postDelayed(discoveryTimeout, DISCOVERY_TIMEOUT_MS)
             }
             status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_DISCONNECTED -> {
                 closeGatt()
                 listener?.onDisconnected("disconnected")
             }
             else -> {
-                listener?.onError("GATT status $status")
-                if (status == GATT_ERROR) {
+                val reason = "GATT status $status (${gattStatusText(status)})"
+                failureFatal = status == 5 || status == 8 || status == 15
+                listener?.onError(reason)
+                if (status == GATT_ERROR || status == 147) {
                     closing = true
                     handler.postDelayed({ closeGatt(g) }, GATT_CLOSE_DELAY_MS)
                 } else {
                     closeGatt()
                 }
-                listener?.onDisconnected("status=$status")
+                listener?.onDisconnected("status=$status (${gattStatusText(status)})")
             }
         }
     }
@@ -290,16 +321,24 @@ class BleTransport(private val context: Context) {
             failAndClose("Service discovery failed: $status")
             return
         }
+        val dump = buildDump(g)
+        listener?.onGattDump(dump)
         val activeProfile = profile
         val service = g.getService(activeProfile.service)
         if (service == null) {
-            failAndClose("Service ${activeProfile.service} not found")
+            if (!rediscoveryTried) {
+                rediscoveryTried = true
+                handler.removeCallbacks(rediscover)
+                handler.postDelayed(rediscover, REDISCOVER_DELAY_MS)
+                return
+            }
+            failAndClose("Service ${activeProfile.service} not found", fatal = true)
             return
         }
         val write = service.getCharacteristic(activeProfile.write)
         val notify = service.getCharacteristic(activeProfile.notify)
         if (write == null || notify == null) {
-            failAndClose("Characteristics ${activeProfile.write}/${activeProfile.notify} not found")
+            failAndClose("Characteristics ${activeProfile.write}/${activeProfile.notify} not found", fatal = true)
             return
         }
         writeChar = write
@@ -418,13 +457,72 @@ class BleTransport(private val context: Context) {
     private fun markServicesReady(write: BluetoothGattCharacteristic, notify: BluetoothGattCharacteristic) {
         servicesReady = true
         handler.removeCallbacks(discoverFallback)
+        handler.removeCallbacks(discoveryTimeout)
         listener?.onServicesReady(write, notify)
     }
 
-    private fun failAndClose(message: String) {
+    private fun failAndClose(message: String, fatal: Boolean = false) {
+        failureFatal = fatal
         listener?.onError(message)
         closeGatt()
         listener?.onDisconnected(message)
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun buildDump(g: BluetoothGatt): GattDump {
+        val services = try {
+            g.services
+        } catch (e: SecurityException) {
+            null
+        } ?: emptyList()
+        val infos = services.mapNotNull { service ->
+            try {
+                GattServiceInfo(
+                    uuid = service.uuid,
+                    characteristics = service.characteristics.map { char ->
+                        GattCharacteristicInfo(char.uuid, char.properties)
+                    },
+                )
+            } catch (e: SecurityException) {
+                null
+            }
+        }
+        return GattDump(address = gattAddress, name = deviceName(g.device), services = infos)
+    }
+
+    private fun advertisement(result: ScanResult): String {
+        val record = try {
+            result.scanRecord
+        } catch (e: SecurityException) {
+            null
+        } ?: return ""
+        val parts = ArrayList<String>()
+        try {
+            record.serviceUuids?.takeIf { it.isNotEmpty() }?.let { uuids ->
+                parts.add("svc=" + uuids.joinToString(",") { shortUuid(it.uuid) })
+            }
+        } catch (e: Exception) {
+        }
+        try {
+            val data = record.manufacturerSpecificData
+            if (data != null) {
+                for (i in 0 until data.size()) {
+                    val id = data.keyAt(i)
+                    val value = data.valueAt(i) ?: continue
+                    parts.add("mfr=" + String.format(Locale.ROOT, "%04X", id) + ":" + hex(value, ""))
+                }
+            }
+        } catch (e: Exception) {
+        }
+        if (parts.isEmpty()) {
+            val bytes = try {
+                record.bytes
+            } catch (e: Exception) {
+                null
+            }
+            if (bytes != null && bytes.isNotEmpty()) parts.add("raw=" + hex(bytes, ""))
+        }
+        return parts.joinToString(" ")
     }
 
     @SuppressLint("MissingPermission")
@@ -460,7 +558,6 @@ class BleTransport(private val context: Context) {
         val settings = ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
             .build()
-        scanFilterUuid = filterUuid
         val filters = filterUuid?.let {
             listOf(ScanFilter.Builder().setServiceUuid(ParcelUuid(it)).build())
         }
@@ -502,6 +599,9 @@ class BleTransport(private val context: Context) {
         }
         stopScan()
         closeGatt()
+        failureFatal = false
+        rediscoveryTried = false
+        gattAddress = address
         val device = try {
             a.getRemoteDevice(address)
         } catch (e: Exception) {
@@ -632,6 +732,8 @@ class BleTransport(private val context: Context) {
             writeWithoutResponse = false
             handler.removeCallbacks(writeTimeout)
             handler.removeCallbacks(discoverFallback)
+            handler.removeCallbacks(rediscover)
+            handler.removeCallbacks(discoveryTimeout)
             handler.removeCallbacks(connectTimeout)
             handler.removeCallbacks(descriptorTimeout)
         }

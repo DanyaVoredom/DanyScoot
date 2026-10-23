@@ -34,12 +34,28 @@
         android:paddingBottom="4dp"
         android:text="@string/scan_hint" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/deviceList"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:paddingTop="6dp"
-        android:paddingBottom="8dp"
-        android:clipToPadding="false" />
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/deviceList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingTop="6dp"
+            android:paddingBottom="8dp"
+            android:clipToPadding="false" />
+
+        <TextView
+            android:id="@+id/emptyState"
+            style="@style/RowLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:padding="32dp"
+            android:visibility="gone"
+            android:text="@string/scan_empty" />
+    </FrameLayout>
 </LinearLayout>

@@ -8,18 +8,14 @@ import android.os.Looper
 import ru.dany.scoot.ble.BleProfiles
 import ru.dany.scoot.ble.BleTransport
 import ru.dany.scoot.ble.FrameCodec
+import ru.dany.scoot.ble.GattDump
 import ru.dany.scoot.ble.IotInfo
 import ru.dany.scoot.ble.ScannedDevice
 import ru.dany.scoot.ble.ScooterCodec
 import ru.dany.scoot.ble.ScooterFrame
 import ru.dany.scoot.ble.VehicleInfo
-import ru.dany.scoot.ble.WhooshOfflineKind
-import ru.dany.scoot.ble.WhooshOnlineKind
-import ru.dany.scoot.ble.WhooshProtocol
-import ru.dany.scoot.ble.YandexProtocol
 import ru.dany.scoot.ble.hex
 import ru.dany.scoot.ble.hexByte
-import ru.dany.scoot.ble.parseHex
 import java.util.Locale
 import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,27 +33,12 @@ object ScooterClient : BleTransport.Listener {
     private const val AUTH_TAG = "AUTH"
     private const val SPAM_TAG = "SPAM"
     private const val DEMO_TAG = "DEMO"
+    private const val GATT_TAG = "GATT"
     private const val AUTH_TIMEOUT_MS = 3000L
     private const val UNLOCK_TIMEOUT_MS = 3000L
     private const val DEMO_TICK_MS = 1500L
-    private const val WHOOSH_TAG = "WHOOSH"
-    private const val YANDEX_TAG = "YANDEX"
-    private const val PROVIDER_TAG = "PROVIDER"
     private const val BYPASS_TAG = "BYPASS"
-    private const val YANDEX_TIMEOUT_MS = 5000L
-    private const val WHOOSH_KEY_TIMEOUT_MS = 3000L
     private const val BRUTE_INTERVAL_MS = 30L
-
-    private enum class YandexPending {
-        AUTH,
-        LOCK1,
-        LOCK2,
-        UNLOCK1,
-        UNLOCK2,
-        SOUND,
-        CABLE,
-        BATTERY,
-    }
 
     private lateinit var prefs: Prefs
     @SuppressLint("StaticFieldLeak")
@@ -86,16 +67,6 @@ object ScooterClient : BleTransport.Listener {
     private var wantedSpam = false
     private var demoTick: Runnable? = null
     private var demoLocked = false
-    private var provider = Provider.URENT
-    private var whooshMode = WhooshMode.OFFLINE
-    private var whooshAttempt = 0
-    private var whooshRetry: Runnable? = null
-    private var whooshDeadline = 0L
-    private var whooshKey = ""
-    private var whooshKeyTimeout: Runnable? = null
-    private var yandexSession = 0
-    private var yandexPending: YandexPending? = null
-    private var yandexTimeout: Runnable? = null
 
     private val _state = MutableStateFlow(ClientState.IDLE)
     val state: StateFlow<ClientState> = _state.asStateFlow()
@@ -117,6 +88,12 @@ object ScooterClient : BleTransport.Listener {
 
     private val _lastError = MutableStateFlow("")
     val lastError: StateFlow<String> = _lastError.asStateFlow()
+
+    private val _gatt = MutableStateFlow<GattDump?>(null)
+    val gatt: StateFlow<GattDump?> = _gatt.asStateFlow()
+
+    private val _incompatible = MutableStateFlow<Set<String>>(emptySet())
+    val incompatible: StateFlow<Set<String>> = _incompatible.asStateFlow()
 
     var sessionKey: Int = 0
         private set
@@ -143,68 +120,11 @@ object ScooterClient : BleTransport.Listener {
     fun init(context: Context) {
         if (transport == null) {
             prefs = Prefs.get(context)
-            transport = BleTransport(context.applicationContext).also { it.listener = this }
-            provider = Provider.from(prefs.provider)
-            whooshMode = WhooshMode.from(prefs.whooshMode)
-            applyProfile()
-        }
-    }
-
-    val currentProvider: Provider get() = provider
-
-    val currentWhooshMode: WhooshMode get() = whooshMode
-
-    val whooshKeyHex: String get() = whooshKey
-
-    fun setProvider(value: Provider) {
-        if (provider == value) return
-        disconnect()
-        provider = value
-        prefs.provider = value.key
-        whooshMode = WhooshMode.from(prefs.whooshMode)
-        applyProfile()
-        LogBus.info(PROVIDER_TAG, "Оператор: ${value.title}")
-    }
-
-    fun setWhooshMode(value: WhooshMode) {
-        if (whooshMode == value) return
-        whooshMode = value
-        prefs.whooshMode = value.key
-        if (provider == Provider.WHOOSH) {
-            disconnect()
-            applyProfile()
-        }
-        LogBus.info(WHOOSH_TAG, "Режим: ${value.title}")
-    }
-
-    fun refreshProfile() {
-        if (_state.value == ClientState.IDLE || _state.value == ClientState.ERROR) {
-            applyProfile()
-        }
-    }
-
-    private fun applyProfile(): Boolean {
-        val t = transport ?: return false
-        val profile = when (provider) {
-            Provider.URENT -> BleProfiles.URENT
-            Provider.WHOOSH -> if (whooshMode == WhooshMode.OFFLINE) {
-                BleProfiles.WHOOSH_OFFLINE
-            } else {
-                BleProfiles.WHOOSH_ONLINE
+            transport = BleTransport(context.applicationContext).also {
+                it.listener = this
+                it.profile = BleProfiles.URENT
             }
-            Provider.YANDEX -> BleProfiles.yandex(
-                prefs.yandexServiceUuid,
-                prefs.yandexWriteUuid,
-                prefs.yandexNotifyUuid,
-                prefs.yandexCccdUuid,
-            )
         }
-        if (profile == null) {
-            LogBus.err(PROVIDER_TAG, "Yandex: заполните service/write/notify UUID")
-            return false
-        }
-        t.profile = profile
-        return true
     }
 
     fun bluetoothSupported(): Boolean = transport?.isSupported == true
@@ -216,25 +136,17 @@ object ScooterClient : BleTransport.Listener {
             LogBus.info(DEMO_TAG, "Режим демо: сканирование отключено")
             return
         }
-        if (!applyProfile()) {
-            _state.value = ClientState.IDLE
-            return
-        }
         cancelReconnect()
         _devices.value = emptyList()
         _state.value = ClientState.SCANNING
-        LogBus.info(TAG, "Сканирование запущено (${provider.title})")
+        LogBus.info(TAG, "Сканирование запущено")
         val t = transport
         if (t == null) {
             _state.value = ClientState.IDLE
             LogBus.err(TAG, "Bluetooth не инициализирован")
             return
         }
-        val filter = if (provider == Provider.URENT && !prefs.showAllDevices) {
-            BleTransport.UART_SERVICE
-        } else {
-            null
-        }
+        val filter = if (prefs.showAllDevices) null else BleTransport.UART_SERVICE
         t.startScan(filter)
     }
 
@@ -246,11 +158,9 @@ object ScooterClient : BleTransport.Listener {
     }
 
     fun connect(address: String, name: String) {
-        if (!applyProfile()) {
-            _state.value = ClientState.IDLE
-            return
-        }
         cancelReconnect()
+        val dump = _gatt.value
+        if (dump != null && dump.address != address) _gatt.value = null
         linkLost = false
         rxBuffer = ByteArray(0)
         authPending = false
@@ -262,14 +172,10 @@ object ScooterClient : BleTransport.Listener {
         cancelUnlock()
         stopKeyBrute()
         bypassPending = false
-        cancelWhoosh()
-        cancelYandex()
         sessionKey = 0
-        yandexSession = 0
-        whooshKey = ""
         _lastError.value = ""
         stopSpam()
-        if (prefs.demoMode && provider != Provider.URENT) prefs.demoMode = false
+        if (prefs.demoMode && address != DEMO_ADDRESS) prefs.demoMode = false
         if (prefs.demoMode && address == DEMO_ADDRESS) {
             transport?.disconnect()
             deviceAddress = DEMO_ADDRESS
@@ -278,7 +184,6 @@ object ScooterClient : BleTransport.Listener {
             startDemo()
             return
         }
-        if (prefs.demoMode) prefs.demoMode = false
         stopDemo()
         val t = transport
         if (t == null) {
@@ -308,8 +213,6 @@ object ScooterClient : BleTransport.Listener {
             transport?.disconnect()
         }
         sessionKey = 0
-        yandexSession = 0
-        whooshKey = ""
         authPending = false
         authenticated = false
         authKey = ""
@@ -319,8 +222,6 @@ object ScooterClient : BleTransport.Listener {
         cancelUnlock()
         stopKeyBrute()
         bypassPending = false
-        cancelWhoosh()
-        cancelYandex()
         rxBuffer = ByteArray(0)
         _state.value = ClientState.IDLE
         LogBus.info(TAG, "Отключено")
@@ -349,16 +250,6 @@ object ScooterClient : BleTransport.Listener {
     }
 
     fun authenticate() {
-        if (provider != Provider.URENT) {
-            when (provider) {
-                Provider.WHOOSH -> {
-                    if (whooshMode == WhooshMode.ONLINE) readWhooshKey() else markReady("Whoosh offline готов")
-                }
-                Provider.YANDEX -> yandexAuth()
-                else -> Unit
-            }
-            return
-        }
         if (isDemo) {
             sessionKey = 0x42
             authenticated = true
@@ -427,79 +318,35 @@ object ScooterClient : BleTransport.Listener {
     }
 
     fun unlock() {
-        when (provider) {
-            Provider.URENT -> {
-                val key = requireKey() ?: return
-                cancelUnlock()
-                unlockKey = key
-                unlockVariant = 0
-                sendUnlockVariant()
-            }
-            Provider.WHOOSH -> {
-                if (whooshMode == WhooshMode.OFFLINE) {
-                    whooshStart()
-                } else {
-                    whooshOnlineSend(prefs.whooshUnlockHex, "WHOOSH unlock")
-                }
-            }
-            Provider.YANDEX -> yandexUnlock()
-        }
+        val key = requireKey() ?: return
+        cancelUnlock()
+        unlockKey = key
+        unlockVariant = 0
+        sendUnlockVariant()
     }
 
     fun lock() {
-        when (provider) {
-            Provider.URENT -> {
-                val key = requireKey() ?: return
-                cancelUnlock()
-                writeCommand(ScooterCodec.lockCommand(key), "блокировка")
-            }
-            Provider.WHOOSH -> {
-                if (whooshMode == WhooshMode.OFFLINE) {
-                    whooshStop()
-                } else {
-                    whooshOnlineSend(prefs.whooshLockHex, "WHOOSH lock")
-                }
-            }
-            Provider.YANDEX -> yandexLock()
-        }
+        val key = requireKey() ?: return
+        cancelUnlock()
+        writeCommand(ScooterCodec.lockCommand(key), "блокировка")
     }
 
     fun ejectBattery() {
-        when (provider) {
-            Provider.URENT -> {
-                val key = requireKey() ?: return
-                writeCommand(ScooterCodec.ejectBatteryCommand(key), "изъятие батареи")
-            }
-            Provider.YANDEX -> yandexBatteryCover()
-            else -> LogBus.warn(TAG, "Команда не поддерживается для ${provider.title}")
-        }
+        val key = requireKey() ?: return
+        writeCommand(ScooterCodec.ejectBatteryCommand(key), "изъятие батареи")
     }
 
     fun findCar() {
-        when (provider) {
-            Provider.URENT -> {
-                val key = requireKey() ?: return
-                writeCommand(ScooterCodec.findCarCommand(key), "поиск самоката")
-            }
-            Provider.YANDEX -> yandexSound()
-            else -> LogBus.warn(TAG, "Команда не поддерживается для ${provider.title}")
-        }
+        val key = requireKey() ?: return
+        writeCommand(ScooterCodec.findCarCommand(key), "поиск самоката")
     }
 
     fun setScooter(headlight: Boolean, modeIndex: Int, throttle: Boolean) {
-        if (provider != Provider.URENT) {
-            LogBus.warn(TAG, "Команда не поддерживается для ${provider.title}")
-            return
-        }
         val key = requireKey() ?: return
         writeCommand(ScooterCodec.setScooterFromUi(key, headlight, modeIndex, throttle), "настройки самоката")
     }
 
     fun sendRaw(cmd: Int, payload: ByteArray) {
-        if (provider != Provider.URENT) {
-            LogBus.warn(TAG, "Используйте вкладку Операторы для ${provider.title}")
-            return
-        }
         if (!isReady) {
             LogBus.warn(TAG, "Требуется авторизация")
             return
@@ -513,10 +360,6 @@ object ScooterClient : BleTransport.Listener {
     }
 
     fun bypassUnlock() {
-        if (provider != Provider.URENT) {
-            LogBus.warn(TAG, "Обход доступен только для Urent")
-            return
-        }
         if (!isConnected()) {
             LogBus.warn(BYPASS_TAG, "Нет подключения")
             return
@@ -536,10 +379,6 @@ object ScooterClient : BleTransport.Listener {
     }
 
     fun startKeyBrute() {
-        if (provider != Provider.URENT) {
-            LogBus.warn(TAG, "Перебор доступен только для Urent")
-            return
-        }
         if (!isConnected()) {
             LogBus.warn(BYPASS_TAG, "Нет подключения")
             return
@@ -590,16 +429,13 @@ object ScooterClient : BleTransport.Listener {
         sessionKey = key
         authenticated = true
         reconnectAttempts = 0
+        _incompatible.value = _incompatible.value - deviceAddress
         _state.value = ClientState.READY
         LogBus.ok(BYPASS_TAG, message)
         onAuthenticated()
     }
 
     fun startSpam() {
-        if (provider != Provider.URENT) {
-            LogBus.warn(SPAM_TAG, "Спам доступен только для Urent")
-            return
-        }
         if (spamRunning) return
         if (!isReady) {
             LogBus.warn(SPAM_TAG, "Сначала авторизуйтесь")
@@ -752,12 +588,12 @@ object ScooterClient : BleTransport.Listener {
             val old = list[existing]
             list[existing] = device.copy(name = if (device.name == "Unknown") old.name else device.name)
         } else {
-            if (provider == Provider.URENT && !prefs.showAllDevices && !device.hasUart) return
+            if (!prefs.showAllDevices && !device.hasUart) return
             list.add(device)
             if (prefs.showScanLog) {
                 LogBus.info(
                     "SCAN",
-                    "${device.name} ${device.address} RSSI=${device.rssi} UART=${device.hasUart} PROFILE=${device.hasProfile}",
+                    "${device.name} ${device.address} RSSI=${device.rssi} UART=${device.hasUart} ${device.advert}",
                 )
             }
         }
@@ -787,26 +623,18 @@ object ScooterClient : BleTransport.Listener {
 
     override fun onServicesReady(write: BluetoothGattCharacteristic, notify: BluetoothGattCharacteristic) {
         handler.post {
-            LogBus.info(TAG, "Сервисы готовы, канал уведомлений включен")
-            when (provider) {
-                Provider.URENT -> authenticate()
-                Provider.WHOOSH -> {
-                    if (whooshMode == WhooshMode.ONLINE) {
-                        readWhooshKey()
-                    } else {
-                        markReady("Whoosh offline готов")
-                    }
-                }
-                Provider.YANDEX -> {
-                    if (prefs.yandexKey.isBlank() || prefs.yandexDeviceId.isBlank()) {
-                        authenticated = false
-                        _state.value = ClientState.READY
-                        LogBus.warn(YANDEX_TAG, "Заполните AUTH key и device id, затем нажмите AUTH")
-                    } else {
-                        yandexAuth()
-                    }
-                }
+            if (deviceAddress.isNotEmpty()) {
+                _incompatible.value = _incompatible.value - deviceAddress
             }
+            LogBus.info(TAG, "Сервисы готовы, канал уведомлений включен")
+            authenticate()
+        }
+    }
+
+    override fun onGattDump(dump: GattDump) {
+        handler.post {
+            _gatt.value = dump
+            LogBus.info(GATT_TAG, "Сервисы (${dump.services.size}): ${dump.summary()}")
         }
     }
 
@@ -815,17 +643,6 @@ object ScooterClient : BleTransport.Listener {
     }
 
     private fun handleCharacteristicRead(uuid: UUID, value: ByteArray) {
-        if (provider == Provider.WHOOSH && uuid == WhooshProtocol.ONLINE_KEY) {
-            whooshKey = value.joinToString("") { hexByte(it.toInt()) }
-            whooshKeyTimeout?.let { handler.removeCallbacks(it) }
-            whooshKeyTimeout = null
-            markReady("Whoosh online: ключ $whooshKey")
-            return
-        }
-        if (provider == Provider.WHOOSH && uuid == WhooshProtocol.ONLINE_DIGITAL) {
-            LogBus.info(WHOOSH_TAG, "digital_output: ${hex(value)}")
-            return
-        }
         LogBus.info(TAG, "Read $uuid: ${hex(value)}")
     }
 
@@ -834,10 +651,6 @@ object ScooterClient : BleTransport.Listener {
     }
 
     private fun processFrame(data: ByteArray) {
-        if (provider != Provider.URENT) {
-            handleProviderFrame(data)
-            return
-        }
         rxBuffer += data
         val (frames, rest) = FrameCodec.findFrames(rxBuffer)
         rxBuffer = rest
@@ -869,10 +682,6 @@ object ScooterClient : BleTransport.Listener {
         cancelUnlock()
         stopKeyBrute()
         bypassPending = false
-        cancelWhoosh()
-        cancelYandex()
-        yandexSession = 0
-        whooshKey = ""
         rxBuffer = ByteArray(0)
         _spamActive.value = false
         LogBus.warn(TAG, "Соединение потеряно ($reason)")
@@ -884,7 +693,8 @@ object ScooterClient : BleTransport.Listener {
         if (!prefs.autoResumeSpam) {
             wantedSpam = false
         }
-        val canReconnect = prefs.autoReconnect && reconnectAttempts < prefs.autoReconnectAttempts &&
+        val fatal = transport?.lastFailureIsFatal == true
+        val canReconnect = !fatal && prefs.autoReconnect && reconnectAttempts < prefs.autoReconnectAttempts &&
             deviceAddress.isNotEmpty() && !prefs.demoMode
         if (canReconnect) {
             reconnectAttempts += 1
@@ -911,450 +721,15 @@ object ScooterClient : BleTransport.Listener {
     private fun handleError(message: String) {
         _lastError.value = message
         LogBus.err(TAG, message)
-    }
-
-    private fun markReady(message: String) {
-        authenticated = true
-        reconnectAttempts = 0
-        _state.value = ClientState.READY
-        LogBus.ok(TAG, message)
-    }
-
-    private fun handleProviderFrame(data: ByteArray) {
-        when (provider) {
-            Provider.WHOOSH -> handleWhooshFrame(data)
-            Provider.YANDEX -> handleYandexFrame(data)
-            else -> Unit
-        }
-    }
-
-    private fun handleWhooshFrame(data: ByteArray) {
-        if (whooshMode == WhooshMode.OFFLINE) {
-            LogBus.rx(WHOOSH_TAG, hex(data))
-            val response = WhooshProtocol.parseOfflineResponse(data)
-            when (response.kind) {
-                WhooshOfflineKind.OK -> {
-                    cancelWhoosh()
-                    LogBus.ok(WHOOSH_TAG, "Команда выполнена")
-                    _state.value = ClientState.READY
-                }
-                WhooshOfflineKind.SMS -> {
-                    cancelWhoosh()
-                    LogBus.warn(WHOOSH_TAG, "Самокат online, SMS на ${WhooshProtocol.SMS_PHONE}")
-                    _state.value = ClientState.READY
-                }
-                WhooshOfflineKind.STATUS -> {
-                    cancelWhoosh()
-                    val code = response.status ?: -1
-                    LogBus.err(WHOOSH_TAG, "${WhooshProtocol.statusName(code)} ($code)")
-                    _state.value = ClientState.READY
-                }
-                WhooshOfflineKind.ERROR -> {
-                    cancelWhoosh()
-                    LogBus.err(WHOOSH_TAG, "EEEEEE: ошибка самоката")
-                    _state.value = ClientState.READY
-                }
-                WhooshOfflineKind.MALFORMED -> LogBus.warn(WHOOSH_TAG, "BBBBBB без статуса: ${response.raw}")
-                WhooshOfflineKind.UNKNOWN -> LogBus.info(WHOOSH_TAG, "Неизвестный ответ: ${response.raw}")
+        if (message.contains("not found") || message.contains("не найден")) {
+            if (deviceAddress.isNotEmpty()) {
+                _incompatible.value = _incompatible.value + deviceAddress
             }
-            return
+            LogBus.warn(
+                GATT_TAG,
+                "Устройство не отдало Nordic UART. Полный список сервисов выше. Если сервисов нет, прошивка закрыта",
+            )
         }
-        val response = WhooshProtocol.parseOnlineResponse(data)
-        LogBus.rx(WHOOSH_TAG, response.text)
-        when (response.kind) {
-            WhooshOnlineKind.SUCCESS -> {
-                cancelWhoosh()
-                LogBus.ok(WHOOSH_TAG, "Команда выполнена")
-                _state.value = ClientState.READY
-            }
-            WhooshOnlineKind.ERROR -> {
-                cancelWhoosh()
-                LogBus.err(WHOOSH_TAG, "CMD_EXE_ERROR: ${response.text}")
-            }
-            WhooshOnlineKind.IGNORED -> LogBus.info(WHOOSH_TAG, "Ответ: ${response.text}")
-        }
-    }
-
-    fun whooshStart() {
-        if (provider != Provider.WHOOSH || whooshMode != WhooshMode.OFFLINE) {
-            LogBus.warn(WHOOSH_TAG, "START доступен в offline режиме")
-            return
-        }
-        if (!isConnected()) {
-            LogBus.warn(WHOOSH_TAG, "Нет подключения")
-            return
-        }
-        sendWhooshOffline(prefs.whooshStartId, "START")
-    }
-
-    fun whooshStop() {
-        if (provider != Provider.WHOOSH || whooshMode != WhooshMode.OFFLINE) {
-            LogBus.warn(WHOOSH_TAG, "STOP доступен в offline режиме")
-            return
-        }
-        if (!isConnected()) {
-            LogBus.warn(WHOOSH_TAG, "Нет подключения")
-            return
-        }
-        sendWhooshOffline(prefs.whooshStopId, "STOP")
-    }
-
-    private fun sendWhooshOffline(commandIdHex: String, label: String) {
-        val tokenHex = WhooshProtocol.tokenHex(prefs.whooshToken)
-        if (tokenHex == null) {
-            LogBus.err(WHOOSH_TAG, "Укажите binaryToken (Base64 или hex:)")
-            return
-        }
-        cancelWhoosh()
-        whooshAttempt = 0
-        whooshDeadline = System.currentTimeMillis() + WhooshProtocol.OFFLINE_TIMEOUT_MS
-        sendWhooshAttempt(commandIdHex, tokenHex, label)
-    }
-
-    private fun sendWhooshAttempt(commandIdHex: String, tokenHex: String, label: String) {
-        if (System.currentTimeMillis() > whooshDeadline) {
-            cancelWhoosh()
-            LogBus.err(WHOOSH_TAG, "Таймаут ${WhooshProtocol.OFFLINE_TIMEOUT_MS / 1000} с")
-            return
-        }
-        whooshAttempt += 1
-        val payload = try {
-            WhooshProtocol.offlinePayload(commandIdHex, whooshAttempt, tokenHex)
-        } catch (e: IllegalArgumentException) {
-            cancelWhoosh()
-            LogBus.err(WHOOSH_TAG, e.message ?: "Ошибка payload")
-            return
-        }
-        if (!writeCommand(payload, "$label ${whooshAttempt}")) {
-            cancelWhoosh()
-            return
-        }
-        whooshRetry?.let { handler.removeCallbacks(it) }
-        val next = Runnable { sendWhooshAttempt(commandIdHex, tokenHex, label) }
-        whooshRetry = next
-        handler.postDelayed(next, WhooshProtocol.OFFLINE_RETRY_MS)
-    }
-
-    fun whooshOnlineSend(commandHex: String, label: String) {
-        if (provider != Provider.WHOOSH || whooshMode != WhooshMode.ONLINE) {
-            LogBus.warn(WHOOSH_TAG, "Команда доступна в online режиме")
-            return
-        }
-        if (!isConnected()) {
-            LogBus.warn(WHOOSH_TAG, "Нет подключения")
-            return
-        }
-        if (commandHex.isBlank()) {
-            LogBus.warn(WHOOSH_TAG, "Укажите hex-команду backend")
-            return
-        }
-        val bytes = WhooshProtocol.decodeHex(commandHex)
-        if (bytes == null) {
-            LogBus.err(WHOOSH_TAG, "Неверный hex")
-            return
-        }
-        cancelWhoosh()
-        whooshAttempt = 0
-        whooshDeadline = System.currentTimeMillis() + WhooshProtocol.ONLINE_TIMEOUT_MS
-        sendWhooshOnlineAttempt(bytes, label)
-    }
-
-    private fun sendWhooshOnlineAttempt(bytes: ByteArray, label: String) {
-        if (System.currentTimeMillis() > whooshDeadline || whooshAttempt >= 10) {
-            cancelWhoosh()
-            LogBus.err(WHOOSH_TAG, "Таймаут ${WhooshProtocol.ONLINE_TIMEOUT_MS / 1000} с")
-            return
-        }
-        whooshAttempt += 1
-        if (!writeCommand(bytes, "$label ${whooshAttempt}")) {
-            cancelWhoosh()
-            return
-        }
-        whooshRetry?.let { handler.removeCallbacks(it) }
-        val next = Runnable { sendWhooshOnlineAttempt(bytes, label) }
-        whooshRetry = next
-        handler.postDelayed(next, WhooshProtocol.ONLINE_RETRY_MS)
-    }
-
-    private fun readWhooshKey() {
-        if (provider != Provider.WHOOSH || whooshMode != WhooshMode.ONLINE) return
-        if (!isConnected()) return
-        whooshKeyTimeout?.let { handler.removeCallbacks(it) }
-        whooshKeyTimeout = null
-        val t = transport ?: return
-        if (!t.read(WhooshProtocol.ONLINE_KEY)) {
-            markReady("Whoosh online: ключ не прочитан")
-            return
-        }
-        val timeout = Runnable {
-            whooshKeyTimeout = null
-            if (_state.value != ClientState.READY) markReady("Whoosh online: ключ не прочитан")
-        }
-        whooshKeyTimeout = timeout
-        handler.postDelayed(timeout, WHOOSH_KEY_TIMEOUT_MS)
-    }
-
-    private fun cancelWhoosh() {
-        whooshRetry?.let { handler.removeCallbacks(it) }
-        whooshRetry = null
-        whooshKeyTimeout?.let { handler.removeCallbacks(it) }
-        whooshKeyTimeout = null
-        whooshAttempt = 0
-        whooshDeadline = 0L
-    }
-
-    fun yandexAuth() {
-        if (provider != Provider.YANDEX) return
-        if (!isConnected()) {
-            LogBus.warn(YANDEX_TAG, "Нет подключения")
-            return
-        }
-        val deviceId = yandexDeviceId() ?: run {
-            authenticated = false
-            if (_state.value == ClientState.DISCOVERING) _state.value = ClientState.READY
-            return
-        }
-        val key = prefs.yandexKey
-        if (key.isBlank()) {
-            authenticated = false
-            if (_state.value == ClientState.DISCOVERING) _state.value = ClientState.READY
-            LogBus.warn(YANDEX_TAG, "Укажите AUTH key из server password")
-            return
-        }
-        val frame = try {
-            YandexProtocol.auth(deviceId, key)
-        } catch (e: IllegalArgumentException) {
-            authenticated = false
-            if (_state.value == ClientState.DISCOVERING) _state.value = ClientState.READY
-            LogBus.err(YANDEX_TAG, e.message ?: "Ошибка AUTH")
-            return
-        }
-        yandexSession = 0
-        sendYandex(frame, YandexPending.AUTH, "AUTH")
-    }
-
-    fun yandexLock() {
-        if (provider != Provider.YANDEX) return
-        if (yandexSession == 0) {
-            LogBus.warn(YANDEX_TAG, "Сначала AUTH")
-            return
-        }
-        val deviceId = yandexDeviceId() ?: return
-        sendYandex(YandexProtocol.lock1(deviceId, yandexSession), YandexPending.LOCK1, "LOCK 1")
-    }
-
-    fun yandexUnlock() {
-        if (provider != Provider.YANDEX) return
-        if (yandexSession == 0) {
-            LogBus.warn(YANDEX_TAG, "Сначала AUTH")
-            return
-        }
-        val deviceId = yandexDeviceId() ?: return
-        val nonce = yandexNonce() ?: return
-        val timestamp = System.currentTimeMillis() / 1000
-        sendYandex(
-            YandexProtocol.unlock1(deviceId, yandexSession, nonce, timestamp),
-            YandexPending.UNLOCK1,
-            "UNLOCK 1",
-        )
-    }
-
-    fun yandexSound() {
-        if (provider != Provider.YANDEX) return
-        if (yandexSession == 0) {
-            LogBus.warn(YANDEX_TAG, "Сначала AUTH")
-            return
-        }
-        val deviceId = yandexDeviceId() ?: return
-        sendYandex(YandexProtocol.sound(deviceId, yandexSession), YandexPending.SOUND, "SOUND")
-    }
-
-    fun yandexCableUnlock() {
-        if (provider != Provider.YANDEX) return
-        if (yandexSession == 0) {
-            LogBus.warn(YANDEX_TAG, "Сначала AUTH")
-            return
-        }
-        val deviceId = yandexDeviceId() ?: return
-        sendYandex(YandexProtocol.cableUnlock(deviceId, yandexSession), YandexPending.CABLE, "CABLE")
-    }
-
-    fun yandexBatteryCover() {
-        if (provider != Provider.YANDEX) return
-        if (yandexSession == 0) {
-            LogBus.warn(YANDEX_TAG, "Сначала AUTH")
-            return
-        }
-        val deviceId = yandexDeviceId() ?: return
-        cancelYandexTimeout()
-        yandexPending = null
-        writeCommand(YandexProtocol.batteryCover(deviceId, yandexSession), "BATTERY COVER")
-    }
-
-    private fun handleYandexFrame(data: ByteArray) {
-        LogBus.rx(YANDEX_TAG, hex(data))
-        val pending = yandexPending
-        if (pending == null) {
-            LogBus.info(YANDEX_TAG, "Ответ без ожидания")
-            return
-        }
-        cancelYandexTimeout()
-        when (pending) {
-            YandexPending.AUTH -> {
-                val session = YandexProtocol.parseAuth(data)
-                if (session == null) {
-                    yandexPending = null
-                    authenticated = false
-                    _state.value = ClientState.READY
-                    LogBus.err(YANDEX_TAG, "AUTH: короткий ответ")
-                } else {
-                    yandexPending = null
-                    yandexSession = session
-                    authenticated = true
-                    reconnectAttempts = 0
-                    _state.value = ClientState.READY
-                    LogBus.ok(YANDEX_TAG, "AUTH ok, session 0x${hexByte(session)}")
-                }
-            }
-            YandexPending.LOCK1 -> {
-                if (YandexProtocol.parseLock(data)) {
-                    val deviceId = yandexDeviceId()
-                    if (deviceId == null) {
-                        yandexPending = null
-                    } else {
-                        sendYandex(YandexProtocol.lock2(deviceId, yandexSession), YandexPending.LOCK2, "LOCK 2")
-                    }
-                } else {
-                    failYandex("LOCK 1")
-                }
-            }
-            YandexPending.LOCK2 -> {
-                yandexPending = null
-                if (YandexProtocol.parseLock(data)) {
-                    LogBus.ok(YANDEX_TAG, "LOCK ok")
-                } else {
-                    LogBus.err(YANDEX_TAG, "LOCK failed")
-                }
-            }
-            YandexPending.UNLOCK1 -> {
-                if (YandexProtocol.parseUnlock(data)) {
-                    val deviceId = yandexDeviceId()
-                    if (deviceId == null) {
-                        yandexPending = null
-                    } else {
-                        sendYandex(YandexProtocol.unlock2(deviceId, yandexSession), YandexPending.UNLOCK2, "UNLOCK 2")
-                    }
-                } else {
-                    failYandex("UNLOCK 1")
-                }
-            }
-            YandexPending.UNLOCK2 -> {
-                yandexPending = null
-                if (YandexProtocol.parseUnlock(data)) {
-                    LogBus.ok(YANDEX_TAG, "UNLOCK ok")
-                } else {
-                    LogBus.err(YANDEX_TAG, "UNLOCK failed")
-                }
-            }
-            YandexPending.SOUND -> {
-                yandexPending = null
-                if (YandexProtocol.parseSound(data)) {
-                    LogBus.ok(YANDEX_TAG, "SOUND ok")
-                } else {
-                    LogBus.err(YANDEX_TAG, "SOUND failed")
-                }
-            }
-            YandexPending.CABLE -> {
-                yandexPending = null
-                if (YandexProtocol.parseCable(data)) {
-                    LogBus.ok(YANDEX_TAG, "CABLE ok")
-                } else {
-                    LogBus.err(YANDEX_TAG, "CABLE failed")
-                }
-            }
-            YandexPending.BATTERY -> {
-                yandexPending = null
-                LogBus.ok(YANDEX_TAG, "BATTERY COVER отправлено")
-            }
-        }
-    }
-
-    private fun sendYandex(frame: ByteArray, pending: YandexPending, label: String) {
-        cancelYandexTimeout()
-        yandexPending = pending
-        if (!writeCommand(frame, label)) {
-            yandexPending = null
-            if (pending == YandexPending.AUTH) {
-                authenticated = false
-                _state.value = ClientState.READY
-            }
-            return
-        }
-        val timeout = Runnable {
-            if (yandexPending == pending) {
-                yandexPending = null
-                if (pending == YandexPending.AUTH) {
-                    authenticated = false
-                    _state.value = ClientState.READY
-                }
-                LogBus.err(YANDEX_TAG, "Таймаут $label")
-            }
-        }
-        yandexTimeout = timeout
-        handler.postDelayed(timeout, YANDEX_TIMEOUT_MS)
-    }
-
-    private fun failYandex(label: String) {
-        yandexPending = null
-        LogBus.err(YANDEX_TAG, "$label: ошибка")
-    }
-
-    private fun cancelYandexTimeout() {
-        yandexTimeout?.let { handler.removeCallbacks(it) }
-        yandexTimeout = null
-    }
-
-    private fun cancelYandex() {
-        cancelYandexTimeout()
-        yandexPending = null
-    }
-
-    private fun yandexDeviceId(): Int? {
-        val text = prefs.yandexDeviceId.trim().removePrefix("0x").removePrefix("0X")
-        val value = text.toIntOrNull(16)
-        if (value == null || value !in 0..0xFFFF) {
-            LogBus.warn(YANDEX_TAG, "Укажите device id (16-bit hex)")
-            return null
-        }
-        return value
-    }
-
-    private fun yandexNonce(): ByteArray? {
-        val nonce = parseHex(prefs.yandexNonce)
-        if (nonce == null || nonce.size != 4) {
-            LogBus.warn(YANDEX_TAG, "Укажите 4-байтовый nonce в hex")
-            return null
-        }
-        return nonce
-    }
-
-    fun sendRawHex(text: String) {
-        if (provider == Provider.URENT) {
-            LogBus.warn(TAG, "Для Urent используйте ручную команду")
-            return
-        }
-        val bytes = parseHex(text)
-        if (bytes == null || bytes.isEmpty()) {
-            LogBus.err(TAG, "Неверный hex")
-            return
-        }
-        if (!isConnected()) {
-            LogBus.warn(TAG, "Нет подключения")
-            return
-        }
-        cancelYandexTimeout()
-        yandexPending = null
-        writeCommand(bytes, "raw ${provider.title}")
     }
 
     private fun handleFrame(frame: ScooterFrame) {
@@ -1513,6 +888,7 @@ object ScooterClient : BleTransport.Listener {
             authenticated = true
             reconnectAttempts = 0
             if (prefs.bleKey != authKey) prefs.bleKey = authKey
+            _incompatible.value = _incompatible.value - deviceAddress
             LogBus.ok(AUTH_TAG, "Ключ верный, сессионный ключ 0x${hexByte(sessionKey)}")
             _state.value = ClientState.READY
             onAuthenticated()
@@ -1532,12 +908,6 @@ object ScooterClient : BleTransport.Listener {
     }
 
     fun requestTelemetry() {
-        if (provider == Provider.WHOOSH && whooshMode == WhooshMode.ONLINE) {
-            val ok = transport?.read(WhooshProtocol.ONLINE_DIGITAL) == true
-            LogBus.info(WHOOSH_TAG, if (ok) "Чтение digital_output" else "digital_output недоступен")
-            return
-        }
-        if (provider != Provider.URENT) return
         if (!isReady) return
         sendService(ScooterCodec.CMD_DEVICE_INFO, byteArrayOf(0x01))
         sendService(ScooterCodec.CMD_SCOOTER_INFO, byteArrayOf(0x01))

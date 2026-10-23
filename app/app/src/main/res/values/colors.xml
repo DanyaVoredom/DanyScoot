@@ -2,4 +2,9 @@
 <resources>
     <color name="text_primary">#FFE3F2E8</color>
     <color name="ic_launcher_background">#FF16351F</color>
+    <color name="status_idle">#FF8A8F8B</color>
+    <color name="status_busy">#FFFFB300</color>
+    <color name="status_ok">#FF4CAF50</color>
+    <color name="status_error">#FFF44336</color>
+    <color name="status_demo">#FF7C6AE8</color>
 </resources>

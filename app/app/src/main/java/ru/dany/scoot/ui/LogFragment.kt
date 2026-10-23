@@ -1,11 +1,15 @@
 package ru.dany.scoot.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
@@ -28,6 +32,7 @@ class LogFragment : Fragment() {
 
     private var binding: FragmentLogBinding? = null
     private lateinit var adapter: LogAdapter
+    private val timeFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val b = FragmentLogBinding.inflate(inflater, container, false)
@@ -36,13 +41,14 @@ class LogFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        adapter = LogAdapter()
+        adapter = LogAdapter { line -> copyLine(line) }
         binding?.logList?.layoutManager = LinearLayoutManager(requireContext())
         binding?.logList?.adapter = adapter
         binding?.clearLog?.setOnClickListener {
             LogBus.clear()
             adapter.submit(emptyList())
         }
+        binding?.copyLog?.setOnClickListener { copyAll() }
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 LogBus.lines.collect { list ->
@@ -55,15 +61,35 @@ class LogFragment : Fragment() {
         }
     }
 
+    private fun copyAll() {
+        val list = LogBus.lines.value
+        if (list.isEmpty()) return
+        copy(list.joinToString("\n") { format(it) }, R.string.log_copied)
+    }
+
+    private fun copyLine(line: LogLine) {
+        copy(format(line), R.string.log_line_copied)
+    }
+
+    private fun format(line: LogLine): String =
+        "${timeFormat.format(Date(line.timeMs))} ${line.tag}: ${line.text}"
+
+    private fun copy(text: String, message: Int) {
+        val manager = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        manager.setPrimaryClip(ClipData.newPlainText("DanyScoot log", text))
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         binding = null
     }
 
-    private inner class LogAdapter : RecyclerView.Adapter<LogAdapter.Holder>() {
+    private inner class LogAdapter(
+        private val onLongClick: (LogLine) -> Unit,
+    ) : RecyclerView.Adapter<LogAdapter.Holder>() {
 
         private val items = ArrayList<LogLine>()
-        private val timeFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
 
         fun submit(list: List<LogLine>) {
             val old = items.size
@@ -114,12 +140,13 @@ class LogFragment : Fragment() {
                 LogLevel.ERR -> themeColor(root, R.attr.colorLogErr)
                 LogLevel.INFO -> themeColor(root, R.attr.colorLogInfo)
             }
-            holder.binding.logLine.text = buildString {
-                append(timeFormat.format(Date(line.timeMs))).append(' ')
-                append(line.tag).append(": ").append(line.text)
-            }
+            holder.binding.logLine.text = format(line)
             holder.binding.logLine.setTextColor(color)
             holder.binding.logLine.setBackgroundColor(Color.TRANSPARENT)
+            root.setOnLongClickListener {
+                onLongClick(line)
+                true
+            }
         }
 
         private fun themeColor(view: View, attr: Int): Int {

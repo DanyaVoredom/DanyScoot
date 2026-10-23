@@ -2,13 +2,14 @@
 
 ## 1. Хранение
 
-Приложение использует только SharedPreferences. Базы данных, файлов журнала и сетевого хранилища нет.
+Приложение использует SharedPreferences и кэш APK обновления. Базы данных, файлов журнала и сетевого хранилища нет.
 
 | Хранилище | Имя | Назначение |
 | --- | --- | --- |
 | SharedPreferences | danyscoot_prefs | все настройки и последнее устройство |
 | Память | LogBus | до 1000 строк журнала |
-| Память | StateFlow | состояние клиента, список устройств, телеметрия |
+| Память | StateFlow | состояние клиента, список устройств, GATT-дамп, телеметрия |
+| Кэш | cacheDir/updates | скачанный APK обновления |
 | Система | SpamService notification | отображение активного спама |
 
 Файл SharedPreferences находится в приватном каталоге приложения и доступен через root или backup. android:allowBackup=false, поэтому обычный backup не копирует настройки.
@@ -18,20 +19,6 @@
 | Поле Prefs | Ключ | Тип | По умолчанию | Диапазон |
 | --- | --- | --- | --- | --- |
 | bleKey | ble_key | String | 4BKNwi77 | непустая строка |
-| provider | provider | String | urent | urent, whoosh, yandex |
-| whooshMode | whoosh_mode | String | offline | offline, online |
-| whooshToken | whoosh_token | String | пусто | Base64 или hex |
-| whooshStartId | whoosh_start_id | String | 01 | один байт hex |
-| whooshStopId | whoosh_stop_id | String | 02 | один байт hex |
-| whooshUnlockHex | whoosh_unlock_hex | String | пусто | hex |
-| whooshLockHex | whoosh_lock_hex | String | пусто | hex |
-| yandexServiceUuid | yandex_service_uuid | String | пусто | UUID |
-| yandexWriteUuid | yandex_write_uuid | String | пусто | UUID |
-| yandexNotifyUuid | yandex_notify_uuid | String | пусто | UUID |
-| yandexCccdUuid | yandex_cccd_uuid | String | 00002902-0000-1000-8000-00805f9b34fb | UUID |
-| yandexDeviceId | yandex_device_id | String | пусто | 16-bit hex |
-| yandexNonce | yandex_nonce | String | пусто | 4 байта hex |
-| yandexKey | yandex_key | String | пусто | до 9 UTF-8 байт |
 | spamIntervalMs | unlock_spam_interval_ms | Int | 100 | 20..10000 |
 | autoReconnect | auto_reconnect_enabled | Boolean | true | - |
 | autoReconnectAttempts | auto_reconnect_max_attempts | Int | 3 | 0..20 |
@@ -44,6 +31,8 @@
 | theme | theme | String | dark | black, white, light, dark, amoled |
 | lastDeviceAddress | last_device_address | String | пусто | MAC или DEMO |
 | lastDeviceName | last_device_name | String | пусто | произвольная строка |
+| autoUpdate | auto_update_enabled | Boolean | true | - |
+| lastUpdateCheck | last_update_check | Long | 0 | время в мс |
 
 Ключи названы так же, как в LostBot, где это возможно. Это упрощает сравнение поведения, но не означает совместимость хранилищ.
 
@@ -60,6 +49,8 @@ ScooterClient публикует следующие StateFlow:
 | spamActive | Boolean | спам запущен |
 | spamSent | Int | число отправленных кадров |
 | lastError | String | последняя ошибка |
+| gatt | GattDump? | сервисы и характеристики последнего подключения |
+| incompatible | Set<String> | адреса без Nordic UART |
 
 Дополнительные поля:
 
@@ -77,7 +68,27 @@ ScannedDevice:
 - address;
 - name;
 - rssi;
-- hasUart.
+- hasUart;
+- advert: строка с service UUID и manufacturer data из рекламы.
+
+GattDump:
+
+- address;
+- name;
+- services: список GattServiceInfo с UUID и characteristics.
+
+GattServiceInfo:
+
+- uuid;
+- name;
+- characteristics: список GattCharacteristicInfo.
+
+GattCharacteristicInfo:
+
+- uuid;
+- properties;
+- writable;
+- notifiable.
 
 IotInfo:
 
@@ -132,13 +143,15 @@ LogBus хранит до 1000 строк. При переполнении уда
 
 ## 6. Жизненный цикл данных
 
-- Настройки сохраняются сразу при нажатии кнопки сохранения.
-- Интервал спама сохраняется при запуске спама.
+- Настройки сохраняются автоматически при каждом изменении.
+- Интервал спама сохраняется при вводе и при запуске спама.
 - Последнее устройство сохраняется при подключении.
 - sessionKey живёт только в памяти и сбрасывается при разрыве.
+- GATT-дамп переживает отключение и заменяется при новом discovery.
 - Телеметрия живёт только в памяти и очищается при отключении или старте демо.
 - Список устройств очищается перед новым сканированием.
 - Журнал переживает смену вкладок, но не перезапуск приложения.
+- Время последней проверки обновлений хранится в prefs, скачанный APK в кэше.
 
 ## 7. Приватность
 
@@ -155,7 +168,7 @@ LogBus хранит до 1000 строк. При переполнении уда
 - полные hex-кадры, включая зашифрованный ключ;
 - названия и адреса окружающих BLE-устройств.
 
-Приложение не отправляет эти данные в сеть. Риск возникает при демонстрации экрана, снятии скриншота, подключении отладчика или создании backup. Подробнее: docs/security.md.
+Приложение не отправляет эти данные в сеть. Сетевой запрос содержит только обращение к API релизов Codeberg. Риск возникает при демонстрации экрана, снятии скриншота, подключении отладчика или создании backup. Подробнее: docs/security.md.
 
 ## 8. Миграции
 
@@ -166,4 +179,4 @@ LogBus хранит до 1000 строк. При переполнении уда
 3. Записать новое значение.
 4. Не удалять старые ключи без необходимости.
 
-Текущая версия 1.0.0 не имеет миграций, потому что это первый публичный формат.
+Текущая версия хранилища 1.4.0 не имеет миграций, потому что набор ключей совместим с 1.1.0. Ключи удалённых операторов больше не читаются.

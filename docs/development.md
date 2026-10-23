@@ -19,22 +19,24 @@ cd app
 
 | Путь | Содержимое |
 | --- | --- |
-| app/app/src/main/java/ru/dany/scoot/App.kt | инициализация ScooterClient |
+| app/app/src/main/java/ru/dany/scoot/App.kt | инициализация ScooterClient и проверки обновлений |
 | AppTheme.kt | перечисление тем и выбор по prefs |
 | MainActivity.kt | вкладки, разрешения, статус, badge |
 | ble/Frame.kt | CRC8, CRC16, FrameCodec, hex, parseHex |
 | ble/ScooterCodec.kt | команды и декодеры |
-| ble/BleTransport.kt | сканер, GATT, MTU, очередь записи |
+| ble/BleTransport.kt | сканер, GATT, MTU, очередь записи, диагностика |
+| ble/GattInfo.kt | дамп сервисов, имена UUID, коды GATT |
 | ble/OpcodeCatalog.kt | каталог 54 опкодов |
-| core/ScooterClient.kt | состояния, auth, спам, ответы, демо |
+| core/ScooterClient.kt | состояния, auth, спам, ответы, демо, GATT |
 | core/Prefs.kt | SharedPreferences и значения по умолчанию |
 | core/LogBus.kt | журнал и уровни |
+| core/UpdateManager.kt | релизы Codeberg, загрузка и установка APK |
 | spam/SpamService.kt | foreground-сервис |
 | ui/DevicesFragment.kt | скан и выбор устройства |
 | ui/ControlFragment.kt | основные команды и телеметрия |
-| ui/LogFragment.kt | журнал |
-| ui/SettingsFragment.kt | настройки и темы |
-| ui/ProvidersFragment.kt | операторы Whoosh и Yandex Go |
+| ui/GattFragment.kt | дамп сервисов и характеристик |
+| ui/LogFragment.kt | журнал и копирование |
+| ui/SettingsFragment.kt | настройки, темы, обновления |
 | res/layout | разметка экранов |
 | res/values/strings.xml | все пользовательские строки |
 | res/values/themes.xml | пять тем |
@@ -85,7 +87,7 @@ cd app
 2. Добавить ограничение диапазона в setter.
 3. Добавить элемент в fragment_settings.xml.
 4. Загрузить значение в SettingsFragment.loadPrefs.
-5. Сохранить значение в SettingsFragment.save.
+5. Сохранить значение в обработчике изменения или в setupAutosave.
 6. Если настройка влияет на активное соединение, обработать изменение сразу или задокументировать, что нужен перезапуск.
 7. Обновить docs/data-model.md и docs/ui.md.
 
@@ -122,7 +124,7 @@ Unit-тесты находятся в app/app/src/test/java/ru/dany/scoot/ble. �
 Полезные команды:
 
 ```
-adb logcat -s BLE AUTH SPAM SCOOTER FW INFO
+adb logcat -s BLE AUTH SPAM SCOOTER FW INFO GATT UPDATE
 adb shell dumpsys bluetooth_manager
 adb shell settings get global bluetooth_on
 ```

@@ -5,19 +5,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.card.MaterialCardView
 import ru.dany.scoot.MainActivity
 import ru.dany.scoot.R
 import ru.dany.scoot.ble.ScannedDevice
 import ru.dany.scoot.core.ClientState
 import ru.dany.scoot.core.LogBus
 import ru.dany.scoot.core.Prefs
-import ru.dany.scoot.core.Provider
 import ru.dany.scoot.core.ScooterClient
 import ru.dany.scoot.databinding.FragmentDevicesBinding
 import ru.dany.scoot.databinding.ItemDeviceBinding
@@ -28,6 +29,8 @@ class DevicesFragment : Fragment() {
     private var binding: FragmentDevicesBinding? = null
     private lateinit var adapter: DeviceAdapter
     private var scanning = false
+    private var devices: List<ScannedDevice> = emptyList()
+    private var incompatible: Set<String> = emptySet()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val b = FragmentDevicesBinding.inflate(inflater, container, false)
@@ -46,29 +49,43 @@ class DevicesFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     ScooterClient.devices.collect { list ->
-                        adapter.submit(list)
-                        val scanningNow = ScooterClient.state.value == ClientState.SCANNING
-                        binding?.scanStatus?.text = if (scanningNow) {
-                            "${getString(R.string.scan_searching)} ${list.size}"
-                        } else {
-                            getString(R.string.scan_hint)
-                        }
+                        devices = list
+                        render()
+                    }
+                }
+                launch {
+                    ScooterClient.incompatible.collect { set ->
+                        incompatible = set
+                        render()
                     }
                 }
                 launch {
                     ScooterClient.state.collect { state ->
                         scanning = state == ClientState.SCANNING
-                        binding?.scanButton?.text = if (scanning) getString(R.string.scan_stop) else getString(R.string.scan_start)
-                        binding?.scanStatus?.text = if (scanning) {
-                            "${getString(R.string.scan_searching)} ${adapter.itemCount}"
+                        binding?.scanButton?.text = if (scanning) {
+                            getString(R.string.scan_stop)
                         } else {
-                            getString(R.string.scan_hint)
+                            getString(R.string.scan_start)
                         }
+                        render()
                         refreshDemoButton()
                     }
                 }
             }
         }
+    }
+
+    private fun render() {
+        val b = binding ?: return
+        adapter.submit(devices, incompatible)
+        b.scanStatus.text = if (scanning) {
+            getString(R.string.scan_searching, devices.size)
+        } else {
+            getString(R.string.scan_hint)
+        }
+        val empty = devices.isEmpty()
+        b.emptyState.visibility = if (empty) View.VISIBLE else View.GONE
+        b.emptyState.text = getString(if (scanning) R.string.scan_empty_scanning else R.string.scan_empty)
     }
 
     private fun toggleScan() {
@@ -99,10 +116,6 @@ class DevicesFragment : Fragment() {
 
     private fun startDemo() {
         val prefs = Prefs.get(requireContext())
-        if (Provider.from(prefs.provider) != Provider.URENT) {
-            LogBus.warn("DEMO", "Демо доступно только для Urent")
-            return
-        }
         if (ScooterClient.isDemo) {
             ScooterClient.disconnect()
             prefs.demoMode = false
@@ -116,14 +129,8 @@ class DevicesFragment : Fragment() {
     }
 
     private fun connect(device: ScannedDevice) {
-        val provider = Provider.from(Prefs.get(requireContext()).provider)
         ScooterClient.connect(device.address, device.name)
-        val activity = activity as? MainActivity
-        if (provider == Provider.URENT) {
-            activity?.showControlTab()
-        } else {
-            activity?.showProvidersTab()
-        }
+        (activity as? MainActivity)?.showControlTab()
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
@@ -134,8 +141,6 @@ class DevicesFragment : Fragment() {
     private fun refreshDemoButton() {
         val b = binding ?: return
         val demo = ScooterClient.isDemo
-        val provider = Provider.from(Prefs.get(requireContext()).provider)
-        b.demoButton.visibility = if (provider == Provider.URENT) View.VISIBLE else View.GONE
         b.demoButton.text = if (demo) getString(R.string.device_disconnect) else getString(R.string.settings_demo_mode)
     }
 
@@ -149,10 +154,12 @@ class DevicesFragment : Fragment() {
     ) : RecyclerView.Adapter<DeviceAdapter.Holder>() {
 
         private val items = ArrayList<ScannedDevice>()
+        private var incompatible: Set<String> = emptySet()
 
-        fun submit(list: List<ScannedDevice>) {
+        fun submit(list: List<ScannedDevice>, blocked: Set<String>) {
             items.clear()
             items.addAll(list)
+            incompatible = blocked
             notifyDataSetChanged()
         }
 
@@ -167,17 +174,30 @@ class DevicesFragment : Fragment() {
 
         override fun onBindViewHolder(holder: Holder, position: Int) {
             val device = items[position]
+            val context = holder.binding.root.context
+            val blocked = device.address in incompatible || !device.hasUart
             holder.binding.deviceName.text = device.name
             holder.binding.deviceAddress.text = device.address
-            holder.binding.deviceRssi.text = holder.binding.root.context.getString(
-                when {
-                    device.hasUart -> R.string.device_rssi_uart
-                    device.hasProfile -> R.string.device_rssi_profile
-                    else -> R.string.device_rssi
-                },
-                device.rssi,
+            holder.binding.deviceAdvert.text = device.advert
+            holder.binding.deviceAdvert.visibility = if (device.advert.isEmpty()) View.GONE else View.VISIBLE
+            holder.binding.deviceRssi.text = if (device.hasUart && !blocked) {
+                context.getString(R.string.device_rssi_uart, device.rssi)
+            } else {
+                context.getString(R.string.device_rssi, device.rssi)
+            }
+            holder.binding.deviceBadge.text = context.getString(
+                if (blocked) R.string.device_badge_no_uart else R.string.device_badge_uart,
             )
+            holder.binding.deviceBadge.setTextColor(
+                ContextCompat.getColor(context, if (blocked) R.color.status_error else R.color.status_ok),
+            )
+            val card = holder.binding.root as MaterialCardView
+            card.strokeWidth = if (blocked) dp(context, 1) else 0
+            card.strokeColor = ContextCompat.getColor(context, R.color.status_error)
             holder.binding.root.setOnClickListener { onClick(device) }
         }
+
+        private fun dp(context: android.content.Context, value: Int): Int =
+            (value * context.resources.displayMetrics.density).toInt()
     }
 }

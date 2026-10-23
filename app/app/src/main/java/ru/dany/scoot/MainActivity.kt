@@ -2,6 +2,7 @@ package ru.dany.scoot
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -23,8 +24,8 @@ import ru.dany.scoot.core.ScooterClient
 import ru.dany.scoot.databinding.ActivityMainBinding
 import ru.dany.scoot.ui.ControlFragment
 import ru.dany.scoot.ui.DevicesFragment
+import ru.dany.scoot.ui.GattFragment
 import ru.dany.scoot.ui.LogFragment
-import ru.dany.scoot.ui.ProvidersFragment
 import ru.dany.scoot.ui.SettingsFragment
 import kotlinx.coroutines.launch
 
@@ -63,7 +64,7 @@ class MainActivity : AppCompatActivity() {
             val index = when (item.itemId) {
                 R.id.tabDevices -> 0
                 R.id.tabControl -> 1
-                R.id.tabProviders -> 2
+                R.id.tabGatt -> 2
                 R.id.tabLog -> 3
                 else -> 4
             }
@@ -98,13 +99,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupFragments(savedInstanceState: Bundle?) {
         val manager = supportFragmentManager
-        val tags = arrayOf("devices", "control", "providers", "log", "settings")
+        val tags = arrayOf("devices", "control", "gatt", "log", "settings")
         fragments = Array(5) { i ->
             val existing = manager.findFragmentByTag(tags[i])
             val fragment = existing ?: when (i) {
                 0 -> DevicesFragment()
                 1 -> ControlFragment()
-                2 -> ProvidersFragment()
+                2 -> GattFragment()
                 3 -> LogFragment()
                 else -> SettingsFragment()
             }
@@ -140,7 +141,7 @@ class MainActivity : AppCompatActivity() {
         showTab(1)
     }
 
-    fun showProvidersTab() {
+    fun showGattTab() {
         showTab(2)
     }
 
@@ -183,6 +184,20 @@ class MainActivity : AppCompatActivity() {
             ClientState.ERROR -> getString(R.string.status_error)
         }
         binding.statusText.text = if (name.isEmpty()) stateText else "$name: $stateText"
+        val color = when (state) {
+            ClientState.IDLE -> R.color.status_idle
+            ClientState.SCANNING,
+            ClientState.CONNECTING,
+            ClientState.DISCOVERING,
+            ClientState.AUTHENTICATING,
+            -> R.color.status_busy
+            ClientState.READY -> R.color.status_ok
+            ClientState.DEMO -> R.color.status_demo
+            ClientState.ERROR -> R.color.status_error
+        }
+        binding.statusDot.backgroundTintList = ColorStateList.valueOf(
+            ContextCompat.getColor(this, color),
+        )
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -202,7 +217,7 @@ class MainActivity : AppCompatActivity() {
         private val TAB_MENU_IDS = intArrayOf(
             R.id.tabDevices,
             R.id.tabControl,
-            R.id.tabProviders,
+            R.id.tabGatt,
             R.id.tabLog,
             R.id.tabSettings,
         )

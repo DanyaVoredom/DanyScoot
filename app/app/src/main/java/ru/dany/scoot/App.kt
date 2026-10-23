@@ -3,6 +3,7 @@ package ru.dany.scoot
 import android.app.Application
 import ru.dany.scoot.core.LogBus
 import ru.dany.scoot.core.ScooterClient
+import ru.dany.scoot.core.UpdateManager
 
 class App : Application() {
 
@@ -10,5 +11,6 @@ class App : Application() {
         super.onCreate()
         ScooterClient.init(this)
         LogBus.info("APP", "DanyScoot ${BuildConfig.VERSION_NAME} запущен")
+        UpdateManager.autoCheck(this)
     }
 }

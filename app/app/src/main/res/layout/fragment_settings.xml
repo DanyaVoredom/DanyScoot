@@ -23,7 +23,6 @@
                     style="@style/ActionButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="0"
                     android:text="@string/settings_theme" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -192,19 +191,52 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/settingsSave"
-            style="@style/ActionButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0"
+        <TextView style="@style/SectionHeader" android:text="@string/settings_updates" />
+
+        <com.google.android.material.card.MaterialCardView style="@style/CardBlock">
+
+            <LinearLayout style="@style/CardBody">
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/settingsAutoUpdate"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="@string/settings_auto_update"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <TextView
+                    android:id="@+id/settingsCurrentVersion"
+                    style="@style/RowLabel"
+                    android:paddingTop="4dp"
+                    android:text="@string/settings_update_idle" />
+
+                <TextView
+                    android:id="@+id/settingsUpdateStatus"
+                    style="@style/RowLabel"
+                    android:paddingTop="2dp"
+                    android:text="@string/settings_update_idle" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/updateCheck"
+                    style="@style/ActionButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/settings_check_update" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/settingsAutosave"
+            style="@style/RowLabel"
             android:layout_marginTop="12dp"
-            android:text="@string/settings_save" />
+            android:text="@string/settings_autosave" />
 
         <TextView
             android:id="@+id/settingsAbout"
             style="@style/RowLabel"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             android:text="@string/settings_about" />
     </LinearLayout>
 </ScrollView>

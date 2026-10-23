@@ -4,19 +4,22 @@
 
     <string name="tab_devices">Устройства</string>
     <string name="tab_control">Управление</string>
-    <string name="tab_providers">Операторы</string>
+    <string name="tab_gatt">GATT</string>
     <string name="tab_log">Лог</string>
     <string name="tab_settings">Настройки</string>
 
     <string name="scan_start">Сканировать</string>
     <string name="scan_stop">Остановить</string>
-    <string name="scan_searching">Поиск самокатов…</string>
+    <string name="scan_searching">Поиск самокатов: %1$d</string>
     <string name="scan_hint">Нажмите на самокат для подключения</string>
+    <string name="scan_empty">Устройства не найдены. Включите самокат и Bluetooth, затем запустите сканирование.</string>
+    <string name="scan_empty_scanning">Идёт поиск. Включите самокат и держите его рядом.</string>
     <string name="device_connect">Подключить</string>
     <string name="device_disconnect">Отключить</string>
     <string name="device_rssi">RSSI %1$d дБм</string>
     <string name="device_rssi_uart">RSSI %1$d дБм · UART</string>
-    <string name="device_rssi_profile">RSSI %1$d дБм · профиль</string>
+    <string name="device_badge_uart">UART</string>
+    <string name="device_badge_no_uart">без UART</string>
     <string name="status_disconnected">Не подключено</string>
     <string name="status_connecting">Подключение…</string>
     <string name="status_authenticating">Авторизация…</string>
@@ -27,31 +30,14 @@
     <string name="status_demo">Демо-режим</string>
     <string name="spam_badge">Спам: %1$d</string>
 
-    <string name="provider_section">Оператор</string>
-    <string name="provider_reconnect">Подключить последний</string>
-    <string name="provider_whoosh">Whoosh</string>
-    <string name="provider_whoosh_token">binaryToken (Base64 или hex:&#8230;)</string>
-    <string name="provider_whoosh_start_id">START id, hex</string>
-    <string name="provider_whoosh_stop_id">STOP id, hex</string>
-    <string name="provider_whoosh_start">START</string>
-    <string name="provider_whoosh_stop">STOP</string>
-    <string name="provider_whoosh_unlock_hex">Online unlock hex</string>
-    <string name="provider_whoosh_lock_hex">Online lock hex</string>
-    <string name="provider_whoosh_send">Отправить online</string>
-    <string name="provider_yandex">Yandex Go</string>
-    <string name="provider_yandex_key">AUTH key (password)</string>
-    <string name="provider_yandex_service">Service UUID</string>
-    <string name="provider_yandex_write">Write UUID</string>
-    <string name="provider_yandex_notify">Notify UUID</string>
-    <string name="provider_yandex_cccd">CCCD UUID</string>
-    <string name="provider_yandex_device">za.d, 16-bit hex</string>
-    <string name="provider_yandex_nonce">za.c, 4 bytes hex</string>
-    <string name="provider_yandex_auth">AUTH</string>
-    <string name="provider_yandex_cable">CABLE</string>
-    <string name="provider_yandex_battery">BATTERY</string>
-    <string name="provider_raw_hex">Raw frame hex</string>
-    <string name="provider_raw_send">Отправить raw</string>
-    <string name="provider_save">Сохранить</string>
+    <string name="gatt_hint">Полный список сервисов, которые отдал самокат. Для команд нужен Nordic UART.</string>
+    <string name="gatt_wait">Данных нет. Подключитесь к самокату.</string>
+    <string name="gatt_empty">Сервисы не обнаружены.</string>
+    <string name="gatt_device">%1$s (%2$s)\nСервисов: %3$d · характеристик: %4$d</string>
+    <string name="gatt_copy">Копировать</string>
+    <string name="gatt_copied">GATT скопирован</string>
+    <string name="gatt_reconnect">Переподключить</string>
+    <string name="gatt_no_device">Нет последнего устройства</string>
 
     <string name="control_auth_section">Авторизация</string>
     <string name="control_select_scooter">Сначала выберите самокат</string>
@@ -117,6 +103,10 @@
 
     <string name="log_clear">Очистить</string>
     <string name="log_autoscroll">Автопрокрутка</string>
+    <string name="log_copy">Копировать</string>
+    <string name="log_copied">Лог скопирован</string>
+    <string name="log_line_copied">Строка скопирована</string>
+    <string name="log_copy_hint">Удерживайте строку, чтобы скопировать её отдельно</string>
 
     <string name="settings_appearance">Оформление</string>
     <string name="settings_theme">Тема</string>
@@ -143,9 +133,23 @@
     <string name="settings_key">Ключ BLE</string>
     <string name="settings_key_ninehack">Ключ NineHack</string>
     <string name="settings_key_lostbot">Ключ LostBot</string>
-    <string name="settings_save">Сохранить</string>
-    <string name="settings_saved">Сохранено</string>
-    <string name="settings_about">DanyScoot объединяет протоколы LostBot и NineHack: кадры A3 A4, CRC-8/MAXIM, рукопожатие ключом, спам разблокировки, телеметрия, Nordic UART. Работает только с собственным самокатом.</string>
+    <string name="settings_autosave">Изменения сохраняются сразу</string>
+
+    <string name="settings_updates">Обновления</string>
+    <string name="settings_auto_update">Проверять обновления при запуске</string>
+    <string name="settings_check_update">Проверить обновление</string>
+    <string name="settings_install_update">Установить обновление</string>
+    <string name="settings_current_version">Версия %1$s (%2$d)</string>
+    <string name="settings_update_idle">Проверка ещё не выполнялась</string>
+    <string name="settings_update_checking">Проверка обновлений…</string>
+    <string name="settings_update_uptodate">Установлена последняя версия</string>
+    <string name="settings_update_available">Доступно обновление %1$s</string>
+    <string name="settings_update_downloading">Загрузка %1$d%%</string>
+    <string name="settings_update_ready">Обновление %1$s скачано</string>
+    <string name="settings_update_permission">Разрешите установку из этого источника и нажмите ещё раз</string>
+    <string name="settings_update_failed">Ошибка: %1$s</string>
+
+    <string name="settings_about">DanyScoot: кадры A3 A4, CRC-8/MAXIM, авторизация ключом, разблокировка, телеметрия, Nordic UART. Работает только с собственным самокатом.</string>
     <string name="settings_about_version">%1$s\n\nDanyScoot %2$s (%3$d)</string>
 
     <string name="notification_channel_name">Спам разблокировки</string>
