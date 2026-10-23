@@ -11,9 +11,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -27,6 +25,7 @@ import ru.dany.scoot.ui.DevicesFragment
 import ru.dany.scoot.ui.GattFragment
 import ru.dany.scoot.ui.LogFragment
 import ru.dany.scoot.ui.SettingsFragment
+import ru.dany.scoot.ui.applyEdgeToEdgeInsets
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -50,14 +49,7 @@ class MainActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
-            val bars = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime(),
-            )
-            val cutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
-            view.setPadding(cutout.left, bars.top, cutout.right, bars.bottom)
-            insets
-        }
+        binding.root.applyEdgeToEdgeInsets()
         requestPermissionsIfNeeded()
         setupFragments(savedInstanceState)
         handleIntent(intent)

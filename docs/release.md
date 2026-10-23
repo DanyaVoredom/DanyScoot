@@ -26,8 +26,8 @@ Release-вариант подписывается signingConfig release, кот�
 versionCode и versionName задаются в app/app/build.gradle.kts:
 
 ```
-versionCode = 8
-versionName = "1.5.0"
+versionCode = 9
+versionName = "1.5.1"
 ```
 
 Правила:
@@ -126,8 +126,8 @@ git push origin dev:prod
 Релиз собирается по тегу vX.Y.Z через GitHub Actions:
 
 ```
-git tag v1.5.0
-git push origin v1.5.0
+git tag v1.5.1
+git push origin v1.5.1
 ```
 
 Workflow .github/workflows/release.yml проверяет совпадение тега и versionName, собирает release APK, проверяет подпись и создает релиз GitHub с файлами DanyScoot-X.Y.Z.apk и DanyScoot-X.Y.Z.apk.sha256. Для запуска нужен секрет репозитория:

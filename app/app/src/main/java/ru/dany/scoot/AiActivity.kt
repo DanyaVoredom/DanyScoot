@@ -3,9 +3,7 @@ package ru.dany.scoot
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -16,6 +14,7 @@ import kotlinx.coroutines.launch
 import ru.dany.scoot.ai.AiChat
 import ru.dany.scoot.databinding.ActivityAiBinding
 import ru.dany.scoot.ui.AiAdapter
+import ru.dany.scoot.ui.applyEdgeToEdgeInsets
 
 class AiActivity : AppCompatActivity() {
 
@@ -29,14 +28,7 @@ class AiActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityAiBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
-            val bars = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime(),
-            )
-            val cutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
-            view.setPadding(cutout.left, bars.top, cutout.right, bars.bottom)
-            insets
-        }
+        binding.root.applyEdgeToEdgeInsets()
         adapter = AiAdapter()
         binding.aiList.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
         binding.aiList.adapter = adapter
