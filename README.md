@@ -42,7 +42,7 @@ git tag v1.5.0
 git push origin v1.5.0
 ```
 
-Forgejo Actions соберет APK по .forgejo/workflows/release.yml и приложит его к релизу Codeberg. Перед тегом обновить versionCode и versionName.
+GitHub Actions соберет APK по .github/workflows/release.yml и приложит его к релизу GitHub. Перед тегом обновить versionCode и versionName.
 
 ## Документация
 
@@ -89,7 +89,7 @@ Forgejo Actions соберет APK по .forgejo/workflows/release.yml и при
 - AI-инструменты: сканирование, подключение, состояние, GATT, чтение и запись характеристик, уведомления, команды самоката, настройки, журнал, обновления, навигация и данные Edifier.
 - Сортировка устройств по расстоянию, имени, адресу или типу и скрытие Unknown.
 - Автосохранение настроек без кнопки сохранения.
-- Проверка обновлений через релизы Codeberg с загрузкой APK и установкой через FileProvider.
+- Проверка обновлений через релизы GitHub с загрузкой APK и установкой через FileProvider.
 - Пять тем: black, white, light, dark, amoled.
 - Настройки ключа с пресетами NineHack 4BKNwi77 и LostBot w4S3Hqn5 и автоподбором второго ключа при отказе, интервал спама, переподключение, фильтры сканирования и каталога.
 - Экспериментальные проверки Urent на телефоне: unlock без auth с key 0 и перебор session key 0..255.

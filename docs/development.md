@@ -38,7 +38,7 @@ cd app
 | core/ScooterClient.kt | состояния, auth, спам, ответы, GATT, внешние устройства |
 | core/Prefs.kt | SharedPreferences и значения по умолчанию |
 | core/LogBus.kt | журнал и уровни |
-| core/UpdateManager.kt | релизы Codeberg, загрузка и установка APK |
+| core/UpdateManager.kt | релизы GitHub, загрузка и установка APK |
 | spam/SpamService.kt | foreground-сервис |
 | ui/DevicesFragment.kt | скан, сортировка и выбор устройства |
 | ui/ControlFragment.kt | основные команды, телеметрия, данные гарнитуры |

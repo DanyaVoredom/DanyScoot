@@ -33,7 +33,7 @@ object UpdateManager {
     }
 
     private const val TAG = "UPDATE"
-    private const val API = "https://codeberg.org/api/v1/repos/DanyaVoredom/DanyScoot/releases/latest"
+    private const val API = "https://api.github.com/repos/FANATFANATA/DanyScoot/releases/latest"
     private const val APK_TYPE = "application/vnd.android.package-archive"
     private const val AUTO_CHECK_INTERVAL_MS = 24L * 60 * 60 * 1000
     private const val CONNECT_TIMEOUT_MS = 15000
@@ -145,7 +145,7 @@ object UpdateManager {
         val connection = URL(API).openConnection() as HttpURLConnection
         connection.connectTimeout = CONNECT_TIMEOUT_MS
         connection.readTimeout = READ_TIMEOUT_MS
-        connection.setRequestProperty("Accept", "application/json")
+        connection.setRequestProperty("Accept", "application/vnd.github+json")
         connection.setRequestProperty("User-Agent", "DanyScoot/${BuildConfig.VERSION_NAME}")
         try {
             val code = connection.responseCode
