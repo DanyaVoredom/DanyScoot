@@ -38,8 +38,6 @@ data class ScannedDevice(
     val kind: DeviceKind = DeviceKind.OTHER,
 ) {
     val distanceMeters: Double get() = DeviceClassifier.distanceMeters(rssi)
-
-    val reachable: Boolean get() = hasUart || hasEdifier || kind != DeviceKind.OTHER
 }
 
 data class BleProfile(

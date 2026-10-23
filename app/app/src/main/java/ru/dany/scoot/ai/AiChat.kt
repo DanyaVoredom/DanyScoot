@@ -42,8 +42,6 @@ object AiChat {
         val app = context.applicationContext
         val prefs = Prefs.get(app)
         addMessage(AiRole.USER, prompt)
-        history.add(AiHistoryItem.User(prompt))
-        trimHistory()
         val config = AiConfig(
             baseUrl = prefs.aiBaseUrl,
             apiKey = prefs.aiApiKey,
@@ -54,6 +52,8 @@ object AiChat {
             addMessage(AiRole.ERROR, app.getString(R.string.ai_not_configured))
             return
         }
+        history.add(AiHistoryItem.User(prompt))
+        trimHistory()
         _busy.value = true
         val currentRun = ++runId
         job = scope.launch {
