@@ -12,7 +12,7 @@ concurrency:
 jobs:
   release:
     runs-on: codeberg-medium
-    timeout-minutes: 10
+    timeout-minutes: 30
     container:
       image: ghcr.io/cirruslabs/android-sdk:36
 
