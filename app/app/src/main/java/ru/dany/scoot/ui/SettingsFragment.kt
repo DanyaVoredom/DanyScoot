@@ -188,6 +188,12 @@ class SettingsFragment : Fragment() {
         b.settingsShowScanLog.setOnCheckedChangeListener { _, checked ->
             if (!loading) prefs.showScanLog = checked
         }
+        b.settingsVerboseLog.setOnCheckedChangeListener { _, checked ->
+            if (!loading) {
+                prefs.verboseLog = checked
+                LogBus.verbose = checked
+            }
+        }
         b.settingsAutoUpdate.setOnCheckedChangeListener { _, checked ->
             if (!loading) prefs.autoUpdate = checked
         }
@@ -264,6 +270,7 @@ class SettingsFragment : Fragment() {
         b.settingsShowAllDevices.isChecked = prefs.showAllDevices
         b.settingsHideUnknown.isChecked = prefs.hideUnknownDevices
         b.settingsShowScanLog.isChecked = prefs.showScanLog
+        b.settingsVerboseLog.isChecked = prefs.verboseLog
         b.settingsAiBaseUrl.setText(prefs.aiBaseUrl)
         b.settingsAiApiKey.setText(prefs.aiApiKey)
         b.settingsAiModel.setText(prefs.aiModel)

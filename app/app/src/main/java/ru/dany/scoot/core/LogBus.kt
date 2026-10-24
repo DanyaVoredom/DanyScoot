@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-enum class LogLevel { INFO, TX, RX, OK, WARN, ERR }
+enum class LogLevel { VERBOSE, DEBUG, INFO, TX, RX, OK, WARN, ERR }
 
 data class LogLine(
     val timeMs: Long,
@@ -15,7 +15,10 @@ data class LogLine(
 
 object LogBus {
 
-    private const val MAX_LINES = 1000
+    private const val MAX_LINES = 2000
+
+    @Volatile
+    var verbose: Boolean = false
 
     private val buffer = ArrayList<LogLine>(MAX_LINES)
     private val _lines = MutableStateFlow<List<LogLine>>(emptyList())
@@ -32,6 +35,11 @@ object LogBus {
         _lines.value = ArrayList(buffer)
     }
 
+    fun verbose(tag: String, text: String) {
+        if (verbose) log(LogLevel.VERBOSE, tag, text)
+    }
+
+    fun debug(tag: String, text: String) = log(LogLevel.DEBUG, tag, text)
     fun info(tag: String, text: String) = log(LogLevel.INFO, tag, text)
     fun tx(tag: String, text: String) = log(LogLevel.TX, tag, text)
     fun rx(tag: String, text: String) = log(LogLevel.RX, tag, text)

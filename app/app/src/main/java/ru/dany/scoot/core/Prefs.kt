@@ -96,6 +96,12 @@ class Prefs private constructor(context: Context) {
             sp.edit { putBoolean(KEY_SHOW_SCAN_LOG, value) }
         }
 
+    var verboseLog: Boolean
+        get() = sp.getBoolean(KEY_VERBOSE_LOG, false)
+        set(value) {
+            sp.edit { putBoolean(KEY_VERBOSE_LOG, value) }
+        }
+
     var theme: String
         get() = sp.getString(KEY_THEME, DEFAULT_THEME) ?: DEFAULT_THEME
         set(value) {
@@ -181,6 +187,7 @@ class Prefs private constructor(context: Context) {
         private const val KEY_HIDE_UNKNOWN = "hide_unknown_devices"
         private const val KEY_DEVICE_SORT = "device_sort"
         private const val KEY_SHOW_SCAN_LOG = "show_scan_debug_log"
+        private const val KEY_VERBOSE_LOG = "verbose_log"
         private const val KEY_THEME = "theme"
         private const val KEY_LAST_ADDRESS = "last_device_address"
         private const val KEY_LAST_NAME = "last_device_name"

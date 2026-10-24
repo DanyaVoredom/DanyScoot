@@ -1,5 +1,7 @@
 package ru.dany.scoot.ble
 
+import java.util.Locale
+
 data class IotInfo(
     val value: Int,
     val flags: Int,
@@ -58,6 +60,33 @@ object ScooterCodec {
 
     fun keyCommand(key: String): ByteArray =
         FrameCodec.build(CMD_KEY, 0, key.toByteArray(Charsets.UTF_8))
+
+    fun keyCandidates(deviceName: String, currentKey: String, wordlist: List<String> = emptyList()): List<String> {
+        val out = LinkedHashSet<String>()
+        wordlist.forEach { addKeyCandidate(out, it) }
+        KEY_PRESETS.forEach { addKeyCandidate(out, it) }
+        addKeyCandidate(out, currentKey)
+        val compact = deviceName.filter { it.isLetterOrDigit() }
+        if (compact.isNotEmpty()) {
+            val tail = compact.takeLast(8)
+            addKeyCandidate(out, tail)
+            addKeyCandidate(out, tail.uppercase(Locale.ROOT))
+            addKeyCandidate(out, tail.lowercase(Locale.ROOT))
+        }
+        val digits = deviceName.filter { it.isDigit() }
+        if (digits.isNotEmpty()) {
+            addKeyCandidate(out, digits.takeLast(8).padStart(8, '0'))
+            addKeyCandidate(out, digits.takeLast(6).padStart(6, '0'))
+        }
+        return out.toList()
+    }
+
+    private fun addKeyCandidate(out: MutableSet<String>, raw: String) {
+        val key = raw.trim()
+        if (key.isEmpty() || key.length > 16) return
+        if (key.any { it.code !in 0x20..0x7E }) return
+        out.add(key)
+    }
 
     fun unlockCommand(actualKey: Int): ByteArray =
         FrameCodec.build(CMD_UNLOCK, actualKey, ByteArray(10) { 0x01 })

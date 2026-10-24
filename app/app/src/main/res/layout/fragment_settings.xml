@@ -182,6 +182,13 @@
                     android:text="@string/settings_show_scan_log"
                     android:textColor="?attr/colorOnSurface" />
 
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/settingsVerboseLog"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_verbose_log"
+                    android:textColor="?attr/colorOnSurface" />
+
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/settingsSort"
                     style="@style/ActionButton"

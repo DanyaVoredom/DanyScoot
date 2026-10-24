@@ -138,6 +138,8 @@ class LogFragment : Fragment() {
                 LogLevel.OK -> themeColor(root, R.attr.colorLogOk)
                 LogLevel.WARN -> themeColor(root, R.attr.colorLogWarn)
                 LogLevel.ERR -> themeColor(root, R.attr.colorLogErr)
+                LogLevel.DEBUG -> themeColor(root, R.attr.colorLogDebug)
+                LogLevel.VERBOSE -> themeColor(root, R.attr.colorLogVerbose)
                 LogLevel.INFO -> themeColor(root, R.attr.colorLogInfo)
             }
             holder.binding.logLine.text = format(line)

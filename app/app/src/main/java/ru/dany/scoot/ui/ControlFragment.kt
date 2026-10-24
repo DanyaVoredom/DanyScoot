@@ -63,6 +63,11 @@ class ControlFragment : Fragment() {
         b.bypassButton.setOnClickListener { ScooterClient.bypassUnlock() }
         b.bruteButton.setOnClickListener { ScooterClient.startKeyBrute() }
         b.bruteStopButton.setOnClickListener { ScooterClient.stopKeyBrute() }
+        b.keyBruteButton.setOnClickListener {
+            saveKey()
+            ScooterClient.startKeyStringBrute()
+        }
+        b.keyBruteStopButton.setOnClickListener { ScooterClient.stopKeyStringBrute() }
         b.svcBatteryCover.setOnClickListener {
             ScooterClient.sendService(ScooterCodec.CMD_BATTERY_COVER, byteArrayOf(0x01))
         }
@@ -193,6 +198,8 @@ class ControlFragment : Fragment() {
         b.bypassButton.isEnabled = linked
         b.bruteButton.isEnabled = linked
         b.bruteStopButton.isEnabled = linked
+        b.keyBruteButton.isEnabled = linked
+        b.keyBruteStopButton.isEnabled = linked
         val external = ScooterClient.deviceAddress.isNotEmpty() && ScooterClient.activeKind != DeviceKind.SCOOTER
         val headset = ScooterClient.activeKind == DeviceKind.HEADSET
         b.keyField.visibility = if (external) View.GONE else View.VISIBLE

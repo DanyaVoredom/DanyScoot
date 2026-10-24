@@ -6,4 +6,6 @@
     <attr name="colorLogWarn" format="color" />
     <attr name="colorLogErr" format="color" />
     <attr name="colorLogInfo" format="color" />
+    <attr name="colorLogDebug" format="color" />
+    <attr name="colorLogVerbose" format="color" />
 </resources>

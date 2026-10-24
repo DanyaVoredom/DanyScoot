@@ -177,6 +177,24 @@
                     android:layout_width="match_parent"
                     android:layout_marginTop="8dp"
                     android:text="@string/control_brute_stop" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/keyBruteButton"
+                        style="@style/ActionButton"
+                        android:text="@string/control_keybrute_start" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/keyBruteStopButton"
+                        style="@style/ActionButton"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/control_keybrute_stop" />
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

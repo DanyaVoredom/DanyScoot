@@ -54,6 +54,8 @@
     <string name="control_bypass_unlock">Unlock key 0</string>
     <string name="control_brute_start">Перебор 0..255</string>
     <string name="control_brute_stop">Стоп перебор</string>
+    <string name="control_keybrute_start">Перебор ключей</string>
+    <string name="control_keybrute_stop">Стоп ключей</string>
 
     <string name="control_lock_section">Замок</string>
     <string name="control_unlock">Разблокировать</string>
@@ -136,6 +138,7 @@
     <string name="settings_show_all_devices">Показывать устройства без UART и Edifier</string>
     <string name="settings_hide_unknown">Скрывать Unknown</string>
     <string name="settings_show_scan_log">Журнал сканирования</string>
+    <string name="settings_verbose_log">Подробный журнал</string>
 
     <string name="settings_key">Ключ BLE</string>
     <string name="settings_key_ninehack">Ключ NineHack</string>
