@@ -136,11 +136,9 @@ app/app/src/main/java/ru/dany/scoot/
 | references/FishBot.apk | FishBot.en.Milky | упаковщик, инжектор, отличия сборки |
 | references/NineHack.apk | com.timeylies.ninehack.ru | минимальный BLE-клиент, ключи, команды |
 | references/apks/urent-2.7.0-base.apk | ru.urentbike.app | официальный API, отсутствие BLE |
-| references/apks/whoosh-4.0.0-base.apk | com.punicapp.whoosh | IoT BLE, UUID, команды, серверное шифрование |
-| references/apks/yandex-go-5.98.2-base.apk | ru.yandex.taxi | Ninebot BLE, команды, провайдер-заглушка |
 | Urent 1.90.2 | ru.urentbike.app | официальный API, отсутствие BLE, APK не хранится |
 
-Хеши и подписи: references/README.md. Полный разбор: analysis/README.md. Референсные отчёты по Whoosh и Yandex Go: analysis/report_whoosh.md и analysis/report_yandex_go.md. Поддержки этих операторов в приложении нет.
+Хеши и подписи: references/README.md. Полный разбор: analysis/README.md.
 
 ## Ограничения
 

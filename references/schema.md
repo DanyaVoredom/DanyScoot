@@ -270,48 +270,7 @@
 - confidence=unresolved допускает пустой uuid.
 - Для Urent источником являются LostBot и NineHack, а не официальное приложение.
 
-## 8. ble_map.csv
-
-| Колонка | Тип | Значение |
-| --- | --- | --- |
-| app | string | идентификатор приложения |
-| transport | string | BLE GATT или BLE GATT server spec |
-| service_uuid | UUID или пусто | сервис |
-| write_uuid | UUID или пусто | запись |
-| notify_uuid | UUID или пусто | notify, несколько значений через точку с запятой |
-| read_uuid | UUID или пусто | чтение |
-| auth | string | способ аутентификации |
-| encryption | string | шифрование и его источник |
-| source | string | файлы и классы |
-| confidence | confirmed, unresolved | уверенность |
-
-Инварианты:
-
-- app существует в manifests.json.
-- Пустые UUID допустимы только при отсутствии реализации провайдера.
-- notify_uuid может содержать несколько UUID через точку с запятой.
-- encryption не должен называть алгоритм, которого нет в APK.
-
-## 9. ble_commands.csv
-
-| Колонка | Тип | Значение |
-| --- | --- | --- |
-| app | string | идентификатор приложения |
-| command | string | имя команды |
-| builder | string | класс или индекс сборщика |
-| frame | string | структура payload до шифрования |
-| notes | string | параметры и ограничения |
-| source | string | файл и метод |
-| confidence | confirmed, unresolved | уверенность |
-
-Инварианты:
-
-- app существует в manifests.json.
-- frame описывает payload до za.f или до серверного шифрования.
-- Для Whoosh frame является зашифрованной строкой, а не plaintext.
-- Команда без подтверждённого кода не должна иметь confidence=confirmed.
-
-## 10. Проверка
+## 8. Проверка
 
 ```
 python references/verify_frames.py
@@ -329,17 +288,17 @@ validate_all.py проверяет:
 - суммы component_counts;
 - категории и риск разрешений;
 - типы компонентов;
-- соответствие app в uuids.csv, ble_map.csv и ble_commands.csv;
+- соответствие app в uuids.csv;
 - структуру frames.json;
 - вызов verify_frames.py.
 
-## 11. Добавление записи
+## 9. Добавление записи
 
 1. Выбрать уникальный id.
 2. Указать источник и уверенность.
 3. Не смешивать официальное приложение и сторонний клиент.
 4. Для APK обновить apks.csv, manifests.json, permissions.csv и components.csv.
-5. Для протокола обновить uuids.csv, ble_map.csv и ble_commands.csv.
+5. Для протокола обновить uuids.csv.
 6. Запустить validate_all.py.
 7. Не менять существующие id без причины.
 

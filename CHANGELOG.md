@@ -52,7 +52,7 @@
 
 ### Изменено
 
-- Удалены профили Whoosh и Yandex Go вместе с экраном операторов и настройками.
+- Удалены профили операторов, которые невозможно реализовать, вместе с экраном операторов и настройками.
 - Устройства без Nordic UART помечаются в списке и не запускают автопереподключение.
 - Версия 1.4.0 (7).
 
@@ -92,11 +92,10 @@
 - Документация docs, analysis и references.
 - Машиночитаемые opcodes.csv и frames.json.
 - Проверка кадров verify_frames.py.
-- Официальные base APK Urent 2.7.0, Whoosh 4.0.0 и Yandex Go 5.98.2 в references/apks через Git LFS.
-- Манифесты, разрешения и компоненты восьми приложений в manifests.json, permissions.csv и components.csv.
-- Карты UUID и BLE-команд в uuids.csv, ble_map.csv и ble_commands.csv.
+- Официальный base APK Urent 2.7.0 в references/apks через Git LFS.
+- Манифесты, разрешения и компоненты шести приложений в manifests.json, permissions.csv и components.csv.
+- Карта UUID в uuids.csv.
 - Проверка references/validate_all.py.
-- Отчёты report_whoosh.md и report_yandex_go.md.
 
 ### Исправлено
 

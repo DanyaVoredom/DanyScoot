@@ -1,6 +1,6 @@
 # Референсы DanyScoot: артефакты, протокол, ключи, официальное приложение Urent
 
-Сводный индекс. Детальный протокол: analysis/protocol_full.md. Официальное приложение: analysis/report_urent.md. Отчёты по отдельным APK: report_lostbot.md, report_ninehack.md, report_fishbot.md, report_whoosh.md, report_yandex_go.md. Независимые проверки: reverse_urent.md, reverse_whoosh.md, reverse_yandex.md.
+Сводный индекс. Детальный протокол: analysis/protocol_full.md. Официальное приложение: analysis/report_urent.md. Отчёты по отдельным APK: report_lostbot.md, report_ninehack.md, report_fishbot.md. Независимая проверка: reverse_urent.md.
 
 ## 1. Артефакты
 
@@ -13,10 +13,8 @@
 | urent.xapk | ru.urentbike.app | 2.7.0 (2070) | 117 800 904 | 22CA0CF66B22EA13E67953ED9158B1DA5508B668A91A17BA373C69513063ADBF | O=Urentbike, тот же сертификат | Официальное приложение, XAPK |
 | urent-1902 base APK | ru.urentbike.app | 1.90.2 | 68 207 063 | B42D28566AD4BCC600BBD7CFDF2D5197B2B0DA24B1291D217E80AFC7C0CF6B68 | O=Urentbike | База XAPK |
 | references/apks/urent-2.7.0-base.apk | ru.urentbike.app | 2.7.0 | 82 428 322 | 503007AC2D084F95100145BD9D77D69B991E337F2642FF362BBF7F4A5EB8B7C3 | O=Urentbike | База XAPK, ADB SM-A175F |
-| references/apks/whoosh-4.0.0-base.apk | com.punicapp.whoosh | 4.0.0 (418060) | 54 707 264 | 912079486F06E84581C92055C3E87DAF8C3CB11F55B8F81F41BA907ADDB53C29 | CN=Whoosh.Bike, SHA-256 12607A1082202FEAFAA03AC22A3814F9EC770D731D87C667CE9FCA7B164F6BAE | Официальное приложение, BLE-стек |
-| references/apks/yandex-go-5.98.2-base.apk | ru.yandex.taxi | 5.98.2 (50128633) | 192 834 008 | 27A75FDF62C9AB601BDDD89C6559E75231F868AC3F08FA463AE7A85D8B5C1862 | CN=OOO Yandex, SHA-256 ACA405DED8B25CB2E8C6DA69425D2B4307D087C1276FC06AD5942731CCC51DBA | Официальное приложение, Ninebot BLE-код |
 
-Источники официальных APK: APKPure для Urent 1.90.2; ADB SM-A175F для Urent 2.7.0, Whoosh 4.0.0 и Yandex Go 5.98.2. Дампы: analysis/LostBot, analysis/FishBot, analysis/NineHack; временные каталоги urent1902_dec, urent_dec, whoosh_dec, whoosh_jadx и yandex_dec.
+Источники официальных APK: APKPure для Urent 1.90.2; ADB SM-A175F для Urent 2.7.0. Дампы: analysis/LostBot, analysis/FishBot, analysis/NineHack; временные каталоги urent1902_dec и urent_dec.
 
 ## 2. Что подтверждено
 
@@ -90,15 +88,7 @@ rand у LostBot 0..254, у NineHack 1..254. CRC-8/MAXIM: poly 0x31 отраже�
 
 Следствие: из официального APK ключ BLE не извлекается, потому что BLE-кода и ключа там нет. Urent управляет замком через сервер, а не через прямой BLE. Для DanyScoot это означает, что w4S3Hqn5 и 4BKNwi77 остаются единственными известными кандидатами, а не гарантией для парка Urent.
 
-## 5. Whoosh и Yandex Go
-
-Whoosh 4.0.0 содержит пакеты bike.whoosh.shared.ble.library_client, library_client_offline, library_server и library_scanner. Клиент ищет сервис 00001c18 и характеристики 0000572a, 00003d2a, 00009f2a. Серверная спецификация использует стандартные 0000181c, 00002a57, 00002a3d, 00002a9f. Клиентские значения являются байтово переставленными версиями стандартных.
-
-Команда Whoosh является UTF-8 строкой. Ключ читается из 00003d2a с интервалом 500 мс. Шифрование выполняет backend через ClientBleCommandEncryptor и BleCommandRequestBody. В APK нет статического ключа и алгоритма шифрования. Успех определяется строкой CMD_EXE_SUCCESS, ошибка строкой CMD_EXE_ERROR. Повторов 3, задержка 500 мс. Подробнее: report_whoosh.md.
-
-Yandex Go 5.98.2 содержит пакет com.yandex.go.scooters.ble с Ninebot-протоколом. Команды: AUTH, LOCK, UNLOCK, SOUND, CABLE_UNLOCK, UNLOCK_BATTERY_COVER. Payload собирается классами nap0 и nep0, преобразуется через za.f, ответ проходит через za.g. UUID сервиса, write, notify и CCCD возвращает провайдер ghq0 и i2r0. В этой сборке fhq0.b() и h2r0.b() возвращают null, других реализаций и установки провайдера нет. Статические UUID и ключи отсутствуют. Подробнее: report_yandex_go.md.
-
-## 6. Расхождения и неизвестное
+## 5. Расхождения и неизвестное
 
 - XDDbot wiki иначе трактует поля ответа рукопожатия. LostBot и NineHack трактуют payload[0] как статус 1, payload[1] как sessionKey. Код APK важнее wiki; текущая реализация DanyScoot следует APK.
 - Неизвестно, какой ключ прошит в конкретном самокате пользователя. Проверка возможна только на hardware.

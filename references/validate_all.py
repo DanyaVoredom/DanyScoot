@@ -231,32 +231,6 @@ def main():
         if row["confidence"] not in {"confirmed", "unresolved"}:
             raise AssertionError(f"uuids.csv: confidence {row['app']}")
 
-    ble_map = read_csv(
-        "ble_map.csv",
-        [
-            "app",
-            "transport",
-            "service_uuid",
-            "write_uuid",
-            "notify_uuid",
-            "read_uuid",
-            "auth",
-            "encryption",
-            "source",
-            "confidence",
-        ],
-    )
-    for row in ble_map:
-        if row["app"] not in app_ids:
-            raise AssertionError(f"ble_map.csv: unknown app {row['app']}")
-
-    ble_commands = read_csv(
-        "ble_commands.csv",
-        ["app", "command", "builder", "frame", "notes", "source", "confidence"],
-    )
-    for row in ble_commands:
-        if row["app"] not in app_ids:
-            raise AssertionError(f"ble_commands.csv: unknown app {row['app']}")
 
     frames = json.loads((ROOT / "frames.json").read_text(encoding="utf-8"))
     for key in ("crc8", "crc16", "tx", "rx", "malformed"):
@@ -270,8 +244,6 @@ def main():
     print(f"components {len(components)}")
     print(f"opcodes {len(opcodes)}")
     print(f"uuids {len(uuids)}")
-    print(f"ble_map {len(ble_map)}")
-    print(f"ble_commands {len(ble_commands)}")
     print("ok")
 
 
