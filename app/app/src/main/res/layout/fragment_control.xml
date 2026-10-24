@@ -195,6 +195,66 @@
                         android:layout_marginStart="8dp"
                         android:text="@string/control_keybrute_stop" />
                 </LinearLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/keyBruteWordlistField"
+                    style="@style/InputField"
+                    android:layout_marginTop="8dp"
+                    android:hint="@string/control_keybrute_wordlist">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/keyBruteWordlist"
+                        style="@style/InputText"
+                        android:gravity="top|start"
+                        android:inputType="textMultiLine"
+                        android:minLines="2"
+                        android:maxLines="4" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/InputField"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:hint="@string/control_keybrute_charset">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/keyBruteCharset"
+                            style="@style/InputText"
+                            android:inputType="text" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/InputField"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:hint="@string/control_keybrute_length">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/keyBruteLength"
+                            style="@style/InputText"
+                            android:inputType="number" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/InputField"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:hint="@string/control_keybrute_interval">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/keyBruteInterval"
+                            style="@style/InputText"
+                            android:inputType="number" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

@@ -37,6 +37,10 @@ class ControlFragment : Fragment() {
         val prefs = Prefs.get(requireContext())
         b.keyInput.setText(prefs.bleKey)
         b.spamInterval.setText(String.format(Locale.ROOT, "%d", prefs.spamIntervalMs))
+        b.keyBruteWordlist.setText(prefs.keyBruteWordlist)
+        b.keyBruteCharset.setText(prefs.keyBruteCharset)
+        b.keyBruteLength.setText(String.format(Locale.ROOT, "%d", prefs.keyBruteLength))
+        b.keyBruteInterval.setText(String.format(Locale.ROOT, "%d", prefs.keyBruteIntervalMs))
 
         b.authButton.setOnClickListener { sendKey() }
         b.connectButton.setOnClickListener { connect() }
@@ -65,6 +69,7 @@ class ControlFragment : Fragment() {
         b.bruteStopButton.setOnClickListener { ScooterClient.stopKeyBrute() }
         b.keyBruteButton.setOnClickListener {
             saveKey()
+            saveBruteSettings()
             ScooterClient.startKeyStringBrute()
         }
         b.keyBruteStopButton.setOnClickListener { ScooterClient.stopKeyStringBrute() }
@@ -113,6 +118,19 @@ class ControlFragment : Fragment() {
     private fun sendKey() {
         saveKey()
         ScooterClient.authenticate()
+    }
+
+    private fun saveBruteSettings() {
+        val b = binding ?: return
+        val prefs = Prefs.get(requireContext())
+        prefs.keyBruteWordlist = b.keyBruteWordlist.text?.toString().orEmpty()
+        prefs.keyBruteCharset = b.keyBruteCharset.text?.toString().orEmpty()
+        prefs.keyBruteLength = b.keyBruteLength.text?.toString()?.trim()?.toIntOrNull() ?: Prefs.DEFAULT_BRUTE_LENGTH
+        prefs.keyBruteIntervalMs = b.keyBruteInterval.text?.toString()?.trim()?.toIntOrNull() ?: Prefs.DEFAULT_BRUTE_INTERVAL
+        b.keyBruteWordlist.setText(prefs.keyBruteWordlist)
+        b.keyBruteCharset.setText(prefs.keyBruteCharset)
+        b.keyBruteLength.setText(String.format(Locale.ROOT, "%d", prefs.keyBruteLength))
+        b.keyBruteInterval.setText(String.format(Locale.ROOT, "%d", prefs.keyBruteIntervalMs))
     }
 
     private fun connect() {

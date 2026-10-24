@@ -47,6 +47,14 @@ python tools/urent_probe.py --scan
 python tools/urent_probe.py --address AA:BB:CC:DD:EE:FF --mode auth --unlock
 ```
 
+Перебор ключей рукопожатия по словарю, затем по маске символов:
+
+```
+python tools/urent_probe.py --address AA:BB:CC:DD:EE:FF --mode auth --wordlist keys.txt --mask digits --length 4 --limit 20000 --unlock
+```
+
+Порядок кандидатов: `--key` и встроенные пресеты, затем словарь, затем маска. Файл словаря разбирается по строкам, запятым, точка с запятой и табуляции, дубликаты и пустые строки отбрасываются. Для `--mask` можно указать набор (`digits`, `lower`, `upper`, `alnum`) или явную строку символов. `--length` ограничен диапазоном 1..8, `--limit 0` означает перебор без ограничения. Ответ 0x01 с `payload[0] == 1` считается успехом, `payload[1]` содержит sessionKey.
+
 Обход авторизации, отправка unlock с key 0 и key 0x42:
 
 ```

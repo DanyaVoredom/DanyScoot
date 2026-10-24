@@ -56,6 +56,10 @@
     <string name="control_brute_stop">Стоп перебор</string>
     <string name="control_keybrute_start">Перебор ключей</string>
     <string name="control_keybrute_stop">Стоп ключей</string>
+    <string name="control_keybrute_wordlist">Словарь ключей</string>
+    <string name="control_keybrute_charset">Символы маски</string>
+    <string name="control_keybrute_length">Длина</string>
+    <string name="control_keybrute_interval">Пауза, мс</string>
 
     <string name="control_lock_section">Замок</string>
     <string name="control_unlock">Разблокировать</string>

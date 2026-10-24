@@ -53,6 +53,11 @@ object ScooterCodec {
     const val CMD_FW_STATUS = 0xFB
     const val CMD_FW_PACK = 0xFC
 
+    const val CHARSET_DIGITS = "0123456789"
+    const val CHARSET_LOWER = "abcdefghijklmnopqrstuvwxyz"
+    const val CHARSET_UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    const val CHARSET_ALNUM = CHARSET_LOWER + CHARSET_UPPER + CHARSET_DIGITS
+
     val KEY_PRESETS: List<String> = listOf("4BKNwi77", "w4S3Hqn5")
 
     private val LOCK_SUCCESS_STATUSES = setOf(0, 1, 2)
@@ -79,6 +84,39 @@ object ScooterCodec {
             addKeyCandidate(out, digits.takeLast(6).padStart(6, '0'))
         }
         return out.toList()
+    }
+
+    fun parseWordlist(text: String): List<String> =
+        text.split('\n', '\r', ',', ';', '\t')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+
+    fun keySequence(charset: String, length: Int): Sequence<String> = sequence {
+        val alphabet = charset.toCharArray().distinct()
+        if (alphabet.isEmpty() || length <= 0) return@sequence
+        val index = IntArray(length)
+        while (true) {
+            yield(String(CharArray(length) { alphabet[index[it]] }))
+            var pos = length - 1
+            while (pos >= 0) {
+                index[pos] += 1
+                if (index[pos] < alphabet.size) break
+                index[pos] = 0
+                pos -= 1
+            }
+            if (pos < 0) return@sequence
+        }
+    }
+
+    fun keySequenceCount(charset: String, length: Int): Long {
+        val alphabet = charset.toCharArray().distinct().size
+        if (alphabet == 0 || length <= 0) return 0L
+        var total = 1L
+        repeat(length) {
+            if (total > Long.MAX_VALUE / alphabet) return Long.MAX_VALUE
+            total *= alphabet
+        }
+        return total
     }
 
     private fun addKeyCandidate(out: MutableSet<String>, raw: String) {

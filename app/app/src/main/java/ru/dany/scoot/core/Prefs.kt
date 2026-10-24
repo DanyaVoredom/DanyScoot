@@ -204,6 +204,31 @@ class Prefs private constructor(context: Context) {
             sp.edit { putLong(KEY_REPORT_LAST_ERROR, value) }
         }
 
+    var keyBruteWordlist: String
+        get() = sp.getString(KEY_BRUTE_WORDLIST, "").orEmpty()
+        set(value) {
+            sp.edit { putString(KEY_BRUTE_WORDLIST, value) }
+        }
+
+    var keyBruteCharset: String
+        get() = sp.getString(KEY_BRUTE_CHARSET, DEFAULT_BRUTE_CHARSET)?.takeIf { it.isNotEmpty() } ?: DEFAULT_BRUTE_CHARSET
+        set(value) {
+            val v = value.trim().ifEmpty { DEFAULT_BRUTE_CHARSET }
+            sp.edit { putString(KEY_BRUTE_CHARSET, v) }
+        }
+
+    var keyBruteLength: Int
+        get() = sp.getInt(KEY_BRUTE_LENGTH, DEFAULT_BRUTE_LENGTH)
+        set(value) {
+            sp.edit { putInt(KEY_BRUTE_LENGTH, value.coerceIn(MIN_BRUTE_LENGTH, MAX_BRUTE_LENGTH)) }
+        }
+
+    var keyBruteIntervalMs: Int
+        get() = sp.getInt(KEY_BRUTE_INTERVAL, DEFAULT_BRUTE_INTERVAL)
+        set(value) {
+            sp.edit { putInt(KEY_BRUTE_INTERVAL, value.coerceIn(MIN_BRUTE_INTERVAL, MAX_BRUTE_INTERVAL)) }
+        }
+
     companion object {
         const val DEFAULT_BLE_KEY = "4BKNwi77"
         const val DEFAULT_SPAM_INTERVAL = 100
@@ -214,6 +239,13 @@ class Prefs private constructor(context: Context) {
         const val DEFAULT_THEME = "dark"
         const val DEFAULT_AI_BASE_URL = "https://api.openai.com/v1"
         const val DEFAULT_AI_MODEL = "gpt-4o-mini"
+        const val DEFAULT_BRUTE_CHARSET = "0123456789"
+        const val DEFAULT_BRUTE_LENGTH = 4
+        const val MIN_BRUTE_LENGTH = 1
+        const val MAX_BRUTE_LENGTH = 8
+        const val DEFAULT_BRUTE_INTERVAL = 150
+        const val MIN_BRUTE_INTERVAL = 20
+        const val MAX_BRUTE_INTERVAL = 10000
 
         private const val PREFS_NAME = "danyscoot_prefs"
         private const val LEGACY_PREFS_NAME = "danyurent_prefs"
@@ -245,6 +277,10 @@ class Prefs private constructor(context: Context) {
         private const val KEY_REPORT_LAST_UPLOAD = "report_last_upload"
         private const val KEY_REPORT_LAST_ID = "report_last_id"
         private const val KEY_REPORT_LAST_ERROR = "report_last_error_ms"
+        private const val KEY_BRUTE_WORDLIST = "key_brute_wordlist"
+        private const val KEY_BRUTE_CHARSET = "key_brute_charset"
+        private const val KEY_BRUTE_LENGTH = "key_brute_length"
+        private const val KEY_BRUTE_INTERVAL = "key_brute_interval_ms"
 
         @Volatile
         private var instance: Prefs? = null
