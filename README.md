@@ -2,7 +2,7 @@
 
 Android-приложение для BLE-устройств: электросамокаты Urent с Nordic UART и гарнитуры Edifier. Протокол самоката восстановлен по референсным APK из каталога references: LostBot, FishBot, NineHack, а также по официальному Urent. Приложение объединяет транспорт и телеметрию LostBot с командами и семантикой NineHack, поддерживает произвольные GATT-устройства и содержит AI-ассистента с вызовом BLE-инструментов.
 
-Пакет: ru.dany.scoot. Версия: 1.5.0 (8). Минимальная Android: 6.0 (API 23). Целевая: Android 15 (API 35).
+Пакет: ru.dany.scoot. Версия: 1.6.0 (10). Минимальная Android: 6.0 (API 23). Целевая: Android 15 (API 35).
 
 ## Быстрый старт
 
@@ -38,8 +38,8 @@ cd app
 Релиз по тегу:
 
 ```
-git tag v1.5.0
-git push origin v1.5.0
+git tag v1.6.0
+git push origin v1.6.0
 ```
 
 GitHub Actions соберет APK по .github/workflows/release.yml и приложит его к релизу GitHub. Перед тегом обновить versionCode и versionName.
