@@ -172,12 +172,6 @@ class SettingsFragment : Fragment() {
                 b.settingsAutoReconnectDelay.setText(String.format(Locale.ROOT, "%d", prefs.autoReconnectDelayMs))
             }
         }
-        b.settingsAiBaseUrl.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus && !loading) b.settingsAiBaseUrl.setText(prefs.aiBaseUrl)
-        }
-        b.settingsAiModel.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus && !loading) b.settingsAiModel.setText(prefs.aiModel)
-        }
         b.settingsAutoReconnect.setOnCheckedChangeListener { _, checked ->
             if (!loading) prefs.autoReconnect = checked
         }

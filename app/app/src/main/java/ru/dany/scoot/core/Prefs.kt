@@ -139,10 +139,9 @@ class Prefs private constructor(context: Context) {
         }
 
     var aiBaseUrl: String
-        get() = sp.getString(KEY_AI_BASE_URL, DEFAULT_AI_BASE_URL)?.ifEmpty { DEFAULT_AI_BASE_URL }
-            ?: DEFAULT_AI_BASE_URL
+        get() = sp.getString(KEY_AI_BASE_URL, null) ?: DEFAULT_AI_BASE_URL
         set(value) {
-            sp.edit { putString(KEY_AI_BASE_URL, value.trim().ifEmpty { DEFAULT_AI_BASE_URL }) }
+            sp.edit { putString(KEY_AI_BASE_URL, value) }
         }
 
     var aiApiKey: String
@@ -152,10 +151,9 @@ class Prefs private constructor(context: Context) {
         }
 
     var aiModel: String
-        get() = sp.getString(KEY_AI_MODEL, DEFAULT_AI_MODEL)?.ifEmpty { DEFAULT_AI_MODEL }
-            ?: DEFAULT_AI_MODEL
+        get() = sp.getString(KEY_AI_MODEL, null) ?: DEFAULT_AI_MODEL
         set(value) {
-            sp.edit { putString(KEY_AI_MODEL, value.trim().ifEmpty { DEFAULT_AI_MODEL }) }
+            sp.edit { putString(KEY_AI_MODEL, value) }
         }
 
     var aiFormat: String

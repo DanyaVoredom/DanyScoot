@@ -844,7 +844,6 @@ object ScooterClient : BleTransport.Listener {
             processFrame(data)
             return
         }
-        LogBus.verbose("RX", "${shortUuid(uuid)}: ${hex(data)}")
         appendNotification(uuid, data)
         updateRemote(uuid, data)
     }
@@ -973,7 +972,6 @@ object ScooterClient : BleTransport.Listener {
     }
 
     private fun handleFrame(frame: ScooterFrame) {
-        LogBus.verbose("RX", "CMD=${hexByte(frame.cmd)} ${hex(frame.raw)}")
         when (frame.cmd) {
             ScooterCodec.CMD_KEY -> handleAuthFrame(frame)
             ScooterCodec.CMD_ERROR -> {
