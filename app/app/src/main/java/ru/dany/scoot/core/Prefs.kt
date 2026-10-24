@@ -139,7 +139,7 @@ class Prefs private constructor(context: Context) {
         }
 
     var aiBaseUrl: String
-        get() = sp.getString(KEY_AI_BASE_URL, null) ?: DEFAULT_AI_BASE_URL
+        get() = sp.getString(KEY_AI_BASE_URL, null)?.takeIf { it.isNotBlank() } ?: DEFAULT_AI_BASE_URL
         set(value) {
             sp.edit { putString(KEY_AI_BASE_URL, value) }
         }
@@ -151,7 +151,7 @@ class Prefs private constructor(context: Context) {
         }
 
     var aiModel: String
-        get() = sp.getString(KEY_AI_MODEL, null) ?: DEFAULT_AI_MODEL
+        get() = sp.getString(KEY_AI_MODEL, null)?.takeIf { it.isNotBlank() } ?: DEFAULT_AI_MODEL
         set(value) {
             sp.edit { putString(KEY_AI_MODEL, value) }
         }

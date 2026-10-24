@@ -49,7 +49,8 @@ object DiagnosticsReport {
         text.append("state: ").append(ScooterClient.state.value.name).append('\n')
         text.append("kind: ").append(kind.name).append('\n')
         text.append("device: ").append(Redactor.text(ScooterClient.deviceName, secrets)).append('\n')
-        text.append("address: ").append(Redactor.address(ScooterClient.deviceAddress)).append('\n')
+        val address = ScooterClient.deviceAddress
+        text.append("address: ").append(if (address.isBlank()) "none" else Redactor.address(address)).append('\n')
         text.append("profile_service: ").append(shortUuid(profile.service)).append('\n')
         text.append("profile_write: ").append(shortUuid(profile.write)).append('\n')
         text.append("profile_notify: ").append(shortUuid(profile.notify)).append('\n')

@@ -205,6 +205,10 @@ object UpdateManager {
                 }
             }
             if (copied <= 0) throw IOException("пустой файл")
+            if (release.size > 0 && temp.length() != release.size) {
+                temp.delete()
+                throw IOException("размер файла не совпадает с релизом")
+            }
         } finally {
             connection.disconnect()
         }
