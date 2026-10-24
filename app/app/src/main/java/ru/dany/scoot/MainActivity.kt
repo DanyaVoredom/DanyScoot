@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        binding.root.applyEdgeToEdgeInsets()
+        binding.root.applyEdgeToEdgeInsets(binding.bottomNav)
         requestPermissionsIfNeeded()
         setupFragments(savedInstanceState)
         handleIntent(intent)

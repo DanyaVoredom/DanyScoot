@@ -7,7 +7,7 @@ import androidx.core.view.WindowInsetsAnimationCompat
 import androidx.core.view.WindowInsetsCompat
 import kotlin.math.max
 
-fun View.applyEdgeToEdgeInsets() {
+fun View.applyEdgeToEdgeInsets(hideOnIme: View? = null) {
     var pending = false
 
     fun scheduleScroll() {
@@ -23,8 +23,15 @@ fun View.applyEdgeToEdgeInsets() {
         val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
         val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
         val cutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
-        setPadding(cutout.left, max(bars.top, cutout.top), cutout.right, max(bars.bottom, ime.bottom))
-        if (insets.isVisible(WindowInsetsCompat.Type.ime())) scheduleScroll()
+        val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+        setPadding(
+            cutout.left,
+            max(bars.top, cutout.top),
+            cutout.right,
+            if (imeVisible) max(bars.bottom, ime.bottom) else bars.bottom,
+        )
+        hideOnIme?.visibility = if (imeVisible) View.GONE else View.VISIBLE
+        if (imeVisible) scheduleScroll()
     }
 
     ViewCompat.setOnApplyWindowInsetsListener(this) { _, insets ->
