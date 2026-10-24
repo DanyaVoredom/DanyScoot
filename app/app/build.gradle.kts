@@ -11,8 +11,8 @@ android {
         applicationId = "ru.dany.scoot"
         minSdk = 23
         targetSdk = 35
-        versionCode = 12
-        versionName = "1.8.0"
+        versionCode = 13
+        versionName = "1.8.1"
     }
 
     signingConfigs {
