@@ -290,6 +290,80 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <TextView style="@style/SectionHeader" android:text="@string/settings_reports" />
+
+        <com.google.android.material.card.MaterialCardView style="@style/CardBlock">
+
+            <LinearLayout style="@style/CardBody">
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/settingsReportUpload"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_report_upload"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/InputField"
+                    android:layout_marginTop="8dp"
+                    android:hint="@string/settings_report_url">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/settingsReportUrl"
+                        style="@style/InputText"
+                        android:inputType="textUri" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/InputField"
+                    android:layout_marginTop="8dp"
+                    android:hint="@string/settings_report_token">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/settingsReportToken"
+                        style="@style/InputText"
+                        android:inputType="textPassword" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/settingsReportWifi"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="@string/settings_report_wifi"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <TextView
+                    android:id="@+id/settingsReportStatus"
+                    style="@style/RowLabel"
+                    android:paddingTop="4dp"
+                    android:text="@string/settings_report_restriction" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/settingsReportSend"
+                        style="@style/ActionButton"
+                        android:text="@string/settings_report_send" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/settingsReportRetry"
+                        style="@style/ActionButton"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/settings_report_retry" />
+                </LinearLayout>
+
+                <TextView
+                    style="@style/RowLabel"
+                    android:paddingTop="8dp"
+                    android:text="@string/settings_report_redaction" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <TextView
             android:id="@+id/settingsAutosave"
             style="@style/RowLabel"

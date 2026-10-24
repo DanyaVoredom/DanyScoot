@@ -117,6 +117,35 @@
     <string name="log_copied">Лог скопирован</string>
     <string name="log_line_copied">Строка скопирована</string>
     <string name="log_copy_hint">Удерживайте строку, чтобы скопировать её отдельно</string>
+    <string name="log_level_all">Все</string>
+    <string name="log_level_verbose">V</string>
+    <string name="log_level_debug">D</string>
+    <string name="log_level_info">I</string>
+    <string name="log_level_tx">TX</string>
+    <string name="log_level_rx">RX</string>
+    <string name="log_level_ok">OK</string>
+    <string name="log_level_warn">WARN</string>
+    <string name="log_level_err">ERR</string>
+    <string name="log_filter_tag">Фильтр по тегу</string>
+    <string name="log_export">Экспорт</string>
+    <string name="log_copy_environment">Окружение</string>
+    <string name="log_report">Отчёт</string>
+    <string name="log_report_upload">Загрузить</string>
+    <string name="log_shared">Лог готов к отправке</string>
+    <string name="environment_copied">Окружение скопировано</string>
+    <string name="share_title">Отправить</string>
+
+    <string name="report_created">Отчёт создан</string>
+    <string name="report_upload_idle">Загрузка отчётов не выполнялась</string>
+    <string name="report_upload_waiting">Загрузка отложена: лимит раз в сутки или нет Wi-Fi</string>
+    <string name="report_uploading">Отправка отчёта…</string>
+    <string name="report_upload_success">Отчёт загружен, ID %1$s</string>
+    <string name="report_upload_failed">Ошибка загрузки: %1$s</string>
+    <string name="report_last_id">Последний отчёт: %1$s</string>
+    <string name="report_upload_disabled">Загрузка отчётов выключена</string>
+    <string name="report_upload_no_url">Укажите URL сервера отчётов</string>
+    <string name="report_queued">Отчёт поставлен в очередь</string>
+    <string name="report_pending">В очереди: %1$d</string>
 
     <string name="settings_appearance">Оформление</string>
     <string name="settings_theme">Тема</string>
@@ -158,6 +187,15 @@
     <string name="ai_format_anthropic">Anthropic</string>
 
     <string name="settings_updates">Обновления</string>
+    <string name="settings_reports">Диагностика</string>
+    <string name="settings_report_upload">Автоматически отправлять отчёты</string>
+    <string name="settings_report_url">URL сервера отчётов</string>
+    <string name="settings_report_token">Токен сервера</string>
+    <string name="settings_report_wifi">Отправлять только через Wi-Fi</string>
+    <string name="settings_report_send">Отправить отчёт сейчас</string>
+    <string name="settings_report_retry">Повторить отправку</string>
+    <string name="settings_report_restriction">Не чаще одного раза в сутки</string>
+    <string name="settings_report_redaction">Адреса BLE, серийные номера, ключи и токены удаляются из отчёта</string>
     <string name="settings_auto_update">Проверять обновления при запуске</string>
     <string name="settings_check_update">Проверить обновление</string>
     <string name="settings_install_update">Установить обновление</string>

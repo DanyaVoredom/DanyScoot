@@ -164,6 +164,48 @@ class Prefs private constructor(context: Context) {
             sp.edit { putString(KEY_AI_FORMAT, value) }
         }
 
+    var reportUploadEnabled: Boolean
+        get() = sp.getBoolean(KEY_REPORT_ENABLED, false)
+        set(value) {
+            sp.edit { putBoolean(KEY_REPORT_ENABLED, value) }
+        }
+
+    var reportServerUrl: String
+        get() = sp.getString(KEY_REPORT_URL, "").orEmpty()
+        set(value) {
+            sp.edit { putString(KEY_REPORT_URL, value.trim()) }
+        }
+
+    var reportToken: String
+        get() = sp.getString(KEY_REPORT_TOKEN, "").orEmpty()
+        set(value) {
+            sp.edit { putString(KEY_REPORT_TOKEN, value.trim()) }
+        }
+
+    var reportWifiOnly: Boolean
+        get() = sp.getBoolean(KEY_REPORT_WIFI_ONLY, true)
+        set(value) {
+            sp.edit { putBoolean(KEY_REPORT_WIFI_ONLY, value) }
+        }
+
+    var reportLastUpload: Long
+        get() = sp.getLong(KEY_REPORT_LAST_UPLOAD, 0L)
+        set(value) {
+            sp.edit { putLong(KEY_REPORT_LAST_UPLOAD, value) }
+        }
+
+    var reportLastId: String
+        get() = sp.getString(KEY_REPORT_LAST_ID, "").orEmpty()
+        set(value) {
+            sp.edit { putString(KEY_REPORT_LAST_ID, value) }
+        }
+
+    var reportLastErrorMs: Long
+        get() = sp.getLong(KEY_REPORT_LAST_ERROR, 0L)
+        set(value) {
+            sp.edit { putLong(KEY_REPORT_LAST_ERROR, value) }
+        }
+
     companion object {
         const val DEFAULT_BLE_KEY = "4BKNwi77"
         const val DEFAULT_SPAM_INTERVAL = 100
@@ -198,6 +240,13 @@ class Prefs private constructor(context: Context) {
         private const val KEY_AI_API_KEY = "ai_api_key"
         private const val KEY_AI_MODEL = "ai_model"
         private const val KEY_AI_FORMAT = "ai_format"
+        private const val KEY_REPORT_ENABLED = "report_upload_enabled"
+        private const val KEY_REPORT_URL = "report_server_url"
+        private const val KEY_REPORT_TOKEN = "report_token"
+        private const val KEY_REPORT_WIFI_ONLY = "report_wifi_only"
+        private const val KEY_REPORT_LAST_UPLOAD = "report_last_upload"
+        private const val KEY_REPORT_LAST_ID = "report_last_id"
+        private const val KEY_REPORT_LAST_ERROR = "report_last_error_ms"
 
         @Volatile
         private var instance: Prefs? = null

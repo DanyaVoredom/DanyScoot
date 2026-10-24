@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -35,10 +36,145 @@
             android:text="@string/log_clear" />
     </LinearLayout>
 
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="4dp"
+        android:scrollbars="none">
+
+        <com.google.android.material.chip.ChipGroup
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:singleLine="true"
+            app:singleSelection="true">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/levelAll"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="@string/log_level_all" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/levelVerbose"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/log_level_verbose" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/levelDebug"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/log_level_debug" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/levelInfo"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/log_level_info" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/levelTx"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/log_level_tx" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/levelRx"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/log_level_rx" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/levelOk"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/log_level_ok" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/levelWarn"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/log_level_warn" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/levelErr"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/log_level_err" />
+        </com.google.android.material.chip.ChipGroup>
+    </HorizontalScrollView>
+
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/InputField"
+        android:layout_marginTop="4dp"
+        android:hint="@string/log_filter_tag">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/logTagFilter"
+            style="@style/InputText"
+            android:imeOptions="actionDone"
+            android:inputType="text" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="6dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/exportLog"
+            style="@style/ActionButton"
+            android:text="@string/log_export" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/copyEnvironment"
+            style="@style/ActionButton"
+            android:layout_marginStart="8dp"
+            android:text="@string/log_copy_environment" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="6dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/createReport"
+            style="@style/ActionButton"
+            android:text="@string/log_report" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/reportUpload"
+            style="@style/ActionButton"
+            android:layout_marginStart="8dp"
+            android:text="@string/log_report_upload" />
+    </LinearLayout>
+
     <TextView
+        android:id="@+id/reportStatus"
         style="@style/RowLabel"
         android:layout_width="match_parent"
         android:paddingTop="4dp"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:text="@string/report_upload_idle" />
+
+    <TextView
+        style="@style/RowLabel"
+        android:layout_width="match_parent"
+        android:paddingTop="2dp"
         android:paddingStart="4dp"
         android:paddingEnd="4dp"
         android:text="@string/log_copy_hint" />

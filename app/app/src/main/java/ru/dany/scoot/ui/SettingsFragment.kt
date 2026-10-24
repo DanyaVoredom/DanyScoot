@@ -19,8 +19,10 @@ import ru.dany.scoot.R
 import ru.dany.scoot.ai.AiFormat
 import ru.dany.scoot.ble.DeviceSort
 import ru.dany.scoot.ble.ScooterCodec
+import ru.dany.scoot.core.DiagnosticsReport
 import ru.dany.scoot.core.LogBus
 import ru.dany.scoot.core.Prefs
+import ru.dany.scoot.core.ReportUploader
 import ru.dany.scoot.core.ScooterClient
 import ru.dany.scoot.core.UpdateManager
 import ru.dany.scoot.databinding.FragmentSettingsBinding
@@ -60,6 +62,8 @@ class SettingsFragment : Fragment() {
             LogBus.info("SETTINGS", "Выбран ключ LostBot")
         }
         b.updateCheck.setOnClickListener { checkOrInstall() }
+        b.settingsReportSend.setOnClickListener { sendReport() }
+        b.settingsReportRetry.setOnClickListener { retryReport() }
         b.settingsSort.setOnClickListener { showSortDialog() }
         b.settingsAiFormat.setOnClickListener { showAiFormatDialog() }
         b.settingsAiOpen.setOnClickListener {
@@ -69,7 +73,8 @@ class SettingsFragment : Fragment() {
         setupAutosave()
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                UpdateManager.status.collect { renderUpdate(it) }
+                launch { UpdateManager.status.collect { renderUpdate(it) } }
+                launch { ReportUploader.status.collect { renderReport(it) } }
             }
         }
         loadPrefs()
@@ -197,6 +202,51 @@ class SettingsFragment : Fragment() {
         b.settingsAutoUpdate.setOnCheckedChangeListener { _, checked ->
             if (!loading) prefs.autoUpdate = checked
         }
+        b.settingsReportUpload.setOnCheckedChangeListener { _, checked ->
+            if (!loading) prefs.reportUploadEnabled = checked
+        }
+        b.settingsReportWifi.setOnCheckedChangeListener { _, checked ->
+            if (!loading) prefs.reportWifiOnly = checked
+        }
+        b.settingsReportUrl.doAfterTextChanged { text ->
+            if (!loading) prefs.reportServerUrl = text?.toString().orEmpty()
+        }
+        b.settingsReportToken.doAfterTextChanged { text ->
+            if (!loading) prefs.reportToken = text?.toString().orEmpty()
+        }
+        b.settingsReportUrl.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus && !loading) b.settingsReportUrl.setText(prefs.reportServerUrl)
+        }
+        b.settingsReportToken.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus && !loading) b.settingsReportToken.setText(prefs.reportToken)
+        }
+    }
+
+    private fun sendReport() {
+        val context = requireContext()
+        val report = DiagnosticsReport.build(context)
+        val message = ReportUploader.enqueue(context, report)
+        Toast.makeText(context, message ?: getString(R.string.report_queued), Toast.LENGTH_SHORT).show()
+    }
+
+    private fun retryReport() {
+        ReportUploader.retry(requireContext())
+    }
+
+    private fun renderReport(status: ReportUploader.Status) {
+        val b = binding ?: return
+        val prefs = Prefs.get(requireContext())
+        val pending = ReportUploader.pendingCount(requireContext())
+        val base = when (status) {
+            ReportUploader.Status.Idle -> getString(R.string.report_upload_idle)
+            ReportUploader.Status.Waiting -> getString(R.string.report_upload_waiting)
+            ReportUploader.Status.Uploading -> getString(R.string.report_uploading)
+            is ReportUploader.Status.Success -> getString(R.string.report_upload_success, status.id)
+            is ReportUploader.Status.Failed -> getString(R.string.report_upload_failed, status.message)
+        }
+        val last = prefs.reportLastId.takeIf { it.isNotEmpty() }?.let { getString(R.string.report_last_id, it) }
+        val parts = listOfNotNull(base, last, if (pending > 0) getString(R.string.report_pending, pending) else null)
+        b.settingsReportStatus.text = parts.joinToString("\n")
     }
 
     private fun checkOrInstall() {
@@ -275,10 +325,15 @@ class SettingsFragment : Fragment() {
         b.settingsAiApiKey.setText(prefs.aiApiKey)
         b.settingsAiModel.setText(prefs.aiModel)
         b.settingsAutoUpdate.isChecked = prefs.autoUpdate
+        b.settingsReportUpload.isChecked = prefs.reportUploadEnabled
+        b.settingsReportWifi.isChecked = prefs.reportWifiOnly
+        b.settingsReportUrl.setText(prefs.reportServerUrl)
+        b.settingsReportToken.setText(prefs.reportToken)
         renderSort(prefs)
         renderAiFormat(prefs)
         loading = false
         renderUpdate(UpdateManager.status.value)
+        renderReport(ReportUploader.status.value)
     }
 
     override fun onDestroyView() {
