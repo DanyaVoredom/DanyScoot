@@ -495,7 +495,10 @@ class BleTransport(private val context: Context) {
         if (g !== gatt || closing) return
         if (uuid != profile.cccd) return
         if (servicesReady) {
-            if (status != BluetoothGatt.GATT_SUCCESS) listener?.onError("Descriptor write failed: $status")
+            if (status != BluetoothGatt.GATT_SUCCESS) {
+                if ((status == 5 || status == 8 || status == 15) && startBonding(g)) return
+                listener?.onError("Descriptor write failed: $status")
+            }
             return
         }
         val char = cccdActive
@@ -652,6 +655,9 @@ class BleTransport(private val context: Context) {
         }
         if (bondState == BluetoothDevice.BOND_BONDED) return false
         bondRequested = true
+        handler.removeCallbacks(discoveryTimeout)
+        handler.removeCallbacks(discoverFallback)
+        handler.removeCallbacks(rediscover)
         registerBondReceiver()
         handler.removeCallbacks(bondTimeout)
         handler.postDelayed(bondTimeout, BOND_TIMEOUT_MS)
