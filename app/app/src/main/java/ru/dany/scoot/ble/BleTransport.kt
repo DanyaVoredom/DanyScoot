@@ -503,6 +503,7 @@ class BleTransport(private val context: Context) {
         descriptorPending = false
         handler.removeCallbacks(descriptorTimeout)
         if (status != BluetoothGatt.GATT_SUCCESS) {
+            if ((status == 5 || status == 8 || status == 15) && startBonding(g)) return
             if (char != null && char.uuid == notifyChar?.uuid) {
                 failAndClose("Notification descriptor write failed: $status")
                 return
@@ -517,6 +518,11 @@ class BleTransport(private val context: Context) {
         if (currentWriteWithoutResponse) return
         handler.removeCallbacks(writeTimeout)
         if (status != BluetoothGatt.GATT_SUCCESS) {
+            if ((status == 5 || status == 8 || status == 15) && startBonding(g)) {
+                writeQueue.clear()
+                writeBusy = false
+                return
+            }
             listener?.onError("Write failed: $status")
             writeQueue.clear()
             writeBusy = false
@@ -528,6 +534,7 @@ class BleTransport(private val context: Context) {
     private fun handleCharacteristicRead(g: BluetoothGatt, uuid: UUID, value: ByteArray, status: Int) {
         if (g !== gatt) return
         if (status != BluetoothGatt.GATT_SUCCESS) {
+            if ((status == 5 || status == 8 || status == 15) && startBonding(g)) return
             listener?.onError("Read ${shortUuid(uuid)} failed: $status")
             return
         }
