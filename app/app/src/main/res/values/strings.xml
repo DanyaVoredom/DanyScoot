@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">DanyScoot</string>
+    <string name="cancel">Отмена</string>
+    <string name="perm_denied_title">Нужны разрешения</string>
+    <string name="perm_denied_message">Без разрешений Bluetooth приложение не сможет искать и подключать устройства. Выдайте разрешения в настройках приложения.</string>
+    <string name="perm_denied_open">Открыть настройки</string>
 
     <string name="tab_devices">Устройства</string>
     <string name="tab_control">Управление</string>

@@ -16,7 +16,10 @@ import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Build
@@ -80,6 +83,9 @@ class BleTransport(private val context: Context) {
         private const val GATT_CLOSE_DELAY_MS = 150L
         private const val DISCOVER_FALLBACK_MS = 3000L
         private const val REDISCOVER_DELAY_MS = 800L
+        private const val MAX_REDISCOVER = 3
+        private const val BOND_TIMEOUT_MS = 20000L
+        private const val BOND_RECONNECT_DELAY_MS = 600L
         private const val DISCOVERY_TIMEOUT_MS = 12000L
     }
 
@@ -107,7 +113,9 @@ class BleTransport(private val context: Context) {
     private var servicesReady = false
     private var descriptorPending = false
     private var closing = false
-    private var rediscoveryTried = false
+    private var rediscoverCount = 0
+    private var bondRequested = false
+    private var bondReceiverActive = false
     private var failureFatal = false
     private var gattAddress = ""
     private val subscribed = LinkedHashSet<UUID>()
@@ -292,7 +300,8 @@ class BleTransport(private val context: Context) {
             status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED -> {
                 connected = true
                 failureFatal = false
-                rediscoveryTried = false
+                rediscoverCount = 0
+                bondRequested = false
                 handler.removeCallbacks(connectTimeout)
                 listener?.onConnected()
                 try {
@@ -312,6 +321,7 @@ class BleTransport(private val context: Context) {
                 val reason = "GATT status $status (${gattStatusText(status)})"
                 failureFatal = status == 5 || status == 8 || status == 15
                 listener?.onError(reason)
+                if ((status == 5 || status == 8 || status == 15) && startBonding(g)) return
                 if (status == GATT_ERROR || status == 147) {
                     closing = true
                     handler.postDelayed({ closeGatt(g) }, GATT_CLOSE_DELAY_MS)
@@ -342,6 +352,13 @@ class BleTransport(private val context: Context) {
         if (g !== gatt || closing || servicesReady || descriptorPending) return
         handler.removeCallbacks(discoverFallback)
         if (status != BluetoothGatt.GATT_SUCCESS) {
+            if ((status == 5 || status == 8 || status == 15) && startBonding(g)) return
+            if (rediscoverCount < MAX_REDISCOVER) {
+                rediscoverCount += 1
+                handler.removeCallbacks(rediscover)
+                handler.postDelayed(rediscover, REDISCOVER_DELAY_MS)
+                return
+            }
             failAndClose("Service discovery failed: $status")
             return
         }
@@ -360,8 +377,8 @@ class BleTransport(private val context: Context) {
                 extras = emptyList()
                 listener?.onError("Профиль не найден, используется GATT ${shortUuid(auto.first.uuid)} / ${shortUuid(auto.second.uuid)}")
             } else {
-                if (service == null && !rediscoveryTried) {
-                    rediscoveryTried = true
+                if (service == null && rediscoverCount < MAX_REDISCOVER) {
+                    rediscoverCount += 1
                     handler.removeCallbacks(rediscover)
                     handler.postDelayed(rediscover, REDISCOVER_DELAY_MS)
                     return
@@ -560,6 +577,118 @@ class BleTransport(private val context: Context) {
         listener?.onDisconnected(message)
     }
 
+    private val bondTimeout = Runnable {
+        if (bondRequested) {
+            bondRequested = false
+            unregisterBondReceiver()
+            failAndClose("Bond timeout", fatal = true)
+        }
+    }
+
+    private val bondReceiver = object : BroadcastReceiver() {
+        override fun onReceive(ctx: Context, intent: Intent) {
+            if (intent.action != BluetoothDevice.ACTION_BOND_STATE_CHANGED) return
+            val device = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+            } ?: return
+            val address = try {
+                device.address
+            } catch (e: SecurityException) {
+                return
+            }
+            if (gattAddress.isNotEmpty() && address != gattAddress) return
+            val state = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.BOND_NONE)
+            when (state) {
+                BluetoothDevice.BOND_BONDED -> {
+                    if (!bondRequested) return
+                    bondRequested = false
+                    handler.removeCallbacks(bondTimeout)
+                    unregisterBondReceiver()
+                    val addr = gattAddress
+                    listener?.onError("Спаривание завершено, переподключение")
+                    closeGatt()
+                    if (addr.isNotEmpty()) {
+                        handler.postDelayed({ connect(addr) }, BOND_RECONNECT_DELAY_MS)
+                    }
+                }
+                BluetoothDevice.BOND_NONE -> {
+                    val prev = intent.getIntExtra(
+                        BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE,
+                        BluetoothDevice.BOND_NONE,
+                    )
+                    if (bondRequested && prev == BluetoothDevice.BOND_BONDING) {
+                        bondRequested = false
+                        handler.removeCallbacks(bondTimeout)
+                        unregisterBondReceiver()
+                        failAndClose("Спаривание отклонено", fatal = true)
+                    }
+                }
+            }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun startBonding(g: BluetoothGatt): Boolean {
+        if (bondRequested) return true
+        val device = try {
+            g.device
+        } catch (e: SecurityException) {
+            null
+        } ?: return false
+        val bondState = try {
+            device.bondState
+        } catch (e: SecurityException) {
+            BluetoothDevice.BOND_NONE
+        }
+        if (bondState == BluetoothDevice.BOND_BONDED) return false
+        bondRequested = true
+        registerBondReceiver()
+        handler.removeCallbacks(bondTimeout)
+        handler.postDelayed(bondTimeout, BOND_TIMEOUT_MS)
+        if (bondState != BluetoothDevice.BOND_BONDING) {
+            val ok = try {
+                device.createBond()
+            } catch (e: SecurityException) {
+                false
+            }
+            if (!ok) {
+                bondRequested = false
+                handler.removeCallbacks(bondTimeout)
+                unregisterBondReceiver()
+                listener?.onError("Не удалось запросить спаривание")
+                return false
+            }
+        }
+        listener?.onError("Требуется спаривание, подтвердите на устройстве")
+        return true
+    }
+
+    private fun registerBondReceiver() {
+        if (bondReceiverActive) return
+        val filter = IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.registerReceiver(bondReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            } else {
+                context.registerReceiver(bondReceiver, filter)
+            }
+            bondReceiverActive = true
+        } catch (e: SecurityException) {
+        }
+    }
+
+    private fun unregisterBondReceiver() {
+        if (!bondReceiverActive) return
+        bondReceiverActive = false
+        try {
+            context.unregisterReceiver(bondReceiver)
+        } catch (e: Exception) {
+        }
+    }
+
     private fun findAutoPair(g: BluetoothGatt): Pair<BluetoothGattCharacteristic, BluetoothGattCharacteristic>? {
         val services = try {
             g.services
@@ -749,7 +878,8 @@ class BleTransport(private val context: Context) {
         stopScan()
         closeGatt()
         failureFatal = false
-        rediscoveryTried = false
+        rediscoverCount = 0
+        bondRequested = false
         gattAddress = address
         val device = try {
             a.getRemoteDevice(address)
@@ -964,11 +1094,14 @@ class BleTransport(private val context: Context) {
             servicesReady = false
             descriptorPending = false
             closing = false
+            bondRequested = false
+            rediscoverCount = 0
             mtu = 23
             writeWithoutResponse = false
             subscribed.clear()
             cccdQueue.clear()
             cccdActive = null
+            unregisterBondReceiver()
             handler.removeCallbacks(writeTimeout)
             handler.removeCallbacks(discoverFallback)
             handler.removeCallbacks(rediscover)

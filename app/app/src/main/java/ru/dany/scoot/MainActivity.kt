@@ -4,11 +4,14 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
@@ -33,6 +36,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var fragments: Array<Fragment>
     private var currentTab = 0
+    private var permissionsRequested = false
+    private var settingsDialogShown = false
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -40,6 +45,8 @@ class MainActivity : AppCompatActivity() {
         val denied = result.filterValues { !it }.keys
         if (denied.isNotEmpty()) {
             LogBus.warn("APP", "Разрешения не выданы: ${denied.joinToString()}")
+            val permanent = denied.filter { !shouldShowRequestPermissionRationale(it) }
+            if (permanent.isNotEmpty()) showPermissionSettings()
         }
     }
 
@@ -50,7 +57,6 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.root.applyEdgeToEdgeInsets(binding.bottomNav)
-        requestPermissionsIfNeeded()
         setupFragments(savedInstanceState)
         handleIntent(intent)
         binding.aiButton.setOnClickListener {
@@ -71,9 +77,10 @@ class MainActivity : AppCompatActivity() {
         if (!ScooterClient.bluetoothSupported()) {
             Toast.makeText(this, getString(R.string.bt_not_supported), Toast.LENGTH_LONG).show()
         }
+        requestPermissionsIfNeeded()
     }
 
-    private fun requestPermissionsIfNeeded() {
+    private fun requiredPermissions(): List<String> {
         val wanted = ArrayList<String>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             wanted.add(Manifest.permission.BLUETOOTH_SCAN)
@@ -85,12 +92,59 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             wanted.add(Manifest.permission.POST_NOTIFICATIONS)
         }
-        val missing = wanted.filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        return wanted
+    }
+
+    private fun missingPermissions(): List<String> = requiredPermissions().filter {
+        ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestPermissionsIfNeeded() {
+        val missing = missingPermissions()
+        if (missing.isEmpty()) return
+        if (permissionsRequested) {
+            val permanent = missing.filter { !shouldShowRequestPermissionRationale(it) }
+            if (permanent.isNotEmpty()) showPermissionSettings()
+            return
         }
-        if (missing.isNotEmpty()) {
-            permissionLauncher.launch(missing.toTypedArray())
+        permissionsRequested = true
+        permissionLauncher.launch(missing.toTypedArray())
+    }
+
+    private fun showPermissionSettings() {
+        if (settingsDialogShown || isFinishing) return
+        settingsDialogShown = true
+        AlertDialog.Builder(this)
+            .setTitle(R.string.perm_denied_title)
+            .setMessage(R.string.perm_denied_message)
+            .setPositiveButton(R.string.perm_denied_open) { _, _ -> openAppSettings() }
+            .setNegativeButton(R.string.cancel, null)
+            .setOnDismissListener { settingsDialogShown = false }
+            .show()
+    }
+
+    private fun openAppSettings() {
+        val intent = Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.fromParts("package", packageName, null),
+        )
+        try {
+            startActivity(intent)
+        } catch (e: Exception) {
+            LogBus.warn("APP", "Не удалось открыть настройки: ${e.message}")
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!permissionsRequested) return
+        val missing = missingPermissions()
+        if (missing.isEmpty()) {
+            settingsDialogShown = false
+            return
+        }
+        val permanent = missing.filter { !shouldShowRequestPermissionRationale(it) }
+        if (permanent.isNotEmpty()) showPermissionSettings()
     }
 
     private fun setupFragments(savedInstanceState: Bundle?) {
